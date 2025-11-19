@@ -3,6 +3,7 @@ import express from "express";
 import Message from "../models/message.js";
 import User from "../models/user.js";
 import { authenticateToken } from "../middlewares/auth.js";
+import { emitMessages } from "../socket.js";
 
 const router = express.Router();
 
@@ -20,7 +21,8 @@ router.post("/admin/send-multi", authenticateToken, async (req, res) => {
     content,
     type: "admin-to-employee"
   }));
-  await Message.insertMany(messages);
+  const inserted = await Message.insertMany(messages);
+  await emitMessages(inserted);
   res.json({ success: true });
 });
 
@@ -28,12 +30,13 @@ router.post("/admin/send-multi", authenticateToken, async (req, res) => {
 router.get("/admin/chat/:employeeId", authenticateToken, async (req, res) => {
   if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) return res.status(403).json({ error: "Forbidden" });
   const employeeId = req.params.employeeId;
-  const adminId = req.user.userId;
-  // Find all messages where admin and employee are sender/receiver
+  const admins = await User.find({ roles: { $in: ["admin"] } }, "_id");
+  const adminIds = admins.map(a => a._id);
+  // Find all messages where any admin and employee are sender/receiver
   const messages = await Message.find({
     $or: [
-      { sender: adminId, receiver: employeeId },
-      { sender: employeeId, receiver: adminId }
+      { sender: employeeId, receiver: { $in: adminIds } },
+      { sender: { $in: adminIds }, receiver: employeeId }
     ]
   }).populate("sender", "name email picture roles").sort({ createdAt: 1 });
   res.json({ messages });
@@ -51,6 +54,7 @@ router.post("/admin/send", authenticateToken, async (req, res) => {
     type: "admin-to-employee"
   });
   await message.save();
+  await emitMessages(message);
   res.json({ success: true });
 });
 
@@ -78,7 +82,8 @@ router.post("/admin/send-bulk", authenticateToken, async (req, res) => {
     content,
     type: "admin-to-employee"
   }));
-  await Message.insertMany(messages);
+  const inserted = await Message.insertMany(messages);
+  await emitMessages(inserted);
   res.json({ success: true });
 });
 
@@ -121,6 +126,7 @@ router.post("/employee/send", authenticateToken, async (req, res) => {
     type: "employee-to-admin"
   });
   await message.save();
+  await emitMessages(message);
   res.json({ success: true });
 });
 
@@ -156,6 +162,7 @@ router.post("/client/send", authenticateToken, async (req, res) => {
     type: "client-to-admin"
   });
   await message.save();
+  await emitMessages(message);
   res.json({ success: true });
 });
 
@@ -170,12 +177,13 @@ router.get("/clients", authenticateToken, async (req, res) => {
 router.get("/admin/client-chat/:clientId", authenticateToken, async (req, res) => {
   if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) return res.status(403).json({ error: "Forbidden" });
   const clientId = req.params.clientId;
-  const adminId = req.user.userId;
-  // Find all messages where admin and client are sender/receiver
+  const admins = await User.find({ roles: { $in: ["admin"] } }, "_id");
+  const adminIds = admins.map(a => a._id);
+  // Find all messages where any admin and client are sender/receiver
   const messages = await Message.find({
     $or: [
-      { sender: adminId, receiver: clientId },
-      { sender: clientId, receiver: adminId }
+      { sender: clientId, receiver: { $in: adminIds } },
+      { sender: { $in: adminIds }, receiver: clientId }
     ]
   }).populate("sender", "name email picture roles").sort({ createdAt: 1 });
   res.json({ messages });
@@ -193,6 +201,7 @@ router.post("/admin/send-to-client", authenticateToken, async (req, res) => {
     type: "admin-to-client"
   });
   await message.save();
+  await emitMessages(message);
   res.json({ success: true });
 });
 

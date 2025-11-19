@@ -1,4 +1,5 @@
 import express from "express";
+import http from "http";
 import dotenv from "dotenv";
 dotenv.config();
 import mongoose from "mongoose";
@@ -14,6 +15,7 @@ import employeeInfo from "./routes/employeeinfo.js"
 import requests from "./routes/admin.js"
 import messagesRoutes from "./routes/messages.js"
 import dailyFormRoutes from "./routes/dailyForms.js"
+import { initSocketServer } from "./socket.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -50,6 +52,9 @@ app.use("/api/daily-forms", dailyFormRoutes);
 
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+initSocketServer(server);
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
