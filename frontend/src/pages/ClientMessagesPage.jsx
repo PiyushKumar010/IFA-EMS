@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MessageSquareText, Send } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -7,15 +7,17 @@ export default function ClientMessagesPage() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
 
-  const loadMessages = () => {
+  const loadMessages = useCallback(() => {
     fetch("/api/messages/client/chat", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setMessages(data.messages || []));
-  };
+  }, []);
 
   useEffect(() => {
     loadMessages();
-  }, []);
+    const interval = setInterval(loadMessages, 4000);
+    return () => clearInterval(interval);
+  }, [loadMessages]);
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;

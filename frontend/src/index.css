@@ -132,6 +132,26 @@
     box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
   }
 
+  select.input-field,
+  .input-field select {
+    color: #f8fafc;
+    background: rgba(15, 23, 42, 0.35);
+    backdrop-filter: blur(18px);
+  }
+
+  select.input-field option,
+  .input-field select option {
+    color: #0f172a;
+    background: #f8fafc;
+    font-weight: 500;
+  }
+
+  select.input-field option:checked,
+  .input-field select option:checked {
+    background: rgba(99, 102, 241, 0.18);
+    color: #1e1b4b;
+  }
+
   .surface-section {
     border-radius: 32px;
     border: 1px solid rgba(255, 255, 255, 0.1);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
@@ -9,12 +9,27 @@ import {
   Calendar,
   BarChart3,
   FolderOpen,
-  UserCircle2,
   LogOut,
   MessageCircle,
   Inbox,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+
+function Modal({ children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8 backdrop-blur-md">
+      <div className="glass-panel relative w-full max-w-xl rounded-[32px] px-8 py-8">
+        <button
+          onClick={onClose}
+          className="absolute right-6 top-6 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+        >
+          Close
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState([]);
@@ -23,17 +38,28 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newProjectData, setNewProjectData] = useState({
+    projectName: "",
+    clientName: "",
+    clientEmail: "",
+    description: "",
+  });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("/api/projects", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => {
-        const projs = data.projects || [];
-        setProjects(projs);
-        setFilteredProjects(projs);
-      });
+  const fetchProjects = useCallback(async () => {
+    const res = await fetch("/api/projects", { credentials: "include" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const projs = data.projects || [];
+    setProjects(projs);
+    setFilteredProjects(projs);
   }, []);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   useEffect(() => {
     let filtered = [...projects];
@@ -138,9 +164,6 @@ export default function AdminDashboard() {
             >
               <Inbox className="h-5 w-5" />
             </button>
-            <button className="btn-ghost rounded-lg p-2">
-              <UserCircle2 className="h-6 w-6" />
-            </button>
             <button className="btn-ghost rounded-lg p-2" onClick={logout}>
               <LogOut className="h-5 w-5" />
             </button>
@@ -216,7 +239,10 @@ export default function AdminDashboard() {
                     Completed
                   </button>
                 </div>
-                <button className="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
+                <button
+                  className="btn-primary flex items-center gap-2 px-4 py-2 text-sm"
+                  onClick={() => setShowCreateModal(true)}
+                >
                   + New Project
                 </button>
               </div>
@@ -313,6 +339,108 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {showCreateModal && (
+        <Modal
+          onClose={() => {
+            if (!creating) setShowCreateModal(false);
+          }}
+        >
+          <h2 className="text-2xl font-semibold text-white">New Project</h2>
+          <p className="text-sm text-slate-300">
+            Capture the same details clients provide when requesting work.
+          </p>
+          <form
+            className="mt-6 space-y-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (creating) return;
+              setCreating(true);
+              const res = await fetch("/api/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(newProjectData),
+              });
+              setCreating(false);
+              if (!res.ok) {
+                alert("Failed to create project");
+                return;
+              }
+              setNewProjectData({
+                projectName: "",
+                clientName: "",
+                clientEmail: "",
+                description: "",
+              });
+              setShowCreateModal(false);
+              fetchProjects();
+            }}
+          >
+            <input
+              name="projectName"
+              placeholder="Project name"
+              value={newProjectData.projectName}
+              onChange={(e) =>
+                setNewProjectData((prev) => ({
+                  ...prev,
+                  [e.target.name]: e.target.value,
+                }))
+              }
+              required
+              className="input-field"
+            />
+            <input
+              name="clientName"
+              placeholder="Client name"
+              value={newProjectData.clientName}
+              onChange={(e) =>
+                setNewProjectData((prev) => ({
+                  ...prev,
+                  [e.target.name]: e.target.value,
+                }))
+              }
+              required
+              className="input-field"
+            />
+            <input
+              name="clientEmail"
+              type="email"
+              placeholder="Client email"
+              value={newProjectData.clientEmail}
+              onChange={(e) =>
+                setNewProjectData((prev) => ({
+                  ...prev,
+                  [e.target.name]: e.target.value,
+                }))
+              }
+              required
+              className="input-field"
+            />
+            <textarea
+              name="description"
+              placeholder="Project description"
+              value={newProjectData.description}
+              onChange={(e) =>
+                setNewProjectData((prev) => ({
+                  ...prev,
+                  [e.target.name]: e.target.value,
+                }))
+              }
+              required
+              className="input-field h-36 resize-none"
+            />
+            <button
+              type="submit"
+              disabled={creating}
+              className="btn-primary w-full justify-center"
+            >
+              {creating ? "Creating..." : "Create project"}
+            </button>
+          </form>
+        </Modal>
+      )}
+
 
       {/* Project Details Modal */}
       {showDetailsModal && selectedProject && (

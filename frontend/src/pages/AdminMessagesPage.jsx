@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MessageCircle, Send, Users } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -30,21 +30,21 @@ export default function AdminMessagesPage() {
     );
   };
 
-  const fetchChat = async (employeeId) => {
+  const fetchChat = useCallback(async (employeeId) => {
     const res = await fetch(`/api/messages/admin/chat/${employeeId}`, {
       credentials: "include",
     });
     const data = await res.json();
     setChatMessages(data.messages || []);
-  };
+  }, []);
 
-  const fetchClientChat = async (clientId) => {
+  const fetchClientChat = useCallback(async (clientId) => {
     const res = await fetch(`/api/messages/admin/client-chat/${clientId}`, {
       credentials: "include",
     });
     const data = await res.json();
     setChatMessages(data.messages || []);
-  };
+  }, []);
 
   const handleSelectEmployee = (employee) => {
     setSelectedEmployee(employee);
@@ -57,6 +57,22 @@ export default function AdminMessagesPage() {
     setSelectedEmployee(null);
     fetchClientChat(client._id);
   };
+
+  useEffect(() => {
+    if (!selectedEmployee) return;
+    const interval = setInterval(() => {
+      fetchChat(selectedEmployee._id);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedEmployee?._id, fetchChat]);
+
+  useEffect(() => {
+    if (!selectedClient) return;
+    const interval = setInterval(() => {
+      fetchClientChat(selectedClient._id);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedClient?._id, fetchClientChat]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || (!selectedEmployee && !selectedClient)) return;
