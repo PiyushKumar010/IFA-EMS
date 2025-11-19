@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
-const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+const DEFAULT_API_BASE_URL = 'https://ifa-ems.onrender.com'
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL
 const API_BASE_URL = rawApiBaseUrl.endsWith('/')
   ? rawApiBaseUrl.slice(0, -1)
   : rawApiBaseUrl

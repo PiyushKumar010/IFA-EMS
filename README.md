@@ -79,14 +79,14 @@ When `NODE_ENV=production`, Express serves the static React build and automatica
 2. Environment variables (Vercel dashboard → Settings → Environment Variables):
    ```
    VITE_GOOGLE_CLIENT_ID=<same as backend>
-   VITE_API_BASE_URL=https://<your-render-service>.onrender.com
+   VITE_API_BASE_URL=https://<your-render-service>.onrender.com   # Optional; defaults to https://ifa-ems.onrender.com
    ```
 3. Build & Output:
    - Build Command: `npm run build`
    - Output Directory: `dist`
 4. After deploy, visit the Vercel URL and confirm API calls are proxied to Render (network tab should show requests to the Render origin).
 
-> Remember to update `CORS_ORIGINS` and `FRONTEND_URL` if you later add a custom domain (`https://app.yourcompany.com`).
+> Remember to update `CORS_ORIGINS` and `FRONTEND_URL` if you later add a custom domain (`https://app.yourcompany.com`). If you leave `VITE_API_BASE_URL` unset, the frontend falls back to `https://ifa-ems.onrender.com`.
 
 ## Health Checks & Monitoring
 - API base URL: `https://<your-host>/api`
