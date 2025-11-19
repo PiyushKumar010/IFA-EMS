@@ -26,7 +26,7 @@ const parseOrigins = (raw) =>
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-const DEFAULT_ORIGINS = ["https://ifa-ems1.vercel.app"];
+const DEFAULT_ORIGINS = ["https://ifa-ems1.onrender.com"];
 const configuredOrigins = parseOrigins(process.env.CORS_ORIGINS);
 const fallbackOrigins = parseOrigins(process.env.FRONTEND_URL);
 const allowedOrigins = configuredOrigins.length
