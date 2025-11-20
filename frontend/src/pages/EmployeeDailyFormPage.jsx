@@ -19,6 +19,20 @@ export default function EmployeeDailyFormPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [formHistory, setFormHistory] = useState([]);
   const [selectedHistoryForm, setSelectedHistoryForm] = useState(null);
+  const [authError, setAuthError] = useState(null);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "/";
+    }
+  };
 
   // Update current time every minute and check editability
   useEffect(() => {
@@ -101,12 +115,17 @@ export default function EmployeeDailyFormPage() {
         console.log("Today's form response status:", res.status);
         if (!res.ok) {
           console.error("Today's form fetch failed:", res.status, res.statusText);
+          if (res.status === 403) {
+            setAuthError("Authentication failed. Please logout and login again as Employee.");
+          }
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         return res.json();
       })
       .then((data) => {
         console.log("Today's form data:", data);
         setForm(data.form);
+        setAuthError(null); // Clear any auth errors
         
         // Set initial states from server response
         const formCanEdit = data.canEdit ?? true;
@@ -137,7 +156,12 @@ export default function EmployeeDailyFormPage() {
           setAlreadySubmitted(true);
         }
       })
-      .catch((err) => console.error("Error fetching form:", err))
+      .catch((err) => {
+        console.error("Error fetching form:", err);
+        if (err.message.includes("403")) {
+          setAuthError("Authentication failed. Please logout and login again as Employee.");
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -430,6 +454,13 @@ export default function EmployeeDailyFormPage() {
                 <History className="h-4 w-4" />
                 {showHistory ? "Hide History" : "View History"}
               </button>
+              <button
+                onClick={logout}
+                className="btn-ghost flex items-center gap-2 text-red-400 hover:text-red-300"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
               {alreadySubmitted && (
                 <div className="flex items-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/20 px-4 py-2">
                   <CheckCircle className="h-5 w-5 text-emerald-300" />
@@ -450,6 +481,27 @@ export default function EmployeeDailyFormPage() {
             <p className="mt-2 text-xs text-amber-100">
               Your score and bonus will be calculated once an admin reviews and confirms your checklist.
             </p>
+          </div>
+        )}
+
+        {/* Authentication Error */}
+        {authError && (
+          <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/20 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-red-200">Authentication Error</p>
+                <p className="text-sm text-red-300">{authError}</p>
+                <p className="mt-1 text-xs text-red-300">
+                  This usually happens when your login session has expired or roles have changed.
+                </p>
+              </div>
+              <button
+                onClick={logout}
+                className="btn-primary bg-red-500 hover:bg-red-600"
+              >
+                Logout & Re-login
+              </button>
+            </div>
           </div>
         )}
 
