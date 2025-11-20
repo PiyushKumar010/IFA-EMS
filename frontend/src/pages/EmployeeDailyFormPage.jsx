@@ -34,6 +34,27 @@ export default function EmployeeDailyFormPage() {
     }
   };
 
+  const createTodaysForm = async () => {
+    try {
+      const res = await fetch("/api/daily-forms/create-today", {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Create today's form response:", data);
+        
+        // Refresh the form data
+        fetchTodaysForm();
+      } else {
+        console.error("Failed to create today's form:", res.status);
+      }
+    } catch (err) {
+      console.error("Error creating today's form:", err);
+    }
+  };
+
   // Update current time every minute and check editability
   useEffect(() => {
     const timer = setInterval(() => {
@@ -130,26 +151,19 @@ export default function EmployeeDailyFormPage() {
         // Set initial states from server response
         const formCanEdit = data.canEdit ?? true;
         const timeInfo = data.timeRemaining;
+        const isToday = data.isToday ?? true;
         
         setCanEdit(formCanEdit);
         setTimeRemaining(timeInfo);
         
-        // Check if form is from a previous day
-        if (data.form?.date) {
-          const now = new Date();
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          const formDate = new Date(data.form.date);
-          formDate.setHours(0, 0, 0, 0);
-          
-          // If form is not from today, it's restricted
-          if (formDate.getTime() !== today.getTime()) {
-            setMidnightRestricted(true);
-            setCanEdit(false);
-          } else {
-            setMidnightRestricted(false);
-          }
+        // Use the backend's isToday flag to determine restrictions
+        if (!isToday) {
+          console.log("Form is not from today, setting midnight restriction");
+          setMidnightRestricted(true);
+          setCanEdit(false);
+        } else {
+          console.log("Form is from today, clearing midnight restriction");
+          setMidnightRestricted(false);
         }
         
         if (data.form?.submitted) {
@@ -507,12 +521,22 @@ export default function EmployeeDailyFormPage() {
 
         {!alreadySubmitted && midnightRestricted && (
           <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/20 p-4">
-            <p className="text-sm text-red-200">
-              <strong>Previous Day Form:</strong> You can only edit today's form. Previous day forms are locked.
-            </p>
-            <p className="mt-2 text-xs text-red-100">
-              Please fill out a new form for today. Contact your admin if you need to modify previous submissions.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-red-200">
+                  <strong>Previous Day Form:</strong> You can only edit today's form. Previous day forms are locked.
+                </p>
+                <p className="mt-2 text-xs text-red-100">
+                  Please fill out a new form for today. Contact your admin if you need to modify previous submissions.
+                </p>
+              </div>
+              <button
+                onClick={createTodaysForm}
+                className="btn-primary bg-blue-500 hover:bg-blue-600"
+              >
+                Create Today's Form
+              </button>
+            </div>
           </div>
         )}
 

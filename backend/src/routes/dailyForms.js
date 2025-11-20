@@ -277,6 +277,73 @@ router.get("/today", authenticateToken, async (req, res) => {
   }
 });
 
+// Employee: Force create today's form (if one doesn't exist for today)
+router.post("/create-today", authenticateToken, async (req, res) => {
+  try {
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
+    }
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+
+    console.log(`Force creating today's form for user ${req.user.userId} - Today: ${todayStart.toISOString()}`);
+
+    // Check if form already exists for today
+    let existingForm = await DailyForm.findOne({
+      employee: req.user.userId,
+      date: { $gte: todayStart, $lte: todayEnd }
+    });
+
+    if (existingForm) {
+      console.log("Form already exists for today, returning existing form");
+      return res.json({ 
+        success: true,
+        message: "Form already exists for today",
+        form: existingForm,
+        created: false
+      });
+    }
+
+    // Create new form for today
+    const tasks = STANDARD_TASKS.map(task => ({
+      taskId: task.taskId,
+      taskText: task.taskText,
+      category: task.category,
+      frequency: task.frequency,
+      employeeChecked: false,
+      adminChecked: false
+    }));
+
+    const newForm = new DailyForm({
+      employee: req.user.userId,
+      date: todayStart,
+      tasks: tasks,
+      customTasks: [],
+      customTags: [],
+      hoursAttended: 0,
+      screensharing: false,
+      submitted: false
+    });
+    
+    await newForm.save();
+    console.log(`Force created new daily form for employee ${req.user.userId}, Form ID: ${newForm._id}`);
+
+    res.json({ 
+      success: true,
+      message: "New form created for today",
+      form: newForm,
+      created: true
+    });
+  } catch (err) {
+    console.error("Error force creating today's form:", err);
+    res.status(500).json({ error: "Failed to create form" });
+  }
+});
+
 // Employee: Get form history (previous submitted forms)
 router.get("/history", authenticateToken, async (req, res) => {
   try {
