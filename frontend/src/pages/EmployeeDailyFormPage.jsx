@@ -55,6 +55,34 @@ export default function EmployeeDailyFormPage() {
     }
   };
 
+  const saveFormData = async () => {
+    if (!form?._id || alreadySubmitted || midnightRestricted) return;
+    
+    try {
+      const res = await fetch("/api/daily-forms/save", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          tasks: form.tasks,
+          customTasks: form.customTasks,
+          hoursAttended: form.hoursAttended,
+          screensharing: form.screensharing,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Form auto-saved successfully");
+        setForm(data.form);
+      } else {
+        console.error("Failed to auto-save form:", res.status);
+      }
+    } catch (err) {
+      console.error("Error saving form:", err);
+    }
+  };
+
   // Update current time every minute and check editability
   useEffect(() => {
     const timer = setInterval(() => {
@@ -105,6 +133,17 @@ export default function EmployeeDailyFormPage() {
     }, 60000); // Update every minute
     return () => clearInterval(timer);
   }, [form, midnightRestricted]);
+
+  // Auto-save form data when it changes
+  useEffect(() => {
+    if (form && !loading && !alreadySubmitted && !midnightRestricted) {
+      const timeoutId = setTimeout(() => {
+        saveFormData();
+      }, 1000); // Save after 1 second of inactivity
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [form?.tasks, form?.customTasks, form?.hoursAttended, form?.screensharing]);
 
   useEffect(() => {
     // Check if form can be submitted
@@ -378,8 +417,8 @@ export default function EmployeeDailyFormPage() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/daily-forms/submit", {
-        method: "POST",
+      const res = await fetch("/api/daily-forms/save", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
@@ -391,14 +430,16 @@ export default function EmployeeDailyFormPage() {
       });
 
       if (res.ok) {
-        alert("Form saved successfully!");
+        const data = await res.json();
+        setForm(data.form); // Update form with any server-side changes
+        alert("Draft saved successfully!");
       } else {
         const error = await res.json();
-        alert(error.message || "Failed to save form");
+        alert(error.message || "Failed to save draft");
       }
     } catch (err) {
-      console.error("Error saving form:", err);
-      alert("Failed to save form");
+      console.error("Error saving draft:", err);
+      alert("Failed to save draft");
     } finally {
       setSaving(false);
     }

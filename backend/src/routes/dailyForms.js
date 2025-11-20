@@ -485,6 +485,73 @@ router.get("/can-submit", authenticateToken, async (req, res) => {
   }
 });
 
+// Employee: Save form data without submitting
+router.put("/save", authenticateToken, async (req, res) => {
+  try {
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
+    }
+
+    const { tasks, customTasks, hoursAttended, screensharing } = req.body;
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+
+    // Find today's form
+    let form = await DailyForm.findOne({
+      employee: req.user.userId,
+      date: { $gte: todayStart, $lte: todayEnd }
+    });
+
+    if (!form) {
+      return res.status(404).json({ error: "No form found for today" });
+    }
+
+    if (form.submitted) {
+      return res.status(400).json({ error: "Cannot save already submitted form" });
+    }
+
+    // Check if form is from today
+    const formDate = new Date(form.date);
+    const isFormFromToday = formDate >= todayStart && formDate <= todayEnd;
+    if (!isFormFromToday) {
+      return res.status(400).json({ error: "Can only edit today's form" });
+    }
+
+    // Update form data without marking as submitted
+    if (tasks) form.tasks = tasks;
+    if (customTasks) form.customTasks = customTasks;
+    if (hoursAttended !== undefined) form.hoursAttended = hoursAttended;
+    if (screensharing !== undefined) form.screensharing = screensharing;
+
+    form.lastEditedAt = new Date();
+    // DO NOT set submitted to true - this is just a save
+
+    await form.save();
+    console.log(`Saved form data for employee ${req.user.userId}, form ID: ${form._id}`);
+
+    const formObj = form.toObject();
+    calculateTaskCompletion(formObj);
+    
+    // Calculate time remaining
+    const timeInfo = getTimeUntilMidnight();
+    
+    res.json({ 
+      success: true, 
+      form: formObj,
+      canEdit: !form.submitted,
+      timeRemaining: timeInfo,
+      message: "Form saved successfully"
+    });
+  } catch (err) {
+    console.error("Error saving form:", err);
+    res.status(500).json({ error: "Failed to save form" });
+  }
+});
+
 // Employee: Submit daily form
 router.post("/submit", authenticateToken, async (req, res) => {
   try {
