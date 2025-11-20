@@ -439,8 +439,8 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
     // Get all approved employees
     const employees = await User.find({
       roles: "employee",
-      status: "approved"
-    }).select("_id name email");
+      status: { $ne: "rejected" }
+    }).select("_id name email status");
 
     // Get all forms in date range
     const forms = await DailyForm.find({
