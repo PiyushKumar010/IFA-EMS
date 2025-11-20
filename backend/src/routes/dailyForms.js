@@ -189,8 +189,10 @@ const calculateScoreAndBonus = (form, { requireAdminApproval = true } = {}) => {
 // Employee: Get today's form or create a new one
 router.get("/today", authenticateToken, async (req, res) => {
   try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
-      return res.status(403).json({ error: "Forbidden" });
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
     }
 
     const today = new Date();
@@ -198,10 +200,14 @@ router.get("/today", authenticateToken, async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    console.log(`Fetching today's form for user ${req.user.userId} - Today: ${today.toISOString()}, Tomorrow: ${tomorrow.toISOString()}`);
+
     let form = await DailyForm.findOne({
       employee: req.user.userId,
       date: { $gte: today, $lt: tomorrow }
     });
+
+    console.log("Found existing form:", form ? `ID: ${form._id}, Date: ${form.date}` : "None");
 
     // Always create a new form for today if it doesn't exist
     if (!form) {
@@ -225,7 +231,7 @@ router.get("/today", authenticateToken, async (req, res) => {
         submitted: false
       });
       await form.save();
-      console.log(`Created new daily form for employee ${req.user.userId} for date ${today}`);
+      console.log(`Created new daily form for employee ${req.user.userId} for date ${today.toISOString()}, Form ID: ${form._id}`);
     }
 
     const formObj = form.toObject();
@@ -250,8 +256,10 @@ router.get("/today", authenticateToken, async (req, res) => {
 // Employee: Get form history (previous submitted forms)
 router.get("/history", authenticateToken, async (req, res) => {
   try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
-      return res.status(403).json({ error: "Forbidden" });
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
     }
 
     const { limit = 30, offset = 0 } = req.query;
@@ -291,8 +299,10 @@ router.get("/history", authenticateToken, async (req, res) => {
 // Employee: Get specific form by ID (read-only for previous days)
 router.get("/view/:formId", authenticateToken, async (req, res) => {
   try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
-      return res.status(403).json({ error: "Forbidden" });
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
     }
 
     const { formId } = req.params;
@@ -328,8 +338,10 @@ router.get("/view/:formId", authenticateToken, async (req, res) => {
 // Employee: Check if form can be submitted (once per day)
 router.get("/can-submit", authenticateToken, async (req, res) => {
   try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
-      return res.status(403).json({ error: "Forbidden" });
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
     }
 
     const today = new Date();
@@ -353,8 +365,10 @@ router.get("/can-submit", authenticateToken, async (req, res) => {
 // Employee: Submit daily form
 router.post("/submit", authenticateToken, async (req, res) => {
   try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
-      return res.status(403).json({ error: "Forbidden" });
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
     }
 
     const today = new Date();
@@ -735,8 +749,10 @@ router.post("/custom/:employeeId", authenticateToken, async (req, res) => {
 // Get employee's own stats and bonus
 router.get("/my-stats", authenticateToken, async (req, res) => {
   try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
-      return res.status(403).json({ error: "Forbidden" });
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      console.log("Access denied - user roles:", userRoles, "userId:", req.user.userId);
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
     }
 
     const { days = 30, range } = req.query;

@@ -97,8 +97,15 @@ export default function EmployeeDailyFormPage() {
 
   const fetchTodaysForm = () => {
     fetch("/api/daily-forms/today", { credentials: "include" })
-      .then((res) => res.json())
+      .then((res) => {
+        console.log("Today's form response status:", res.status);
+        if (!res.ok) {
+          console.error("Today's form fetch failed:", res.status, res.statusText);
+        }
+        return res.json();
+      })
       .then((data) => {
+        console.log("Today's form data:", data);
         setForm(data.form);
         
         // Set initial states from server response
@@ -136,11 +143,21 @@ export default function EmployeeDailyFormPage() {
 
   const fetchFormHistory = () => {
     fetch("/api/daily-forms/history?limit=10", { credentials: "include" })
-      .then((res) => res.json())
+      .then((res) => {
+        console.log("Form history response status:", res.status);
+        if (!res.ok) {
+          console.error("Form history fetch failed:", res.status, res.statusText);
+        }
+        return res.json();
+      })
       .then((data) => {
+        console.log("Form history data:", data);
         setFormHistory(data.forms || []);
       })
-      .catch((err) => console.error("Error fetching form history:", err));
+      .catch((err) => {
+        console.error("Error fetching form history:", err);
+        setFormHistory([]);
+      });
   };
 
   const fetchHistoryForm = async (formId) => {

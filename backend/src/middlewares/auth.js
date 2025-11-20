@@ -29,12 +29,20 @@ export const authenticateToken = async (req, res, next) => {
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-      roles: decoded.roles,
+      roles: decoded.roles || user.roles || [],  // Fallback to DB roles if JWT roles are missing
       name: decoded.name,
       picture: decoded.picture,
       // approved field removed
       db: user
     };
+
+    console.log("Auth middleware - User authenticated:", {
+      userId: decoded.userId,
+      email: decoded.email,
+      jwtRoles: decoded.roles,
+      dbRoles: user.roles,
+      finalRoles: req.user.roles
+    });
 
     next();
   } catch (err) {
