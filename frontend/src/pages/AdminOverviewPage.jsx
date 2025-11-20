@@ -24,12 +24,23 @@ import {
   Target,
   Zap,
   BookOpen,
+  ChevronRight,
+  Download,
+  Filter,
+  Search,
+  RefreshCw,
+  Settings,
+  Bell,
+  Plus,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function AdminOverviewPage() {
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState("overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -155,67 +166,709 @@ export default function AdminOverviewPage() {
   return (
     <PageBackground variant="violet">
       <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
-        {/* Top Navigation */}
-        <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-              Admin Dashboard
-            </p>
-            <h1 className="mt-2 text-4xl font-bold">Overview</h1>
-            <p className="text-sm text-slate-300">
-              Complete overview of your organization's performance
-            </p>
+        {/* Enhanced Header with Navigation */}
+        <header className="mb-8 border-b border-white/10 pb-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                Admin Dashboard
+              </p>
+              <h1 className="mt-2 text-4xl font-bold">Management Center</h1>
+              <p className="text-sm text-slate-300">
+                Complete oversight of organizational operations and performance
+              </p>
+            </div>
+            
+            {/* Quick Actions Bar */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search anything..."
+                  className="input-field w-64 pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <button
+                className="btn-ghost rounded-lg p-2 relative"
+                onClick={() => navigate("/admin/requests")}
+                title="Pending Requests"
+              >
+                <Bell className="h-5 w-5" />
+                {stats?.employees?.pending > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {stats.employees.pending}
+                  </span>
+                )}
+              </button>
+              
+              <button
+                className="btn-ghost rounded-lg p-2"
+                onClick={fetchOverviewData}
+                title="Refresh Data"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
+              
+              <button
+                className="btn-primary flex items-center gap-2 px-4 py-2 text-sm"
+                onClick={() => navigate("/admin/projects")}
+              >
+                <Plus className="h-4 w-4" />
+                New Project
+              </button>
+              
+              <button className="btn-ghost rounded-lg p-2" onClick={logout}>
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Navigation Tabs */}
+          <div className="mt-6 flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1">
             <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/employees")}
-              title="Employees"
+              className={`px-4 py-2 text-sm font-medium transition-colors rounded-md ${
+                selectedTab === "overview"
+                  ? "bg-indigo-500/20 text-white"
+                  : "text-slate-300 hover:text-white"
+              }`}
+              onClick={() => setSelectedTab("overview")}
             >
-              <Users className="h-5 w-5" />
+              Overview
             </button>
             <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/leaderboard")}
-              title="Leaderboard"
+              className={`px-4 py-2 text-sm font-medium transition-colors rounded-md ${
+                selectedTab === "daily-checklist"
+                  ? "bg-indigo-500/20 text-white"
+                  : "text-slate-300 hover:text-white"
+              }`}
+              onClick={() => setSelectedTab("daily-checklist")}
             >
-              <Trophy className="h-5 w-5" />
+              Daily Checklist
             </button>
             <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/meetings")}
-              title="Meetings"
+              className={`px-4 py-2 text-sm font-medium transition-colors rounded-md ${
+                selectedTab === "analytics"
+                  ? "bg-indigo-500/20 text-white"
+                  : "text-slate-300 hover:text-white"
+              }`}
+              onClick={() => setSelectedTab("analytics")}
             >
-              <Video className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/messages")}
-              title="Messages"
-            >
-              <MessageCircle className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/requests")}
-              title="Requests"
-            >
-              <Inbox className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/projects")}
-              title="Projects"
-            >
-              <FolderOpen className="h-5 w-5" />
-            </button>
-            <button className="btn-ghost rounded-lg p-2" onClick={logout}>
-              <LogOut className="h-5 w-5" />
+              Analytics
             </button>
           </div>
         </header>
 
-        {/* Enhanced Key Metrics Grid */}
+        {/* Main Content Area */}
+        {selectedTab === "overview" && (
+          <>
+            {/* Enhanced Key Metrics Grid with Navigation */}
+            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div 
+                className="glass-card p-6 transition-all hover:border-white/20 hover:scale-105 cursor-pointer"
+                onClick={() => navigate("/admin/employees")}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20">
+                    <Users className="h-6 w-6 text-blue-300" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400">Team Members</span>
+                    <div className="text-2xl font-bold">{stats?.employees?.total || 0}</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Active</span>
+                    <span className="text-emerald-300">{stats?.employees?.approved || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Pending</span>
+                    <span className="text-amber-300">{stats?.employees?.pending || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Inactive</span>
+                    <span className="text-red-300">{stats?.employees?.rejected || 0}</span>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center text-xs text-slate-400">
+                  <span>View all employees</span>
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </div>
+              </div>
+
+              <div 
+                className="glass-card p-6 transition-all hover:border-white/20 hover:scale-105 cursor-pointer"
+                onClick={() => navigate("/admin/projects")}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20">
+                    <FolderOpen className="h-6 w-6 text-indigo-300" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400">Projects</span>
+                    <div className="text-2xl font-bold">{stats?.projects?.total || 0}</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Active</span>
+                    <span className="text-blue-300">{stats?.projects?.active || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Completed</span>
+                    <span className="text-emerald-300">{stats?.projects?.completed || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">New</span>
+                    <span className="text-amber-300">{stats?.projects?.new || 0}</span>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center text-xs text-slate-400">
+                  <span>Manage projects</span>
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </div>
+              </div>
+
+              <div 
+                className="glass-card p-6 transition-all hover:border-white/20 hover:scale-105 cursor-pointer"
+                onClick={() => setSelectedTab("daily-checklist")}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500/20">
+                    <FileText className="h-6 w-6 text-emerald-300" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400">Daily Forms</span>
+                    <div className="text-2xl font-bold">{stats?.dailyForms?.todaySubmissions || 0}</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">This Week</span>
+                    <span className="text-blue-300">{stats?.dailyForms?.weeklySubmissions || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Avg Score</span>
+                    <span className="text-emerald-300">
+                      {stats?.dailyForms?.productivity?.averageScore ? 
+                        Math.round(stats.dailyForms.productivity.averageScore * 10) / 10 : 0}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center text-xs text-slate-400">
+                  <span>View checklist</span>
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </div>
+              </div>
+
+              <div 
+                className="glass-card p-6 transition-all hover:border-white/20 hover:scale-105 cursor-pointer"
+                onClick={() => navigate("/admin/meetings")}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/20">
+                    <Clock className="h-6 w-6 text-purple-300" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400">Hours Logged</span>
+                    <div className="text-2xl font-bold">{stats?.totalHoursLogged || 0}h</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">This Week</span>
+                    <span className="text-purple-300">
+                      {stats?.dailyForms?.productivity?.totalHoursAttended || 0}h
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">Meetings</span>
+                    <span className="text-rose-300">{stats?.meetings?.thisWeek || 0}</span>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center text-xs text-slate-400">
+                  <span>Schedule meeting</span>
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Analytics Tab */}
+        {selectedTab === "analytics" && (
+          <div className="space-y-6">
+            {/* Productivity Overview */}
+            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="glass-card p-6">
+                <div className="mb-4">
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                    Weekly Productivity
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold">Team Performance</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-300" />
+                      <span className="text-sm text-slate-300">Confirmed Forms</span>
+                    </div>
+                    <span className="text-emerald-300">
+                      {stats?.dailyForms?.productivity?.confirmedForms || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="h-4 w-4 text-blue-300" />
+                      <span className="text-sm text-slate-300">Screen Sharing</span>
+                    </div>
+                    <span className="text-blue-300">
+                      {stats?.dailyForms?.productivity?.screensharingForms || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-purple-300" />
+                      <span className="text-sm text-slate-300">Total Submissions</span>
+                    </div>
+                    <span className="text-purple-300">
+                      {stats?.dailyForms?.productivity?.totalFormsSubmitted || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Performers */}
+              <div className="glass-card overflow-hidden lg:col-span-2">
+                <div className="border-b border-white/10 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                        Performance Leaders
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold">Top Performers This Week</h3>
+                    </div>
+                    <button
+                      onClick={() => navigate("/admin/leaderboard")}
+                      className="btn-ghost rounded-lg px-3 py-1 text-sm"
+                    >
+                      View Leaderboard
+                    </button>
+                  </div>
+                </div>
+                <div className="divide-y divide-white/10">
+                  {recentData?.topPerformers?.length > 0 ? (
+                    recentData.topPerformers.map((performer, idx) => (
+                      <div key={performer._id} className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-sm font-bold text-white">
+                            {idx + 1}
+                          </div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20">
+                            <Star className="h-5 w-5 text-indigo-300" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">
+                              {performer.name || performer.email}
+                            </p>
+                            <p className="text-sm text-slate-300">
+                              {performer.department || 'No Department'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-emerald-300">
+                              {performer.averageScore} avg
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              {performer.totalHours}h • {performer.formsSubmitted} forms
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-slate-400">
+                      No performance data available this week
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity Grid */}
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              {/* Recent Employees */}
+              <div className="glass-card overflow-hidden">
+                <div className="border-b border-white/10 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                        Team Activity
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold">Recent Logins</h3>
+                    </div>
+                    <button
+                      onClick={() => navigate("/admin/employees")}
+                      className="btn-ghost rounded-lg px-3 py-1 text-sm"
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
+                <div className="divide-y divide-white/10 max-h-80 overflow-y-auto">
+                  {recentData?.employees?.length > 0 ? (
+                    recentData.employees.map((employee) => (
+                      <div key={employee._id} className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20">
+                            <UserCheck className="h-5 w-5 text-indigo-300" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">
+                              {employee.name || employee.email}
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-slate-300">
+                              <span
+                                className={`h-2 w-2 rounded-full ${
+                                  employee.status === "approved"
+                                    ? "bg-emerald-400"
+                                    : employee.status === "pending"
+                                    ? "bg-amber-400"
+                                    : "bg-red-400"
+                                }`}
+                              />
+                              <span className="capitalize">{employee.status}</span>
+                              {employee.profileCompleted && (
+                                <CheckCircle className="h-3 w-3 text-emerald-400" />
+                              )}
+                            </div>
+                            {employee.department && (
+                              <div className="text-xs text-slate-400">
+                                {employee.department} • {employee.designation || 'No designation'}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {employee.lastLogin
+                              ? new Date(employee.lastLogin).toLocaleDateString()
+                              : "Never"}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-slate-400">
+                      No employees found
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent Projects */}
+              <div className="glass-card overflow-hidden">
+                <div className="border-b border-white/10 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                        Project Updates
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold">Latest Projects</h3>
+                    </div>
+                    <button
+                      onClick={() => navigate("/admin/projects")}
+                      className="btn-ghost rounded-lg px-3 py-1 text-sm"
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
+                <div className="divide-y divide-white/10 max-h-80 overflow-y-auto">
+                  {recentData?.projects?.length > 0 ? (
+                    recentData.projects.map((project) => (
+                      <div key={project._id} className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/20">
+                            <FolderOpen className="h-5 w-5 text-indigo-300" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">
+                              {project.projectName}
+                            </p>
+                            <p className="text-sm text-slate-300 truncate">
+                              {project.clientName}
+                            </p>
+                            <div className="mt-1 flex items-center gap-2 text-xs">
+                              <span
+                                className={`rounded-full px-2 py-0.5 ${
+                                  project.status === "Active"
+                                    ? "bg-blue-500/20 text-blue-300"
+                                    : project.status === "Completed"
+                                    ? "bg-emerald-500/20 text-emerald-300"
+                                    : "bg-slate-500/20 text-slate-300"
+                                }`}
+                              >
+                                {project.status}
+                              </span>
+                              <span className="text-slate-400">
+                                {project.assignees?.length || 0} members
+                              </span>
+                            </div>
+                            {project.completionPercentage !== undefined && (
+                              <div className="mt-2">
+                                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                  <span>Progress</span>
+                                  <span>{project.completionPercentage}%</span>
+                                </div>
+                                <div className="w-full bg-slate-700 rounded-full h-1.5">
+                                  <div 
+                                    className="bg-gradient-to-r from-blue-500 to-emerald-500 h-1.5 rounded-full"
+                                    style={{ width: `${project.completionPercentage}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                            {project.leadAssignee && (
+                              <div className="mt-1 text-xs text-slate-400">
+                                Lead: {project.leadAssignee.name || project.leadAssignee.email}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {new Date(project.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-slate-400">
+                      No projects found
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Daily Checklist Tab - Excel-like Layout */}
+        {selectedTab === "daily-checklist" && (
+          <div className="space-y-6">
+            {/* Checklist Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Employee Daily Checklist</h2>
+                <p className="text-slate-300">Monitor daily form submissions and task completion</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1">
+                  <button
+                    className={`px-3 py-1 text-sm transition-colors rounded ${
+                      filterStatus === "all"
+                        ? "bg-indigo-500/20 text-white"
+                        : "text-slate-300 hover:text-white"
+                    }`}
+                    onClick={() => setFilterStatus("all")}
+                  >
+                    All
+                  </button>
+                  <button
+                    className={`px-3 py-1 text-sm transition-colors rounded ${
+                      filterStatus === "submitted"
+                        ? "bg-indigo-500/20 text-white"
+                        : "text-slate-300 hover:text-white"
+                    }`}
+                    onClick={() => setFilterStatus("submitted")}
+                  >
+                    Submitted
+                  </button>
+                  <button
+                    className={`px-3 py-1 text-sm transition-colors rounded ${
+                      filterStatus === "pending"
+                        ? "bg-indigo-500/20 text-white"
+                        : "text-slate-300 hover:text-white"
+                    }`}
+                    onClick={() => setFilterStatus("pending")}
+                  >
+                    Pending
+                  </button>
+                </div>
+                <button className="btn-ghost flex items-center gap-2 px-3 py-2 text-sm">
+                  <Download className="h-4 w-4" />
+                  Export
+                </button>
+              </div>
+            </div>
+
+            {/* Excel-like Table */}
+            <div className="glass-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  {/* Table Header */}
+                  <thead className="border-b border-white/10 bg-white/5">
+                    <tr>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-8">
+                        #
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 min-w-48">
+                        Employee
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-32">
+                        Department
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-24">
+                        Status
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-20">
+                        Hours
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-20">
+                        Score
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-24">
+                        Tasks
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-32">
+                        Screen Share
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-32">
+                        Admin Verified
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-32">
+                        Submitted At
+                      </th>
+                      <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-slate-300 w-24">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  {/* Table Body */}
+                  <tbody className="divide-y divide-white/5">
+                    {recentData?.dailyForms?.length > 0 ? (
+                      recentData.dailyForms
+                        .filter(form => {
+                          if (filterStatus === "all") return true;
+                          if (filterStatus === "submitted") return form.submitted;
+                          if (filterStatus === "pending") return !form.submitted;
+                          return true;
+                        })
+                        .map((form, index) => (
+                        <tr key={form._id} className="hover:bg-white/5 transition-colors">
+                          <td className="p-4 text-slate-400 text-sm">
+                            {index + 1}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20">
+                                <UserCheck className="h-4 w-4 text-indigo-300" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-white">
+                                  {form.employee?.name || form.employee?.email || "Unknown"}
+                                </div>
+                                <div className="text-xs text-slate-400">
+                                  {form.employee?.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm text-slate-300">
+                            {form.employee?.department || "N/A"}
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                form.submitted
+                                  ? "bg-emerald-500/20 text-emerald-300"
+                                  : "bg-amber-500/20 text-amber-300"
+                              }`}
+                            >
+                              {form.submitted ? "Submitted" : "Pending"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-sm font-mono">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-slate-400" />
+                              <span className="text-white">{form.hoursAttended || 0}h</span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm font-mono">
+                            <div
+                              className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                                form.score >= 8
+                                  ? "bg-emerald-500/20 text-emerald-300"
+                                  : form.score >= 6
+                                  ? "bg-amber-500/20 text-amber-300"
+                                  : "bg-red-500/20 text-red-300"
+                              }`}
+                            >
+                              {form.score || 0}
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-slate-400" />
+                              <span className="text-white">
+                                {(form.tasks?.filter(t => t.isCompleted)?.length || 0) + 
+                                 (form.customTasks?.filter(t => t.isCompleted)?.length || 0)}
+                              </span>
+                              <span className="text-slate-400">/</span>
+                              <span className="text-slate-400">
+                                {(form.tasks?.length || 0) + (form.customTasks?.length || 0)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center justify-center">
+                              {form.screensharing ? (
+                                <Monitor className="h-4 w-4 text-emerald-300" />
+                              ) : (
+                                <div className="h-4 w-4 rounded border border-slate-600"></div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center justify-center">
+                              {form.adminConfirmed ? (
+                                <CheckCircle className="h-4 w-4 text-emerald-300" />
+                              ) : (
+                                <div className="h-4 w-4 rounded border border-slate-600"></div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm text-slate-300">
+                            {form.submittedAt 
+                              ? new Date(form.submittedAt).toLocaleString()
+                              : "Not submitted"
+                            }
+                          </td>
+                          <td className="p-4">
+                            <button 
+                              className="btn-ghost p-1 rounded"
+                              onClick={() => navigate(`/admin/employee/${form.employee?._id}`)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="11" className="p-8 text-center text-slate-400">
+                          No daily forms found for the selected filter
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="glass-card p-6 transition-shadow hover:border-white/20">
             <div className="mb-4 flex items-center justify-between">
