@@ -38,7 +38,7 @@ router.post("/google", async (req, res) => {
 
     const user = await verifyGoogleToken(googleToken);
 
-    const isAdmin = ADMIN_EMAILS.includes(user.email)
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
 
     if (role === "admin" && !isAdmin) {
       return res.status(403).json({ error: "Unauthorized for admin access" });
