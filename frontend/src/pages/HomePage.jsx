@@ -59,9 +59,6 @@ export default function HomePage() {
               </div>
               <span className="text-xl font-bold text-white">EMS</span>
             </div>
-            <button className="btn-ghost px-4 py-2 text-sm">
-              Need Help?
-            </button>
           </div>
         </nav>
 
