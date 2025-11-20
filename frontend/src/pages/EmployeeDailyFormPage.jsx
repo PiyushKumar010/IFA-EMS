@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Clock, Save, Calendar, FolderOpen, LogIn, LogOut, Timer, Tag } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, Save, Calendar, FolderOpen, LogIn, LogOut, Timer, Tag, History } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function EmployeeDailyFormPage() {
@@ -16,6 +16,9 @@ export default function EmployeeDailyFormPage() {
   const [canEdit, setCanEdit] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [midnightRestricted, setMidnightRestricted] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [formHistory, setFormHistory] = useState([]);
+  const [selectedHistoryForm, setSelectedHistoryForm] = useState(null);
 
   // Update current time every minute and check editability
   useEffect(() => {
@@ -78,6 +81,21 @@ export default function EmployeeDailyFormPage() {
       });
 
     // Fetch today's form
+    fetchTodaysForm();
+
+    // Fetch assigned projects
+    fetch("/api/projects", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        setAssignedProjects(data.projects || []);
+      })
+      .catch((err) => console.error("Error fetching projects:", err));
+    
+    // Fetch form history
+    fetchFormHistory();
+  }, []);
+
+  const fetchTodaysForm = () => {
     fetch("/api/daily-forms/today", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
@@ -114,15 +132,28 @@ export default function EmployeeDailyFormPage() {
       })
       .catch((err) => console.error("Error fetching form:", err))
       .finally(() => setLoading(false));
+  };
 
-    // Fetch assigned projects
-    fetch("/api/projects", { credentials: "include" })
+  const fetchFormHistory = () => {
+    fetch("/api/daily-forms/history?limit=10", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        setAssignedProjects(data.projects || []);
+        setFormHistory(data.forms || []);
       })
-      .catch((err) => console.error("Error fetching projects:", err));
-  }, []);
+      .catch((err) => console.error("Error fetching form history:", err));
+  };
+
+  const fetchHistoryForm = async (formId) => {
+    try {
+      const res = await fetch(`/api/daily-forms/view/${formId}`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedHistoryForm(data.form);
+      }
+    } catch (err) {
+      console.error("Error fetching history form:", err);
+    }
+  };
 
   const handleTaskChange = (taskIndex, checked) => {
     if (alreadySubmitted || !canEdit || midnightRestricted) return; // Prevent changes if restricted
@@ -374,14 +405,23 @@ export default function EmployeeDailyFormPage() {
                 })}
               </p>
             </div>
-            {alreadySubmitted && (
-              <div className="flex items-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/20 px-4 py-2">
-                <CheckCircle className="h-5 w-5 text-emerald-300" />
-                <span className="text-sm font-medium text-emerald-300">
-                  Already Submitted
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="btn-ghost flex items-center gap-2"
+              >
+                <History className="h-4 w-4" />
+                {showHistory ? "Hide History" : "View History"}
+              </button>
+              {alreadySubmitted && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/20 px-4 py-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-300" />
+                  <span className="text-sm font-medium text-emerald-300">
+                    Already Submitted
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -425,6 +465,168 @@ export default function EmployeeDailyFormPage() {
                 </span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Form History Section */}
+        {showHistory && (
+          <div className="mb-8 glass-card p-6">
+            <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
+              <History className="h-5 w-5 text-purple-400" />
+              Form History
+            </h2>
+            
+            {formHistory.length > 0 ? (
+              <div className="space-y-3">
+                {formHistory.map((historyForm) => (
+                  <button
+                    key={historyForm._id}
+                    onClick={() => fetchHistoryForm(historyForm._id)}
+                    className="w-full rounded-lg border border-white/10 bg-white/5 p-4 text-left transition-colors hover:bg-white/10"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">
+                          {new Date(historyForm.date).toLocaleDateString("en-US", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </div>
+                        <div className="mt-1 text-sm text-slate-400">
+                          Score: {historyForm.score || 0} • Bonus: ₹{historyForm.dailyBonus || 0}
+                        </div>
+                      </div>
+                      <div className="text-sm text-emerald-400">
+                        {historyForm.adminConfirmed ? "Confirmed" : "Pending"}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-400">No previous forms found.</p>
+            )}
+
+            {/* History Form Modal */}
+            {selectedHistoryForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
+                <div className="glass-panel w-full max-w-2xl rounded-[32px] px-8 py-8 max-h-[90vh] overflow-y-auto">
+                  <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-xl font-bold">
+                      Form from {new Date(selectedHistoryForm.date).toLocaleDateString()}
+                    </h2>
+                    <button 
+                      onClick={() => setSelectedHistoryForm(null)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Show tasks by category */}
+                    {(() => {
+                      const tasksByCategory = {};
+                      selectedHistoryForm.tasks?.forEach((task) => {
+                        const category = task.category || "Other";
+                        if (!tasksByCategory[category]) {
+                          tasksByCategory[category] = [];
+                        }
+                        tasksByCategory[category].push(task);
+                      });
+                      
+                      return Object.entries(tasksByCategory).map(([category, tasks]) => (
+                        <div key={category} className="bg-white/5 p-4 rounded-lg">
+                          <h3 className="font-medium mb-3">{category}</h3>
+                          <div className="space-y-2">
+                            {tasks.map((task, idx) => (
+                              <div key={idx} className="flex items-center gap-3 text-sm">
+                                <div className={`w-4 h-4 rounded border ${
+                                  task.employeeChecked 
+                                    ? "bg-emerald-500 border-emerald-500" 
+                                    : "border-white/30"
+                                }`}>
+                                  {task.employeeChecked && (
+                                    <CheckCircle className="w-3 h-3 text-white m-0.5" />
+                                  )}
+                                </div>
+                                <span className={task.employeeChecked ? "text-emerald-300" : "text-slate-400"}>
+                                  {task.taskText}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                    
+                    {/* Show custom tasks */}
+                    {selectedHistoryForm.customTasks?.length > 0 && (
+                      <div className="bg-white/5 p-4 rounded-lg">
+                        <h3 className="font-medium mb-3">Custom Tasks</h3>
+                        <div className="space-y-2">
+                          {selectedHistoryForm.customTasks.map((task, idx) => (
+                            <div key={idx} className="flex items-center gap-3 text-sm">
+                              <div className={`w-4 h-4 rounded border ${
+                                task.employeeChecked 
+                                  ? "bg-emerald-500 border-emerald-500" 
+                                  : "border-white/30"
+                              }`}>
+                                {task.employeeChecked && (
+                                  <CheckCircle className="w-3 h-3 text-white m-0.5" />
+                                )}
+                              </div>
+                              <span className={task.employeeChecked ? "text-emerald-300" : "text-slate-400"}>
+                                {task.taskText}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show summary and time tracking */}
+                    <div className="bg-blue-500/20 border border-blue-500/30 p-4 rounded-lg">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>Hours Attended: <span className="font-medium">{selectedHistoryForm.hoursAttended || 0}</span></div>
+                        <div>Screensharing: <span className="font-medium">{selectedHistoryForm.screensharing ? "Yes" : "No"}</span></div>
+                        <div>Score: <span className="font-medium">{selectedHistoryForm.score || 0}</span></div>
+                        <div>Bonus: <span className="font-medium">₹{selectedHistoryForm.dailyBonus || 0}</span></div>
+                      </div>
+                      
+                      {(selectedHistoryForm.entryTime || selectedHistoryForm.exitTime) && (
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <h4 className="font-medium mb-2">Time Tracking</h4>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            {selectedHistoryForm.entryTime && (
+                              <div className="flex items-center gap-2">
+                                <LogIn className="w-4 h-4 text-green-400" />
+                                <span>Entry: {new Date(selectedHistoryForm.entryTime).toLocaleTimeString()}</span>
+                              </div>
+                            )}
+                            {selectedHistoryForm.exitTime && (
+                              <div className="flex items-center gap-2">
+                                <LogOut className="w-4 h-4 text-red-400" />
+                                <span>Exit: {new Date(selectedHistoryForm.exitTime).toLocaleTimeString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setSelectedHistoryForm(null)}
+                    className="btn-primary w-full mt-6"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

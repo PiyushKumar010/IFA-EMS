@@ -203,7 +203,7 @@ router.get("/today", authenticateToken, async (req, res) => {
       date: { $gte: today, $lt: tomorrow }
     });
 
-    // If no form exists, create one with standard tasks
+    // Always create a new form for today if it doesn't exist
     if (!form) {
       const tasks = STANDARD_TASKS.map(task => ({
         taskId: task.taskId,
@@ -219,27 +219,108 @@ router.get("/today", authenticateToken, async (req, res) => {
         date: today,
         tasks: tasks,
         customTasks: [],
+        customTags: [],
         hoursAttended: 0,
         screensharing: false,
         submitted: false
       });
       await form.save();
+      console.log(`Created new daily form for employee ${req.user.userId} for date ${today}`);
     }
 
     const formObj = form.toObject();
     calculateTaskCompletion(formObj);
     
-    // Add editability status - always calculate time based on current day
-    const isEditable = isFormEditableByEmployee(form.date);
-    const timeInfo = getTimeUntilMidnight(); // Remove form.date parameter
+    // Today's form is always editable (unless submitted)
+    const isEditable = !form.submitted;
+    const timeInfo = getTimeUntilMidnight();
     
     res.json({ 
       form: formObj, 
       canEdit: isEditable,
-      timeRemaining: timeInfo
+      timeRemaining: timeInfo,
+      isToday: true
     });
   } catch (err) {
     console.error("Error fetching today's form:", err);
+    res.status(500).json({ error: "Failed to fetch form" });
+  }
+});
+
+// Employee: Get form history (previous submitted forms)
+router.get("/history", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { limit = 30, offset = 0 } = req.query;
+    
+    // Get all previous forms (excluding today)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const forms = await DailyForm.find({
+      employee: req.user.userId,
+      date: { $lt: today }, // Only previous days
+      submitted: true // Only submitted forms
+    })
+    .sort({ date: -1 }) // Most recent first
+    .limit(parseInt(limit))
+    .skip(parseInt(offset))
+    .lean();
+
+    const formsWithCompletion = forms.map(form => {
+      return calculateTaskCompletion(form);
+    });
+
+    res.json({ 
+      forms: formsWithCompletion,
+      total: await DailyForm.countDocuments({
+        employee: req.user.userId,
+        date: { $lt: today },
+        submitted: true
+      })
+    });
+  } catch (err) {
+    console.error("Error fetching form history:", err);
+    res.status(500).json({ error: "Failed to fetch form history" });
+  }
+});
+
+// Employee: Get specific form by ID (read-only for previous days)
+router.get("/view/:formId", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { formId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(formId)) {
+      return res.status(400).json({ error: "Invalid form ID" });
+    }
+
+    const form = await DailyForm.findOne({
+      _id: formId,
+      employee: req.user.userId // Ensure employee can only view their own forms
+    }).lean();
+
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
+    const formWithCompletion = calculateTaskCompletion(form);
+    const isEditable = isFormEditableByEmployee(form.date);
+    const timeInfo = getTimeUntilMidnight();
+    
+    res.json({ 
+      form: formWithCompletion,
+      canEdit: isEditable,
+      timeRemaining: timeInfo,
+      isHistorical: !isEditable
+    });
+  } catch (err) {
+    console.error("Error fetching form:", err);
     res.status(500).json({ error: "Failed to fetch form" });
   }
 });
