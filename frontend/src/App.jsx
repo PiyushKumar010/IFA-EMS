@@ -14,6 +14,7 @@ import ApprovalPage from "./pages/Approval";
 import AdminRequestsPage from "./pages/AdminRequestsPage";
 import EmployeeMessagesPage from "./pages/EmployeeMessagesPage";
 import AdminMessagesPage from "./pages/AdminMessagesPage";
+import AdminDailyFormsPage from "./pages/AdminDailyFormsPage";
 import AdminEmployeesPage from "./pages/AdminEmployeesPage";
 import AdminEmployeeDetailsPage from "./pages/AdminEmployeeDetailsPage";
 import ClientMessagesPage from "./pages/ClientMessagesPage";
@@ -64,6 +65,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminMessagesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/daily-forms"
+          element={
+            <AdminRoute>
+              <AdminDailyFormsPage />
             </AdminRoute>
           }
         />

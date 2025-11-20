@@ -658,5 +658,269 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
   }
 });
 
+// Admin auto-select all employee checked items
+router.post("/admin/auto-select/:formId", authenticateToken, async (req, res) => {
+  try {
+    const { formId } = req.params;
+    const adminId = req.user.userId;
+
+    // Verify admin role
+    const admin = await User.findById(adminId);
+    if (!admin || !admin.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const form = await DailyForm.findById(formId).populate("employee", "name email");
+    if (!form) {
+      return res.status(404).json({ error: "Daily form not found" });
+    }
+
+    // Auto-select all items that employee has checked
+    if (form.tasks) {
+      form.tasks.forEach(task => {
+        if (task.employeeChecked) {
+          task.adminChecked = true;
+        }
+      });
+    }
+
+    if (form.customTasks) {
+      form.customTasks.forEach(task => {
+        if (task.employeeChecked) {
+          task.adminChecked = true;
+        }
+      });
+    }
+
+    if (form.customTags) {
+      form.customTags.forEach(tag => {
+        if (tag.employeeChecked) {
+          tag.adminChecked = true;
+        }
+      });
+    }
+
+    // Mark as auto-selected
+    form.adminAutoSelected = true;
+    form.adminAutoSelectedAt = new Date();
+    form.lastEditedBy = adminId;
+    form.lastEditedAt = new Date();
+
+    await form.save();
+
+    res.json({ 
+      success: true, 
+      message: "Auto-selected all employee checked items",
+      form
+    });
+  } catch (error) {
+    console.error("Auto-select error:", error);
+    res.status(500).json({ error: "Failed to auto-select items" });
+  }
+});
+
+// Update time tracking (entry/exit)
+router.put("/time-tracking/:formId", authenticateToken, async (req, res) => {
+  try {
+    const { formId } = req.params;
+    const { entryTime, exitTime } = req.body;
+    const userId = req.user.userId;
+
+    const form = await DailyForm.findById(formId);
+    if (!form) {
+      return res.status(404).json({ error: "Daily form not found" });
+    }
+
+    // Check if user is the form owner or admin
+    const user = await User.findById(userId);
+    const isAdmin = user.roles.includes("admin");
+    const isOwner = form.employee.toString() === userId;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Unauthorized to update this form" });
+    }
+
+    // Update time tracking
+    if (entryTime) form.entryTime = new Date(entryTime);
+    if (exitTime) form.exitTime = new Date(exitTime);
+
+    form.lastEditedBy = userId;
+    form.lastEditedAt = new Date();
+
+    await form.save();
+
+    res.json({ 
+      success: true, 
+      message: "Time tracking updated",
+      form
+    });
+  } catch (error) {
+    console.error("Time tracking error:", error);
+    res.status(500).json({ error: "Failed to update time tracking" });
+  }
+});
+
+// Add custom tag
+router.post("/custom-tag/:formId", authenticateToken, async (req, res) => {
+  try {
+    const { formId } = req.params;
+    const { name, color } = req.body;
+    const userId = req.user.userId;
+
+    if (!name) {
+      return res.status(400).json({ error: "Tag name is required" });
+    }
+
+    const form = await DailyForm.findById(formId);
+    if (!form) {
+      return res.status(404).json({ error: "Daily form not found" });
+    }
+
+    // Check if user is admin or owner
+    const user = await User.findById(userId);
+    const isAdmin = user.roles.includes("admin");
+    const isOwner = form.employee.toString() === userId;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Unauthorized to add tags" });
+    }
+
+    // Add new custom tag
+    const newTag = {
+      name,
+      color: color || "#6366f1",
+      employeeChecked: false,
+      adminChecked: false,
+      isCompleted: false,
+      createdBy: userId,
+      createdAt: new Date()
+    };
+
+    form.customTags.push(newTag);
+    form.lastEditedBy = userId;
+    form.lastEditedAt = new Date();
+
+    await form.save();
+
+    res.json({ 
+      success: true, 
+      message: "Custom tag added",
+      tag: newTag,
+      form
+    });
+  } catch (error) {
+    console.error("Add custom tag error:", error);
+    res.status(500).json({ error: "Failed to add custom tag" });
+  }
+});
+
+// Delete custom tag
+router.delete("/custom-tag/:formId/:tagId", authenticateToken, async (req, res) => {
+  try {
+    const { formId, tagId } = req.params;
+    const userId = req.user.userId;
+
+    const form = await DailyForm.findById(formId);
+    if (!form) {
+      return res.status(404).json({ error: "Daily form not found" });
+    }
+
+    // Check if user is admin or owner
+    const user = await User.findById(userId);
+    const isAdmin = user.roles.includes("admin");
+    const isOwner = form.employee.toString() === userId;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Unauthorized to delete tags" });
+    }
+
+    // Remove the tag
+    form.customTags = form.customTags.filter(tag => tag._id.toString() !== tagId);
+    form.lastEditedBy = userId;
+    form.lastEditedAt = new Date();
+
+    await form.save();
+
+    res.json({ 
+      success: true, 
+      message: "Custom tag deleted",
+      form
+    });
+  } catch (error) {
+    console.error("Delete custom tag error:", error);
+    res.status(500).json({ error: "Failed to delete custom tag" });
+  }
+});
+
+// Admin create new daily form for employee
+router.post("/admin/create-for-employee", authenticateToken, async (req, res) => {
+  try {
+    const { employeeId, date, entryTime, exitTime, adminNotes } = req.body;
+    const adminId = req.user.userId;
+
+    // Verify admin role
+    const admin = await User.findById(adminId);
+    if (!admin || !admin.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // Verify employee exists
+    const employee = await User.findById(employeeId);
+    if (!employee || !employee.roles.includes("employee")) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const formDate = date ? new Date(date) : new Date();
+    
+    // Check if form already exists for this date
+    const existingForm = await DailyForm.findOne({
+      employee: employeeId,
+      date: {
+        $gte: new Date(formDate.setHours(0, 0, 0, 0)),
+        $lt: new Date(formDate.setHours(23, 59, 59, 999))
+      }
+    });
+
+    if (existingForm) {
+      return res.status(400).json({ error: "Daily form already exists for this date" });
+    }
+
+    // Create new form with standard tasks
+    const newForm = new DailyForm({
+      employee: employeeId,
+      date: formDate,
+      entryTime: entryTime ? new Date(entryTime) : null,
+      exitTime: exitTime ? new Date(exitTime) : null,
+      tasks: STANDARD_TASKS.map(task => ({
+        ...task,
+        employeeChecked: false,
+        adminChecked: false,
+        isCompleted: false
+      })),
+      customTasks: [],
+      customTags: [],
+      adminNotes: adminNotes || "",
+      submitted: false,
+      lastEditedBy: adminId,
+      lastEditedAt: new Date()
+    });
+
+    await newForm.save();
+
+    const populatedForm = await DailyForm.findById(newForm._id)
+      .populate("employee", "name email")
+      .populate("lastEditedBy", "name email");
+
+    res.status(201).json({
+      success: true,
+      message: "Daily form created for employee",
+      form: populatedForm
+    });
+  } catch (error) {
+    console.error("Create form error:", error);
+    res.status(500).json({ error: "Failed to create daily form" });
+  }
+});
+
 export default router;
 
