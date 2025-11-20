@@ -15,6 +15,7 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
     const totalEmployees = await User.countDocuments({ roles: "employee" });
     const approvedEmployees = await User.countDocuments({ roles: "employee", status: "approved" });
     const pendingEmployees = await User.countDocuments({ roles: "employee", status: "pending" });
+    const rejectedEmployees = await User.countDocuments({ roles: "employee", status: "rejected" });
     const totalProjects = await Project.countDocuments();
     const activeProjects = await Project.countDocuments({ status: "Active" });
     const completedProjects = await Project.countDocuments({ status: "Completed" });
@@ -23,44 +24,151 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
     // Get recent data
     const recentEmployees = await User.find({ roles: "employee" })
       .sort({ lastLogin: -1 })
-      .limit(5)
-      .select('name email status lastLogin');
+      .limit(8)
+      .select('name email status lastLogin profileCompleted department designation');
 
     const recentProjects = await Project.find()
       .sort({ createdAt: -1 })
-      .limit(5)
+      .limit(8)
       .populate('assignees', 'name email')
-      .select('projectName clientName status createdAt assignees');
+      .populate('leadAssignee', 'name email')
+      .select('projectName clientName status createdAt assignees leadAssignee completionPercentage estimatedHoursRequired estimatedHoursTaken priority');
 
-    // Get today's submissions
+    // Get today's and recent daily form data
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
 
     const todaySubmissions = await DailyForm.countDocuments({
       date: { $gte: today, $lt: tomorrow },
       submitted: true
     });
 
+    const weeklySubmissions = await DailyForm.countDocuments({
+      date: { $gte: weekAgo, $lt: tomorrow },
+      submitted: true
+    });
+
+    // Get recent daily forms with employee details
+    const recentDailyForms = await DailyForm.find({
+      date: { $gte: weekAgo, $lt: tomorrow },
+      submitted: true
+    })
+      .sort({ submittedAt: -1 })
+      .limit(10)
+      .populate('employee', 'name email department designation')
+      .select('employee date submittedAt hoursAttended score tasks customTasks adminConfirmed screensharing');
+
+    // Get productivity stats
+    const productivityStats = await DailyForm.aggregate([
+      {
+        $match: {
+          date: { $gte: weekAgo, $lt: tomorrow },
+          submitted: true
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalHoursAttended: { $sum: "$hoursAttended" },
+          averageScore: { $avg: "$score" },
+          totalFormsSubmitted: { $sum: 1 },
+          confirmedForms: {
+            $sum: { $cond: ["$adminConfirmed", 1, 0] }
+          },
+          screensharingForms: {
+            $sum: { $cond: ["$screensharing", 1, 0] }
+          }
+        }
+      }
+    ]);
+
     // Get recent messages
     const recentMessages = await Message.find()
       .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('sender', 'name email')
-      .select('subject sender createdAt');
+      .limit(8)
+      .populate('sender', 'name email roles')
+      .populate('recipient', 'name email')
+      .select('subject sender recipient createdAt isRead');
+
+    // Get top performers (based on recent daily form scores)
+    const topPerformers = await DailyForm.aggregate([
+      {
+        $match: {
+          date: { $gte: weekAgo, $lt: tomorrow },
+          submitted: true,
+          score: { $gt: 0 }
+        }
+      },
+      {
+        $group: {
+          _id: "$employee",
+          averageScore: { $avg: "$score" },
+          totalHours: { $sum: "$hoursAttended" },
+          formsSubmitted: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "employeeInfo"
+        }
+      },
+      {
+        $unwind: "$employeeInfo"
+      },
+      {
+        $match: {
+          "employeeInfo.roles": "employee",
+          "employeeInfo.status": "approved"
+        }
+      },
+      {
+        $sort: { averageScore: -1 }
+      },
+      {
+        $limit: 5
+      },
+      {
+        $project: {
+          name: "$employeeInfo.name",
+          email: "$employeeInfo.email",
+          department: "$employeeInfo.department",
+          averageScore: { $round: ["$averageScore", 1] },
+          totalHours: 1,
+          formsSubmitted: 1
+        }
+      }
+    ]);
 
     // Calculate total hours logged across all projects
     const totalHoursLogged = await Project.aggregate([
       { $group: { _id: null, total: { $sum: "$estimatedHoursTaken" } } }
     ]);
 
+    // Get meeting statistics if available
+    let meetingStats = { total: 0, thisWeek: 0 };
+    try {
+      const totalMeetings = await Meeting.countDocuments();
+      const weeklyMeetings = await Meeting.countDocuments({
+        scheduledAt: { $gte: weekAgo, $lt: tomorrow }
+      });
+      meetingStats = { total: totalMeetings, thisWeek: weeklyMeetings };
+    } catch (err) {
+      // Meeting model might not exist
+    }
+
     const stats = {
       employees: {
         total: totalEmployees,
         approved: approvedEmployees,
         pending: pendingEmployees,
-        rejected: totalEmployees - approvedEmployees - pendingEmployees
+        rejected: rejectedEmployees
       },
       projects: {
         total: totalProjects,
@@ -69,15 +177,20 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
         new: newProjects
       },
       dailyForms: {
-        todaySubmissions
+        todaySubmissions,
+        weeklySubmissions,
+        productivity: productivityStats[0] || {}
       },
+      meetings: meetingStats,
       totalHoursLogged: totalHoursLogged[0]?.total || 0
     };
 
     const recentData = {
       employees: recentEmployees,
       projects: recentProjects,
-      messages: recentMessages
+      messages: recentMessages,
+      dailyForms: recentDailyForms,
+      topPerformers
     };
 
     res.json({

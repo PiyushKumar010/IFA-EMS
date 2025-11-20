@@ -19,6 +19,11 @@ import {
   Trophy,
   Video,
   Inbox,
+  Star,
+  Monitor,
+  Target,
+  Zap,
+  BookOpen,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -137,7 +142,7 @@ export default function AdminOverviewPage() {
           </div>
         </header>
 
-        {/* Key Metrics Grid */}
+        {/* Enhanced Key Metrics Grid */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="glass-card p-6 transition-shadow hover:border-white/20">
             <div className="mb-4 flex items-center justify-between">
@@ -157,6 +162,10 @@ export default function AdminOverviewPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-slate-300">Pending</span>
                 <span className="text-amber-300">{stats?.employees?.pending || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-300">Rejected</span>
+                <span className="text-red-300">{stats?.employees?.rejected || 0}</span>
               </div>
             </div>
           </div>
@@ -180,6 +189,10 @@ export default function AdminOverviewPage() {
                 <span className="text-slate-300">Completed</span>
                 <span className="text-emerald-300">{stats?.projects?.completed || 0}</span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-300">New</span>
+                <span className="text-amber-300">{stats?.projects?.new || 0}</span>
+              </div>
             </div>
           </div>
 
@@ -189,11 +202,23 @@ export default function AdminOverviewPage() {
                 <FileText className="h-6 w-6 text-emerald-300" />
               </div>
               <div className="text-right">
-                <span className="text-xs text-slate-400">Today's Forms</span>
+                <span className="text-xs text-slate-400">Daily Forms</span>
                 <div className="text-2xl font-bold">{stats?.dailyForms?.todaySubmissions || 0}</div>
               </div>
             </div>
-            <div className="text-sm text-slate-300">Daily form submissions</div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-300">This Week</span>
+                <span className="text-blue-300">{stats?.dailyForms?.weeklySubmissions || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-300">Avg Score</span>
+                <span className="text-emerald-300">
+                  {stats?.dailyForms?.productivity?.averageScore ? 
+                    Math.round(stats.dailyForms.productivity.averageScore * 10) / 10 : 0}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="glass-card p-6 transition-shadow hover:border-white/20">
@@ -206,12 +231,120 @@ export default function AdminOverviewPage() {
                 <div className="text-2xl font-bold">{stats?.totalHoursLogged || 0}h</div>
               </div>
             </div>
-            <div className="text-sm text-slate-300">Across all projects</div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-300">This Week</span>
+                <span className="text-purple-300">
+                  {stats?.dailyForms?.productivity?.totalHoursAttended || 0}h
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-300">Meetings</span>
+                <span className="text-rose-300">{stats?.meetings?.thisWeek || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Productivity Overview */}
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="glass-card p-6">
+            <div className="mb-4">
+              <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                Weekly Productivity
+              </p>
+              <h3 className="mt-2 text-xl font-semibold">Team Performance</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-emerald-300" />
+                  <span className="text-sm text-slate-300">Confirmed Forms</span>
+                </div>
+                <span className="text-emerald-300">
+                  {stats?.dailyForms?.productivity?.confirmedForms || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Monitor className="h-4 w-4 text-blue-300" />
+                  <span className="text-sm text-slate-300">Screen Sharing</span>
+                </div>
+                <span className="text-blue-300">
+                  {stats?.dailyForms?.productivity?.screensharingForms || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-purple-300" />
+                  <span className="text-sm text-slate-300">Total Submissions</span>
+                </div>
+                <span className="text-purple-300">
+                  {stats?.dailyForms?.productivity?.totalFormsSubmitted || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Performers */}
+          <div className="glass-card overflow-hidden lg:col-span-2">
+            <div className="border-b border-white/10 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                    Performance Leaders
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold">Top Performers This Week</h3>
+                </div>
+                <button
+                  onClick={() => navigate("/admin/leaderboard")}
+                  className="btn-ghost rounded-lg px-3 py-1 text-sm"
+                >
+                  View Leaderboard
+                </button>
+              </div>
+            </div>
+            <div className="divide-y divide-white/10">
+              {recentData?.topPerformers?.length > 0 ? (
+                recentData.topPerformers.map((performer, idx) => (
+                  <div key={performer._id} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-sm font-bold text-white">
+                        {idx + 1}
+                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20">
+                        <Star className="h-5 w-5 text-indigo-300" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white truncate">
+                          {performer.name || performer.email}
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          {performer.department || 'No Department'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-emerald-300">
+                          {performer.averageScore} avg
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {performer.totalHours}h • {performer.formsSubmitted} forms
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-slate-400">
+                  No performance data available this week
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
           {/* Recent Employees */}
           <div className="glass-card overflow-hidden">
             <div className="border-b border-white/10 p-6">
@@ -220,7 +353,7 @@ export default function AdminOverviewPage() {
                   <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
                     Team Activity
                   </p>
-                  <h3 className="mt-2 text-xl font-semibold">Recent Employee Logins</h3>
+                  <h3 className="mt-2 text-xl font-semibold">Recent Logins</h3>
                 </div>
                 <button
                   onClick={() => navigate("/admin/employees")}
@@ -230,7 +363,7 @@ export default function AdminOverviewPage() {
                 </button>
               </div>
             </div>
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-white/10 max-h-80 overflow-y-auto">
               {recentData?.employees?.length > 0 ? (
                 recentData.employees.map((employee) => (
                   <div key={employee._id} className="p-4">
@@ -253,7 +386,15 @@ export default function AdminOverviewPage() {
                             }`}
                           />
                           <span className="capitalize">{employee.status}</span>
+                          {employee.profileCompleted && (
+                            <CheckCircle className="h-3 w-3 text-emerald-400" />
+                          )}
                         </div>
+                        {employee.department && (
+                          <div className="text-xs text-slate-400">
+                            {employee.department} • {employee.designation || 'No designation'}
+                          </div>
+                        )}
                       </div>
                       <div className="text-xs text-slate-400">
                         {employee.lastLogin
@@ -289,7 +430,7 @@ export default function AdminOverviewPage() {
                 </button>
               </div>
             </div>
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-white/10 max-h-80 overflow-y-auto">
               {recentData?.projects?.length > 0 ? (
                 recentData.projects.map((project) => (
                   <div key={project._id} className="p-4">
@@ -320,6 +461,25 @@ export default function AdminOverviewPage() {
                             {project.assignees?.length || 0} members
                           </span>
                         </div>
+                        {project.completionPercentage !== undefined && (
+                          <div className="mt-2">
+                            <div className="flex justify-between text-xs text-slate-400 mb-1">
+                              <span>Progress</span>
+                              <span>{project.completionPercentage}%</span>
+                            </div>
+                            <div className="w-full bg-slate-700 rounded-full h-1.5">
+                              <div 
+                                className="bg-gradient-to-r from-blue-500 to-emerald-500 h-1.5 rounded-full"
+                                style={{ width: `${project.completionPercentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+                        {project.leadAssignee && (
+                          <div className="mt-1 text-xs text-slate-400">
+                            Lead: {project.leadAssignee.name || project.leadAssignee.email}
+                          </div>
+                        )}
                       </div>
                       <div className="text-xs text-slate-400">
                         {new Date(project.createdAt).toLocaleDateString()}
@@ -335,6 +495,89 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
+          {/* Daily Updates */}
+          <div className="glass-card overflow-hidden lg:col-span-2">
+            <div className="border-b border-white/10 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                    Employee Updates
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold">Recent Daily Forms</h3>
+                </div>
+                <button
+                  onClick={() => navigate("/admin/employees")}
+                  className="btn-ghost rounded-lg px-3 py-1 text-sm"
+                >
+                  View Forms
+                </button>
+              </div>
+            </div>
+            <div className="divide-y divide-white/10 max-h-96 overflow-y-auto">
+              {recentData?.dailyForms?.length > 0 ? (
+                recentData.dailyForms.map((form) => (
+                  <div key={form._id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20">
+                        <FileText className="h-5 w-5 text-emerald-300" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-white truncate">
+                            {form.employee?.name || form.employee?.email || "Unknown Employee"}
+                          </p>
+                          {form.adminConfirmed && (
+                            <CheckCircle className="h-4 w-4 text-emerald-400" />
+                          )}
+                          {form.screensharing && (
+                            <Monitor className="h-4 w-4 text-blue-400" />
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-300">
+                          {form.employee?.department || 'No Department'} • {form.employee?.designation || 'No Role'}
+                        </p>
+                        <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Hours:</span>
+                            <span className="text-white">{form.hoursAttended || 0}h</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Score:</span>
+                            <span className={`${form.score >= 8 ? 'text-emerald-300' : form.score >= 6 ? 'text-amber-300' : 'text-red-300'}`}>
+                              {form.score || 0}/10
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center gap-4 text-xs text-slate-400">
+                          <span>Tasks: {(form.tasks?.length || 0) + (form.customTasks?.length || 0)}</span>
+                          <span>Completed: {
+                            (form.tasks?.filter(t => t.isCompleted)?.length || 0) + 
+                            (form.customTasks?.filter(t => t.isCompleted)?.length || 0)
+                          }</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-slate-400">
+                          {new Date(form.date).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {form.submittedAt ? new Date(form.submittedAt).toLocaleTimeString() : 'Pending'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-slate-400">
+                  No daily forms submitted recently
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Messages Section */}
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Recent Messages */}
           <div className="glass-card overflow-hidden">
             <div className="border-b border-white/10 p-6">
@@ -353,7 +596,7 @@ export default function AdminOverviewPage() {
                 </button>
               </div>
             </div>
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-white/10 max-h-80 overflow-y-auto">
               {recentData?.messages?.length > 0 ? (
                 recentData.messages.map((message) => (
                   <div key={message._id} className="p-4">
@@ -362,14 +605,27 @@ export default function AdminOverviewPage() {
                         <MessageCircle className="h-5 w-5 text-purple-300" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">
-                          {message.subject}
-                        </p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-white truncate">
+                            {message.subject}
+                          </p>
+                          {!message.isRead && (
+                            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                          )}
+                        </div>
                         <p className="text-sm text-slate-300">
                           From: {message.sender?.name || message.sender?.email || "Unknown"}
+                          {message.sender?.roles?.includes('admin') && (
+                            <span className="ml-1 text-xs bg-purple-500/20 text-purple-300 px-1 rounded">Admin</span>
+                          )}
                         </p>
-                        <div className="text-xs text-slate-400">
-                          {new Date(message.createdAt).toLocaleDateString()}
+                        {message.recipient && (
+                          <p className="text-xs text-slate-400">
+                            To: {message.recipient.name || message.recipient.email}
+                          </p>
+                        )}
+                        <div className="text-xs text-slate-400 mt-1">
+                          {new Date(message.createdAt).toLocaleDateString()} at {new Date(message.createdAt).toLocaleTimeString()}
                         </div>
                       </div>
                     </div>
@@ -380,6 +636,83 @@ export default function AdminOverviewPage() {
                   No recent messages
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* System Health */}
+          <div className="glass-card p-6">
+            <div className="mb-6">
+              <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
+                System Overview
+              </p>
+              <h3 className="mt-2 text-xl font-semibold">Health Status</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20">
+                    <CheckCircle className="h-4 w-4 text-emerald-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-emerald-200">Employee Engagement</p>
+                    <p className="text-xs text-emerald-300">
+                      {stats?.dailyForms?.todaySubmissions || 0} forms today
+                    </p>
+                  </div>
+                </div>
+                <div className="text-emerald-300 font-bold">
+                  {stats?.employees?.approved ? 
+                    Math.round((stats.dailyForms?.todaySubmissions || 0) / stats.employees.approved * 100) : 0}%
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/20">
+                    <Activity className="h-4 w-4 text-blue-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-200">Project Activity</p>
+                    <p className="text-xs text-blue-300">
+                      {stats?.projects?.active || 0} active projects
+                    </p>
+                  </div>
+                </div>
+                <div className="text-blue-300 font-bold">
+                  {stats?.projects?.total ? 
+                    Math.round((stats.projects?.active || 0) / stats.projects.total * 100) : 0}%
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/20">
+                    <AlertCircle className="h-4 w-4 text-amber-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-amber-200">Pending Approvals</p>
+                    <p className="text-xs text-amber-300">
+                      Requires attention
+                    </p>
+                  </div>
+                </div>
+                <div className="text-amber-300 font-bold">
+                  {stats?.employees?.pending || 0}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">{stats?.meetings?.total || 0}</div>
+                    <div className="text-slate-400">Total Meetings</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">{stats?.meetings?.thisWeek || 0}</div>
+                    <div className="text-slate-400">This Week</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
