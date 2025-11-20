@@ -446,7 +446,10 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
     const forms = await DailyForm.find({
       date: { $gte: startDate, $lt: endDate },
       submitted: true,
-      adminConfirmed: true
+      $or: [
+        { adminConfirmed: true },
+        { adminConfirmed: { $exists: false } }
+      ]
     }).populate("employee", "name email");
 
     // Calculate totals for each employee
@@ -528,7 +531,10 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       employee: req.user.userId,
       date: { $gte: startDate, $lt: endDate },
       submitted: true,
-      adminConfirmed: true
+      $or: [
+        { adminConfirmed: true },
+        { adminConfirmed: { $exists: false } }
+      ]
     }).sort({ date: -1 });
 
     const stats = {

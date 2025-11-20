@@ -218,6 +218,14 @@ export default function AdminEmployeeDetailsPage() {
     return grouped;
   };
 
+  const isFormConfirmed = (form) => {
+    if (!form) return false;
+    if (form.adminConfirmed === true) return true;
+    if (form.adminConfirmed === false) return false;
+    // For historical data created before confirmation workflow
+    return Boolean(form.score || form.dailyBonus || form.scoreCalculatedAt);
+  };
+
   return (
     <PageBackground variant="violet">
       <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
@@ -365,6 +373,7 @@ export default function AdminEmployeeDetailsPage() {
                   (form.customTasks || []).filter((t) => t.isCompleted).length;
                 const totalTasks =
                   (form.tasks?.length || 0) + (form.customTasks?.length || 0);
+                const confirmed = isFormConfirmed(form);
                 return (
                   <div
                     key={form._id}
@@ -383,7 +392,7 @@ export default function AdminEmployeeDetailsPage() {
                               day: "numeric",
                             })}
                           </span>
-                          {form.adminConfirmed ? (
+                          {confirmed ? (
                             <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
                               Confirmed
                             </span>
@@ -409,7 +418,7 @@ export default function AdminEmployeeDetailsPage() {
                               <span className="text-emerald-300">Screensharing</span>
                             </>
                           )}
-                          {(form.adminConfirmed || form.score || form.dailyBonus) && (
+                          {(confirmed || form.score || form.dailyBonus) && (
                             <>
                               <span>•</span>
                               <span className="flex items-center gap-1 text-emerald-300">
@@ -426,7 +435,7 @@ export default function AdminEmployeeDetailsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {(form.adminConfirmed || form.score || form.dailyBonus) && (
+                        {(confirmed || form.score || form.dailyBonus) && (
                           <div className="text-right">
                             <div className="flex items-center gap-1 text-xs text-emerald-300">
                               <span>₹</span>
@@ -601,7 +610,7 @@ export default function AdminEmployeeDetailsPage() {
                 </div>
 
                 {/* Score and Bonus */}
-                {(selectedForm.adminConfirmed || selectedForm.score || selectedForm.dailyBonus) ? (
+                {isFormConfirmed(selectedForm) || selectedForm.score || selectedForm.dailyBonus ? (
                   <div className="rounded-lg border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-600/10 p-4">
                     <h3 className="mb-3 text-lg font-semibold text-white">
                       Performance Score & Bonus
