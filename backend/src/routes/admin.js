@@ -5,24 +5,99 @@ import DailyForm from "../models/dailyForm.js";
 import Meeting from "../models/meeting.js";
 import Message from "../models/message.js";
 import authenticateAdmin from "../middlewares/authAdmin.js";
+import { seedTestData } from "../seedData.js";
 
 const router = express.Router();
+
+// Seed test data endpoint (for development)
+router.post("/seed-test-data", authenticateAdmin, async (req, res) => {
+  try {
+    const counts = await seedTestData();
+    res.json({ success: true, message: "Test data seeded successfully", counts });
+  } catch (error) {
+    console.error("Seed data error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Simple overview endpoint for debugging
+router.get("/overview-simple", authenticateAdmin, async (req, res) => {
+  try {
+    // Test basic collections exist
+    const userCount = await User.countDocuments();
+    const projectCount = await Project.countDocuments();
+    
+    console.log("Simple counts - Users:", userCount, "Projects:", projectCount);
+    
+    // Get some actual data
+    const users = await User.find({ roles: "employee" }).limit(3);
+    const projects = await Project.find().limit(3);
+    
+    console.log("Sample users:", users.map(u => ({ email: u.email, roles: u.roles, status: u.status })));
+    console.log("Sample projects:", projects.map(p => ({ name: p.projectName, status: p.status })));
+    
+    res.json({
+      success: true,
+      counts: { users: userCount, projects: projectCount },
+      samples: { users, projects }
+    });
+  } catch (error) {
+    console.error("Simple overview error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get admin dashboard overview data
 router.get("/overview", authenticateAdmin, async (req, res) => {
   try {
-    // Get total counts
-    const totalEmployees = await User.countDocuments({ roles: "employee" });
-    const approvedEmployees = await User.countDocuments({ roles: "employee", status: "approved" });
-    const pendingEmployees = await User.countDocuments({ roles: "employee", status: "pending" });
-    const rejectedEmployees = await User.countDocuments({ roles: "employee", status: "rejected" });
+    // Get total counts - handle both string and array roles
+    const totalEmployees = await User.countDocuments({
+      $or: [
+        { roles: "employee" },
+        { roles: { $in: ["employee"] } }
+      ]
+    });
+    const approvedEmployees = await User.countDocuments({
+      $or: [
+        { roles: "employee" },
+        { roles: { $in: ["employee"] } }
+      ],
+      status: "approved"
+    });
+    const pendingEmployees = await User.countDocuments({
+      $or: [
+        { roles: "employee" },
+        { roles: { $in: ["employee"] } }
+      ],
+      status: "pending"
+    });
+    const rejectedEmployees = await User.countDocuments({
+      $or: [
+        { roles: "employee" },
+        { roles: { $in: ["employee"] } }
+      ],
+      status: "rejected"
+    });
     const totalProjects = await Project.countDocuments();
     const activeProjects = await Project.countDocuments({ status: "Active" });
     const completedProjects = await Project.countDocuments({ status: "Completed" });
     const newProjects = await Project.countDocuments({ status: "New" });
 
-    // Get recent data
-    const recentEmployees = await User.find({ roles: "employee" })
+    console.log("Basic counts:", {
+      totalEmployees,
+      approvedEmployees,
+      pendingEmployees,
+      totalProjects,
+      activeProjects
+    });
+
+    // Get recent data - handle both string and array roles
+    const recentEmployees = await User.find({
+      $or: [
+        { roles: "employee" },
+        { roles: { $in: ["employee"] } }
+      ]
+    })
       .sort({ lastLogin: -1 })
       .limit(8)
       .select('name email status lastLogin profileCompleted department designation');
@@ -51,6 +126,8 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
       date: { $gte: weekAgo, $lt: tomorrow },
       submitted: true
     });
+
+    console.log("Daily form counts:", { todaySubmissions, weeklySubmissions });
 
     // Get recent daily forms with employee details
     const recentDailyForms = await DailyForm.find({
@@ -86,13 +163,13 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
       }
     ]);
 
-    // Get recent messages
+    // Get recent messages - updated to match actual Message model
     const recentMessages = await Message.find()
       .sort({ createdAt: -1 })
       .limit(8)
       .populate('sender', 'name email roles')
-      .populate('recipient', 'name email')
-      .select('subject sender recipient createdAt isRead');
+      .populate('receiver', 'name email')
+      .select('content sender receiver createdAt type');
 
     // Get top performers (based on recent daily form scores)
     const topPerformers = await DailyForm.aggregate([
@@ -124,7 +201,7 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
       },
       {
         $match: {
-          "employeeInfo.roles": "employee",
+          "employeeInfo.roles": { $in: ["employee"] },
           "employeeInfo.status": "approved"
         }
       },
@@ -151,16 +228,17 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
       { $group: { _id: null, total: { $sum: "$estimatedHoursTaken" } } }
     ]);
 
-    // Get meeting statistics if available
+    // Get meeting statistics - updated to match actual Meeting model
     let meetingStats = { total: 0, thisWeek: 0 };
     try {
       const totalMeetings = await Meeting.countDocuments();
       const weeklyMeetings = await Meeting.countDocuments({
-        scheduledAt: { $gte: weekAgo, $lt: tomorrow }
+        scheduledDate: { $gte: weekAgo, $lt: tomorrow }
       });
       meetingStats = { total: totalMeetings, thisWeek: weeklyMeetings };
     } catch (err) {
-      // Meeting model might not exist
+      console.log("Meeting stats error:", err.message);
+      meetingStats = { total: 0, thisWeek: 0 };
     }
 
     const stats = {
@@ -193,6 +271,15 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
       topPerformers
     };
 
+    console.log("Final stats:", stats);
+    console.log("Recent data counts:", {
+      employees: recentData.employees?.length,
+      projects: recentData.projects?.length,
+      messages: recentData.messages?.length,
+      dailyForms: recentData.dailyForms?.length,
+      topPerformers: recentData.topPerformers?.length
+    });
+
     res.json({
       success: true,
       stats,
@@ -201,7 +288,7 @@ router.get("/overview", authenticateAdmin, async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching overview data:", error);
-    res.status(500).json({ error: "Failed to fetch overview data" });
+    res.status(500).json({ error: "Failed to fetch overview data", details: error.message });
   }
 });
 

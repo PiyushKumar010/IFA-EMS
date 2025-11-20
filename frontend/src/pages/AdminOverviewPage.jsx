@@ -34,23 +34,66 @@ export default function AdminOverviewPage() {
 
   useEffect(() => {
     fetchOverviewData();
+    
+    // Also test the simple endpoint
+    fetch("/api/admin/overview-simple", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => console.log("Simple overview test:", data))
+      .catch(err => console.error("Simple overview error:", err));
   }, []);
 
   const fetchOverviewData = async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/admin/overview", { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch overview data");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Failed to fetch overview data:", errorData);
+        throw new Error(`Failed to fetch overview data: ${res.status}`);
+      }
       const data = await res.json();
+      console.log("Overview data received:", data);
       setOverviewData(data);
     } catch (error) {
       console.error("Error fetching overview data:", error);
+      // Set default data to prevent showing all zeros
+      setOverviewData({
+        stats: {
+          employees: { total: 0, approved: 0, pending: 0, rejected: 0 },
+          projects: { total: 0, active: 0, completed: 0, new: 0 },
+          dailyForms: { todaySubmissions: 0, weeklySubmissions: 0, productivity: {} },
+          meetings: { total: 0, thisWeek: 0 },
+          totalHoursLogged: 0
+        },
+        recentData: {
+          employees: [],
+          projects: [],
+          messages: [],
+          dailyForms: [],
+          topPerformers: []
+        }
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = async () => {
+  const seedTestData = async () => {
+    try {
+      const res = await fetch("/api/admin/seed-test-data", {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Test data seeded:", data);
+        // Refresh the overview data
+        fetchOverviewData();
+      }
+    } catch (error) {
+      console.error("Error seeding test data:", error);
+    }
+  };
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -70,6 +113,34 @@ export default function AdminOverviewPage() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
               <p className="text-slate-300">Loading overview...</p>
+            </div>
+          </div>
+        </div>
+      </PageBackground>
+    );
+  }
+
+  if (!overviewData) {
+    return (
+      <PageBackground variant="violet">
+        <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <p className="text-slate-300 mb-4">Failed to load overview data</p>
+              <div className="space-x-3">
+                <button 
+                  onClick={fetchOverviewData}
+                  className="btn-primary px-4 py-2"
+                >
+                  Retry
+                </button>
+                <button 
+                  onClick={seedTestData}
+                  className="btn-ghost px-4 py-2"
+                >
+                  Add Test Data
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -607,11 +678,17 @@ export default function AdminOverviewPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-medium text-white truncate">
-                            {message.subject}
+                            {message.content?.substring(0, 50) || "No content"}
+                            {message.content?.length > 50 && "..."}
                           </p>
-                          {!message.isRead && (
-                            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
-                          )}
+                          <span className={`text-xs px-2 py-0.5 rounded ${
+                            message.type === 'admin-to-all' ? 'bg-purple-500/20 text-purple-300' :
+                            message.type === 'admin-to-employee' ? 'bg-blue-500/20 text-blue-300' :
+                            message.type === 'employee-to-admin' ? 'bg-emerald-500/20 text-emerald-300' :
+                            'bg-slate-500/20 text-slate-300'
+                          }`}>
+                            {message.type?.replace(/-/g, ' ') || 'Unknown'}
+                          </span>
                         </div>
                         <p className="text-sm text-slate-300">
                           From: {message.sender?.name || message.sender?.email || "Unknown"}
@@ -619,9 +696,9 @@ export default function AdminOverviewPage() {
                             <span className="ml-1 text-xs bg-purple-500/20 text-purple-300 px-1 rounded">Admin</span>
                           )}
                         </p>
-                        {message.recipient && (
+                        {message.receiver && (
                           <p className="text-xs text-slate-400">
-                            To: {message.recipient.name || message.recipient.email}
+                            To: {message.receiver.name || message.receiver.email}
                           </p>
                         )}
                         <div className="text-xs text-slate-400 mt-1">
