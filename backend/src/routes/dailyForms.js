@@ -11,25 +11,57 @@ const isFormEditableByEmployee = (formDate) => {
   const now = new Date();
   const formDateObj = new Date(formDate);
   
-  // Set the deadline to midnight of the form date
-  const deadline = new Date(formDateObj);
-  deadline.setHours(23, 59, 59, 999);
+  // Get the start of today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   
-  return now <= deadline;
+  // Get the start of the form date
+  const formDay = new Date(formDateObj);
+  formDay.setHours(0, 0, 0, 0);
+  
+  // If the form is from today, it's always editable (until midnight)
+  if (formDay.getTime() === today.getTime()) {
+    return true;
+  }
+  
+  // If the form is from a previous day, it's not editable
+  if (formDay.getTime() < today.getTime()) {
+    return false;
+  }
+  
+  // If the form is from a future day, it's not editable
+  return false;
 };
 
 // Helper function to get time remaining until midnight
 const getTimeUntilMidnight = (formDate) => {
   const now = new Date();
   const formDateObj = new Date(formDate);
-  const midnight = new Date(formDateObj);
-  midnight.setDate(midnight.getDate() + 1);
-  midnight.setHours(0, 0, 0, 0);
   
-  const timeRemaining = midnight - now;
+  // Get today's date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Get form's date
+  const formDay = new Date(formDateObj);
+  formDay.setHours(0, 0, 0, 0);
+  
+  // If form is not from today, return expired
+  if (formDay.getTime() !== today.getTime()) {
+    return { 
+      expired: true, 
+      message: "Can only edit today's form" 
+    };
+  }
+  
+  // Calculate time until end of today
+  const endOfToday = new Date(today);
+  endOfToday.setHours(23, 59, 59, 999);
+  
+  const timeRemaining = endOfToday - now;
   
   if (timeRemaining <= 0) {
-    return { expired: true, message: "Editing period has expired" };
+    return { expired: true, message: "Today's editing period has expired" };
   }
   
   const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
@@ -272,8 +304,8 @@ router.post("/submit", authenticateToken, async (req, res) => {
     // Check if form is still editable (midnight restriction)
     if (!isFormEditableByEmployee(form.date)) {
       return res.status(403).json({ 
-        error: "Form editing period has expired",
-        message: "You can only edit forms until midnight of the same day"
+        error: "Cannot edit previous day's form",
+        message: "You can only edit today's form. Previous day forms are locked after midnight."
       });
     }
 
@@ -790,8 +822,8 @@ router.put("/time-tracking/:formId", authenticateToken, async (req, res) => {
     // For employees, check midnight restriction
     if (!isAdmin && !isFormEditableByEmployee(form.date)) {
       return res.status(403).json({ 
-        error: "Form editing period has expired",
-        message: "You can only edit forms until midnight of the same day"
+        error: "Cannot edit previous day's form",
+        message: "You can only edit today's form. Previous day forms are locked after midnight."
       });
     }
 
