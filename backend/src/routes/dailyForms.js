@@ -344,6 +344,38 @@ router.post("/create-today", authenticateToken, async (req, res) => {
   }
 });
 
+// Debug endpoint: Get all forms for current user
+router.get("/debug/my-forms", authenticateToken, async (req, res) => {
+  try {
+    const userRoles = req.user.roles || [];
+    if (!Array.isArray(userRoles) || !userRoles.includes("employee")) {
+      return res.status(403).json({ error: "Forbidden - Employee access required" });
+    }
+
+    const allForms = await DailyForm.find({ employee: req.user.userId })
+      .sort({ date: -1 })
+      .limit(10);
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+
+    res.json({
+      userId: req.user.userId,
+      today: todayStart.toISOString(),
+      forms: allForms.map(form => ({
+        id: form._id,
+        date: form.date.toISOString(),
+        submitted: form.submitted,
+        taskCount: (form.tasks || []).length,
+        customTaskCount: (form.customTasks || []).length
+      }))
+    });
+  } catch (err) {
+    console.error("Error getting debug forms:", err);
+    res.status(500).json({ error: "Failed to get forms" });
+  }
+});
+
 // Employee: Get form history (previous submitted forms)
 router.get("/history", authenticateToken, async (req, res) => {
   try {
