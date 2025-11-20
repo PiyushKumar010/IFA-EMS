@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Clock, Save, Calendar, FolderOpen } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, Save, Calendar, FolderOpen, LogIn, LogOut, Timer, Tag } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function EmployeeDailyFormPage() {
@@ -11,6 +11,16 @@ export default function EmployeeDailyFormPage() {
   const [canSubmit, setCanSubmit] = useState(true);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [assignedProjects, setAssignedProjects] = useState([]);
+  const [showTimeTracking, setShowTimeTracking] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     // Check if form can be submitted
@@ -76,6 +86,67 @@ export default function EmployeeDailyFormPage() {
       ...prev,
       screensharing: checked,
     }));
+  };
+
+  const handleEntryTime = async () => {
+    if (!form?._id) return;
+    
+    try {
+      const res = await fetch(`/api/daily-forms/time-tracking/${form._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ 
+          entryTime: new Date().toISOString() 
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setForm(data.form);
+        alert("Entry time recorded!");
+      }
+    } catch (error) {
+      console.error("Error recording entry time:", error);
+    }
+  };
+
+  const handleExitTime = async () => {
+    if (!form?._id) return;
+    
+    try {
+      const res = await fetch(`/api/daily-forms/time-tracking/${form._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ 
+          exitTime: new Date().toISOString() 
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setForm(data.form);
+        alert("Exit time recorded!");
+      }
+    } catch (error) {
+      console.error("Error recording exit time:", error);
+    }
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "Not recorded";
+    return new Date(dateString).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const calculateWorkingHours = () => {
+    if (!form?.entryTime || !form?.exitTime) return "N/A";
+    const diff = new Date(form.exitTime) - new Date(form.entryTime);
+    const hours = Math.max(0, diff / (1000 * 60 * 60));
+    return `${hours.toFixed(1)}h`;
   };
 
   const handleSubmit = async () => {
@@ -224,6 +295,80 @@ export default function EmployeeDailyFormPage() {
             </p>
           </div>
         )}
+
+        {/* Time Tracking Section */}
+        <div className="mb-8 glass-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="flex items-center gap-2 text-xl font-bold">
+              <Timer className="h-5 w-5 text-blue-400" />
+              Time Tracking
+            </h2>
+            <div className="text-sm text-slate-300">
+              Current Time: {currentTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Entry Time */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <LogIn className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div className="text-sm text-slate-400 mb-1">Entry Time</div>
+              <div className="text-lg font-semibold mb-3">
+                {formatTime(form.entryTime)}
+              </div>
+              <button
+                onClick={handleEntryTime}
+                disabled={alreadySubmitted || form.entryTime}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {form.entryTime ? "Recorded" : "Record Entry"}
+              </button>
+            </div>
+
+            {/* Working Hours */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Clock className="h-6 w-6 text-blue-400" />
+              </div>
+              <div className="text-sm text-slate-400 mb-1">Working Hours</div>
+              <div className="text-lg font-semibold mb-3">
+                {calculateWorkingHours()}
+              </div>
+              <div className="text-xs text-slate-500">
+                Auto-calculated from entry/exit
+              </div>
+            </div>
+
+            {/* Exit Time */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <LogOut className="h-6 w-6 text-rose-400" />
+              </div>
+              <div className="text-sm text-slate-400 mb-1">Exit Time</div>
+              <div className="text-lg font-semibold mb-3">
+                {formatTime(form.exitTime)}
+              </div>
+              <button
+                onClick={handleExitTime}
+                disabled={alreadySubmitted || form.exitTime || !form.entryTime}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {form.exitTime ? "Recorded" : "Record Exit"}
+              </button>
+            </div>
+          </div>
+
+          {!form.entryTime && (
+            <div className="mt-4 text-center text-sm text-slate-400">
+              Record your entry time when you start work today
+            </div>
+          )}
+        </div>
 
         {/* Assigned Projects Info */}
         {assignedProjects.length > 0 && (

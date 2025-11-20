@@ -92,7 +92,7 @@ export default function AdminOverviewPage() {
       description: "Monitor employee submissions",
       icon: FileText,
       color: "bg-emerald-500",
-      path: "/admin/employees",
+      path: "/admin/daily-forms",
       count: stats?.dailyForms?.todaySubmissions || 0
     },
     {
