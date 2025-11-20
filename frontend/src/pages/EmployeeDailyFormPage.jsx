@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Clock, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, Save, Calendar, FolderOpen } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function EmployeeDailyFormPage() {
@@ -10,6 +10,7 @@ export default function EmployeeDailyFormPage() {
   const [saving, setSaving] = useState(false);
   const [canSubmit, setCanSubmit] = useState(true);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [assignedProjects, setAssignedProjects] = useState([]);
 
   useEffect(() => {
     // Check if form can be submitted
@@ -31,6 +32,14 @@ export default function EmployeeDailyFormPage() {
       })
       .catch((err) => console.error("Error fetching form:", err))
       .finally(() => setLoading(false));
+
+    // Fetch assigned projects
+    fetch("/api/projects", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        setAssignedProjects(data.projects || []);
+      })
+      .catch((err) => console.error("Error fetching projects:", err));
   }, []);
 
   const handleTaskChange = (taskIndex, checked) => {
@@ -210,6 +219,44 @@ export default function EmployeeDailyFormPage() {
             <p className="text-sm text-amber-200">
               You have already submitted this form for today. You can only submit once per day.
             </p>
+          </div>
+        )}
+
+        {/* Assigned Projects Info */}
+        {assignedProjects.length > 0 && (
+          <div className="mb-6 rounded-[32px] border border-white/10 bg-white/5 p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-emerald-300" />
+              <h2 className="text-lg font-semibold text-white">Your Assigned Projects</h2>
+            </div>
+            <div className="space-y-3">
+              {assignedProjects.map((project) => (
+                <div
+                  key={project._id}
+                  className="rounded-lg border border-white/10 bg-white/5 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-white">{project.projectName}</h3>
+                      <p className="text-sm text-slate-300">{project.clientName}</p>
+                    </div>
+                    {(project.startDate || project.endDate) && (
+                      <div className="flex items-center gap-2 text-sm text-slate-300">
+                        <Calendar className="h-4 w-4" />
+                        <div className="text-right">
+                          {project.startDate && (
+                            <div>Start: {new Date(project.startDate).toLocaleDateString()}</div>
+                          )}
+                          {project.endDate && (
+                            <div>End: {new Date(project.endDate).toLocaleDateString()}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

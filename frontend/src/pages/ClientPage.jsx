@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, LogOut, Globe, Activity, FileText, Clock, MessageCircle, LayoutGrid } from "lucide-react";
+import { PlusCircle, LogOut, Globe, Activity, FileText, Clock, MessageCircle, LayoutGrid, Calendar, Video } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 function Modal({ children, onClose }) {
@@ -51,8 +51,26 @@ function ProjectDetailsModal({ project, onClose, progressReports, setProgressRep
             <p className="mt-4 text-base text-slate-200">
               {project.description}
             </p>
-            <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-              Client: {project.clientName} • {project.clientEmail}
+            <div className="mt-4 space-y-2">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                Client: {project.clientName} • {project.clientEmail}
+              </div>
+              {(project.startDate || project.endDate) && (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-cyan-300" />
+                    <span>
+                      {project.startDate
+                        ? `Start: ${new Date(project.startDate).toLocaleDateString()}`
+                        : "Start: Not set"}
+                      {project.startDate && project.endDate ? " • " : ""}
+                      {project.endDate
+                        ? `End: ${new Date(project.endDate).toLocaleDateString()}`
+                        : project.startDate ? " • End: Not set" : ""}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -222,6 +240,13 @@ export default function ClientPage() {
               onClick={() => navigate("/client/messages")}
             >
               <MessageCircle className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/client/meetings")}
+              title="Meetings"
+            >
+              <Video className="h-5 w-5" />
             </button>
             <button
               className="btn-primary rounded-lg p-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500"

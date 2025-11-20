@@ -11,6 +11,7 @@ import {
   ChevronRight,
   LayoutGrid,
   Trophy,
+  Video,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -129,6 +130,13 @@ export default function EmployeeDashboard() {
               title="Leaderboard"
             >
               <Trophy className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/employee/meetings")}
+              title="Meetings"
+            >
+              <Video className="h-5 w-5" />
             </button>
             <button className="btn-ghost rounded-lg p-2" onClick={logout}>
               <LogOut className="h-5 w-5" />

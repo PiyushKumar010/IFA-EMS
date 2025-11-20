@@ -16,6 +16,7 @@ import employeeInfo from "./routes/employeeinfo.js"
 import requests from "./routes/admin.js"
 import messagesRoutes from "./routes/messages.js"
 import dailyFormRoutes from "./routes/dailyForms.js"
+import meetingsRoutes from "./routes/meetings.js"
 import { initSocketServer } from "./socket.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -74,6 +75,7 @@ app.use("/api/employees",employeeInfo);
 app.use("/api/requests",requests);
 app.use("/api/messages", messagesRoutes);
 app.use("/api/daily-forms", dailyFormRoutes);
+app.use("/api/meetings", meetingsRoutes);
 
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {

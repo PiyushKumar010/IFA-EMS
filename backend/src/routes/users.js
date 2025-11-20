@@ -18,6 +18,19 @@ router.get("/employees", authenticateToken, async (req, res) => {
   }
 });
 
+// Get all clients for admin assignment
+router.get("/clients", authenticateToken, async (req, res) => {
+  if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) return res.status(403).json({ error: "Not authorized" });
+  try {
+    const clients = await User.find({ 
+      roles: "client"
+    }, "_id name email");
+    res.json({ clients });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch clients" });
+  }
+});
+
 // Get current user profile
 router.get("/me", authenticateToken, async (req, res) => {
   try {

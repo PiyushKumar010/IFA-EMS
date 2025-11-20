@@ -27,4 +27,22 @@ router.put("/reject/:id", authenticateAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
+// Suspend employee (revoke access - sets status to pending so they need approval again)
+router.put("/suspend/:id", authenticateAdmin, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { status: "pending" },
+      { new: true }
+    );
+    if (!user) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("Error suspending employee:", err);
+    res.status(500).json({ error: "Failed to suspend employee" });
+  }
+});
+
 export default router;

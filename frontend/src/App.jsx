@@ -17,6 +17,9 @@ import AdminEmployeesPage from "./pages/AdminEmployeesPage";
 import AdminEmployeeDetailsPage from "./pages/AdminEmployeeDetailsPage";
 import ClientMessagesPage from "./pages/ClientMessagesPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import AdminMeetingsPage from "./pages/AdminMeetingsPage";
+import EmployeeMeetingsPage from "./pages/EmployeeMeetingsPage";
+import ClientMeetingsPage from "./pages/ClientMeetingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import EmployeeRoute from "./components/EmployeeRoute";
@@ -87,6 +90,14 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/meetings"
+          element={
+            <AdminRoute>
+              <AdminMeetingsPage />
+            </AdminRoute>
+          }
+        />
 
         {/* Employee Routes - Employee only */}
         <Route
@@ -138,6 +149,14 @@ export default function App() {
             </EmployeeRoute>
           }
         />
+        <Route
+          path="/employee/meetings"
+          element={
+            <EmployeeRoute>
+              <EmployeeMeetingsPage />
+            </EmployeeRoute>
+          }
+        />
 
         {/* Client Routes - Client only */}
         <Route
@@ -153,6 +172,14 @@ export default function App() {
           element={
             <ClientRoute>
               <ClientMessagesPage />
+            </ClientRoute>
+          }
+        />
+        <Route
+          path="/client/meetings"
+          element={
+            <ClientRoute>
+              <ClientMeetingsPage />
             </ClientRoute>
           }
         />

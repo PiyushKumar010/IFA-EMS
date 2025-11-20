@@ -34,6 +34,8 @@ export default function EmployeeProject() {
   const [reportText, setReportText] = useState("");
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [employeeRole, setEmployeeRole] = useState(null);
 
   const logout = async () => {
     try {
@@ -48,6 +50,13 @@ export default function EmployeeProject() {
   };
 
   useEffect(() => {
+    // Fetch current user to determine role
+    fetch("/api/users/me", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        setCurrentUser(data);
+      });
+
     fetch("/api/projects", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
@@ -68,6 +77,29 @@ export default function EmployeeProject() {
       })
       .then((data) => data && setProgressHistory(data?.progress || []));
   }, [id]);
+
+  // Determine employee role when both user and project are loaded
+  useEffect(() => {
+    if (currentUser && currentUser._id && project) {
+      const userId = currentUser._id;
+      if (project.leadAssignee && (
+        (typeof project.leadAssignee === 'object' && project.leadAssignee._id === userId) ||
+        project.leadAssignee.toString() === userId ||
+        project.leadAssignee === userId
+      )) {
+        setEmployeeRole("Lead Assignee");
+      } else if (project.assignees && project.assignees.some(assignee => {
+        if (typeof assignee === 'object') {
+          return assignee._id === userId || assignee.toString() === userId;
+        }
+        return assignee === userId || assignee.toString() === userId;
+      })) {
+        setEmployeeRole("Assignee");
+      } else {
+        setEmployeeRole(null);
+      }
+    }
+  }, [currentUser, project]);
 
   const submitReport = async (e) => {
     e.preventDefault();
@@ -125,6 +157,13 @@ export default function EmployeeProject() {
             </p>
             <h1 className="mt-2 text-3xl font-bold">{project.projectName}</h1>
             <p className="text-sm text-slate-200">{project.clientName}</p>
+            {employeeRole && (
+              <div className="mt-2">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                  {employeeRole}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-3">
             <button
