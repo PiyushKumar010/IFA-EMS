@@ -199,6 +199,32 @@ function AdminDailyFormsPage() {
         }
     };
 
+    const handleApproveForm = async (formId, approve) => {
+        try {
+            const res = await fetch(`/api/daily-forms/approve/${formId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ approve })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setSelectedForm(data.form);
+                if (selectedEmployee) {
+                    fetchEmployeeForms(selectedEmployee._id);
+                }
+                alert(approve ? "Form approved successfully!" : "Form approval revoked!");
+            } else {
+                const error = await res.json();
+                alert(error.message || "Failed to update approval status");
+            }
+        } catch (error) {
+            console.error("Approve form error:", error);
+            alert("Failed to update approval status");
+        }
+    };
+
     const handleCreateForm = async (employeeId, formData) => {
         try {
             setError("");
@@ -466,83 +492,81 @@ function AdminDailyFormsPage() {
                                     </div>
                                 </div>
 
-                                {/* Custom Tags */}
+                                {/* Form Approval */}
                                 <div className="glass-card p-6">
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold">Custom Tags</h3>
-                                        <button
-                                            onClick={() => setShowAddTagModal(true)}
-                                            className="btn-ghost flex items-center gap-2"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            Add Tag
-                                        </button>
-                                    </div>
-
-                                    {selectedForm.customTags?.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {selectedForm.customTags.map((tag) => (
-                                                <div key={tag._id} className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
-                                                    <div 
-                                                        className="h-3 w-3 rounded-full"
-                                                        style={{ backgroundColor: tag.color }}
-                                                    />
-                                                    <div className="flex items-center gap-2">
-                                                        {tag.employeeChecked ? (
-                                                            <CheckSquare className="h-4 w-4 text-blue-400" />
-                                                        ) : (
-                                                            <Square className="h-4 w-4 text-slate-400" />
+                                    <div className="mb-4">
+                                        <h3 className="text-lg font-semibold mb-4">Form Approval</h3>
+                                        
+                                        {/* Approval Status */}
+                                        <div className={`mb-4 rounded-lg border p-4 ${
+                                            selectedForm.adminConfirmed 
+                                                ? "border-emerald-500/50 bg-emerald-500/10" 
+                                                : "border-amber-500/50 bg-amber-500/10"
+                                        }`}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    {selectedForm.adminConfirmed ? (
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500">
+                                                            <Check className="h-4 w-4 text-white" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500">
+                                                            <Clock className="h-4 w-4 text-white" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className={`font-medium ${
+                                                            selectedForm.adminConfirmed ? "text-emerald-200" : "text-amber-200"
+                                                        }`}>
+                                                            {selectedForm.adminConfirmed ? "Approved" : "Pending Approval"}
+                                                        </p>
+                                                        {selectedForm.adminConfirmedAt && (
+                                                            <p className={`text-xs ${
+                                                                selectedForm.adminConfirmed ? "text-emerald-300" : "text-amber-300"
+                                                            }`}>
+                                                                {selectedForm.adminConfirmed ? "Approved" : "Updated"} on {new Date(selectedForm.adminConfirmedAt).toLocaleDateString()}
+                                                            </p>
                                                         )}
-                                                        <span className="text-xs text-blue-300">Emp</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {tag.adminChecked ? (
-                                                            <CheckSquare className="h-4 w-4 text-emerald-400" />
-                                                        ) : (
-                                                            <Square className="h-4 w-4 text-slate-400" />
-                                                        )}
-                                                        <span className="text-xs text-emerald-300">Admin</span>
-                                                    </div>
-                                                    <span className="flex-1">{tag.name}</span>
-                                                    <button
-                                                        onClick={() => handleDeleteTag(selectedForm._id, tag._id)}
-                                                        className="text-red-400 hover:text-red-300"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
                                                 </div>
-                                            ))}
+                                                
+                                                {/* Bonus Information */}
+                                                <div className="text-right">
+                                                    <p className="text-sm text-slate-300">Daily Bonus</p>
+                                                    <p className={`text-lg font-bold ${
+                                                        selectedForm.adminConfirmed ? "text-emerald-400" : "text-amber-400"
+                                                    }`}>
+                                                        ₹{selectedForm.dailyBonus || 0}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <p className="text-slate-400">No custom tags added yet.</p>
-                                    )}
-                                </div>
 
-                                {/* Admin Notes */}
-                                <div className="glass-card p-6">
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold">Admin Notes</h3>
-                                        <button
-                                            onClick={() => setEditingNotes(!editingNotes)}
-                                            className="btn-ghost flex items-center gap-2"
-                                        >
-                                            {editingNotes ? <Save className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
-                                            {editingNotes ? "Save" : "Edit"}
-                                        </button>
+                                        {/* Action Buttons */}
+                                        <div className="flex items-center gap-3">
+                                            {!selectedForm.adminConfirmed ? (
+                                                <button
+                                                    onClick={() => handleApproveForm(selectedForm._id, true)}
+                                                    className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+                                                >
+                                                    <Check className="h-4 w-4" />
+                                                    Approve & Release Bonus
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleApproveForm(selectedForm._id, false)}
+                                                    className="btn-ghost flex items-center gap-2 text-red-400 hover:text-red-300"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                    Revoke Approval
+                                                </button>
+                                            )}
+                                            
+                                            <div className="text-sm text-slate-400">
+                                                Score: <span className="font-medium text-white">{selectedForm.score || 0}</span> points
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    {editingNotes ? (
-                                        <textarea
-                                            value={adminNotes}
-                                            onChange={(e) => setAdminNotes(e.target.value)}
-                                            className="input-field w-full h-24 resize-none"
-                                            placeholder="Add admin notes..."
-                                        />
-                                    ) : (
-                                        <p className="text-slate-300">
-                                            {selectedForm.adminNotes || "No admin notes added yet."}
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                         ) : (

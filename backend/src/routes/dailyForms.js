@@ -827,6 +827,65 @@ router.get("/:formId", authenticateToken, async (req, res) => {
   }
 });
 
+// Admin: Approve/disapprove a submitted form
+router.put("/approve/:formId", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { formId } = req.params;
+    const { approve } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(formId)) {
+      return res.status(400).json({ error: "Invalid form ID" });
+    }
+
+    const form = await DailyForm.findById(formId);
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
+    if (!form.submitted) {
+      return res.status(400).json({ error: "Cannot approve unsubmitted form" });
+    }
+
+    // Update approval status
+    form.adminConfirmed = approve;
+    form.adminConfirmedAt = new Date();
+
+    if (approve) {
+      // Calculate score and bonus when approving
+      const formObj = form.toObject();
+      calculateTaskCompletion(formObj);
+      const { score, dailyBonus } = calculateScoreAndBonus(formObj);
+      form.score = score;
+      form.dailyBonus = dailyBonus;
+      form.scoreCalculatedAt = new Date();
+    } else {
+      // Clear score and bonus when revoking approval
+      form.score = 0;
+      form.dailyBonus = 0;
+      form.scoreCalculatedAt = null;
+    }
+
+    await form.save();
+    console.log(`Form ${formId} ${approve ? 'approved' : 'approval revoked'} by admin ${req.user.userId}`);
+
+    const updatedFormObj = form.toObject();
+    calculateTaskCompletion(updatedFormObj);
+    
+    res.json({ 
+      success: true, 
+      form: updatedFormObj,
+      message: approve ? "Form approved successfully" : "Form approval revoked"
+    });
+  } catch (err) {
+    console.error("Error updating form approval:", err);
+    res.status(500).json({ error: "Failed to update approval status" });
+  }
+});
+
 // Admin: Update form (edit and approve)
 router.put("/:formId", authenticateToken, async (req, res) => {
   try {
