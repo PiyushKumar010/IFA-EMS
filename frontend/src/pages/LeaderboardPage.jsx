@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Trophy, Medal, Award, Calendar, TrendingUp } from "lucide-react";
+import { ArrowLeft, Trophy, Medal, Award, Calendar, TrendingUp, AlertTriangle } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function LeaderboardPage() {
@@ -9,13 +9,16 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
   const [days, setDays] = useState(30);
+  const [viewMode, setViewMode] = useState("auto");
+  const [leaderboardMeta, setLeaderboardMeta] = useState(null);
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [selectedDate, days]);
+  }, [selectedDate, days, viewMode]);
 
   const fetchLeaderboard = async () => {
     setLoading(true);
+    setLeaderboardMeta(null);
     try {
       const params = new URLSearchParams();
       if (selectedDate) {
@@ -23,6 +26,7 @@ export default function LeaderboardPage() {
       } else {
         params.append("days", days.toString());
       }
+      params.append("view", viewMode);
 
       const res = await fetch(`/api/daily-forms/leaderboard?${params.toString()}`, {
         credentials: "include",
@@ -31,6 +35,13 @@ export default function LeaderboardPage() {
       if (res.ok) {
         const data = await res.json();
         setLeaderboard(data.leaderboard || []);
+         setLeaderboardMeta({
+           source: data.summary?.dataSource || "none",
+           formsEvaluated: data.summary?.formsEvaluated || 0,
+           approvalsUsed: data.summary?.approvalsUsed || 0,
+           pendingUsed: data.summary?.pendingUsed || 0,
+           dateRange: data.dateRange || null,
+         });
       } else {
         console.error("Failed to fetch leaderboard");
       }
@@ -61,6 +72,22 @@ export default function LeaderboardPage() {
       currency: "INR",
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const sourceLabelMap = {
+    approved: "Admin-approved data",
+    submitted: "Submitted preview",
+    historical: "Historical fallback",
+    none: "No data",
+  };
+
+  const formattedRange = () => {
+    if (!leaderboardMeta?.dateRange?.start || !leaderboardMeta?.dateRange?.end) {
+      return "—";
+    }
+    const start = new Date(leaderboardMeta.dateRange.start);
+    const end = new Date(leaderboardMeta.dateRange.end);
+    return `${start.toLocaleDateString()} — ${end.toLocaleDateString()}`;
   };
 
   return (
@@ -108,9 +135,36 @@ export default function LeaderboardPage() {
                   <option value={90}>Last 90 days</option>
                 </select>
               )}
+              <select
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value)}
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+              >
+                <option value="auto">Auto source</option>
+                <option value="approved">Approved only</option>
+                <option value="submitted">Submitted preview</option>
+              </select>
             </div>
           </div>
         </header>
+
+        {leaderboardMeta?.source === "submitted" && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-100">
+            <AlertTriangle className="mt-0.5 h-5 w-5" />
+            <div>
+              Rankings are based on submitted forms that still await admin approval. Scores may change once approvals are completed.
+            </div>
+          </div>
+        )}
+
+        {leaderboardMeta?.source === "historical" && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-cyan-400/40 bg-cyan-400/10 p-4 text-sm text-cyan-100">
+            <AlertTriangle className="mt-0.5 h-5 w-5" />
+            <div>
+              Showing historical data because no submissions were found in the selected period. Update the filters to see the latest activity.
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex min-h-[400px] items-center justify-center">
@@ -130,7 +184,7 @@ export default function LeaderboardPage() {
           <div className="space-y-4">
             {leaderboard.map((entry, index) => (
               <div
-                key={entry.employee._id}
+                key={entry.employee?._id || `${entry.employee?.email}-${index}`}
                 className={`rounded-[32px] border bg-gradient-to-r p-6 transition-all hover:scale-[1.02] ${getRankColor(
                   index
                 )}`}
@@ -151,6 +205,11 @@ export default function LeaderboardPage() {
                           {entry.daysWorked} days worked
                         </span>
                         <span>Avg Score: {entry.averageScore}</span>
+                        {entry.hasProvisionalData && (
+                          <span className="rounded-full border border-amber-300/50 px-3 py-0.5 text-amber-200">
+                            Pending approval
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -167,6 +226,29 @@ export default function LeaderboardPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {leaderboardMeta && (
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Forms Evaluated</p>
+              <p className="mt-2 text-3xl font-semibold text-white">{leaderboardMeta.formsEvaluated}</p>
+              <p className="mt-2 text-xs text-slate-400">
+                Approved: {leaderboardMeta.approvalsUsed} · Pending: {leaderboardMeta.pendingUsed}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Data Source</p>
+              <p className="mt-2 text-lg font-semibold text-white">{sourceLabelMap[leaderboardMeta.source] || "Auto"}</p>
+              <p className="mt-2 text-xs text-slate-400">
+                Mode: {viewMode === "auto" ? "Auto-detect" : viewMode}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Date Range</p>
+              <p className="mt-2 text-lg font-semibold text-white">{formattedRange()}</p>
+            </div>
           </div>
         )}
 

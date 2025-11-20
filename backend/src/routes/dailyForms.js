@@ -70,12 +70,28 @@ const calculateTaskCompletion = (form) => {
 // Helper function to calculate score and bonus
 // Score: Each completed task = 1 point, screensharing bonus = 5 points, hours bonus (max 8 hours = 10 points)
 // Bonus: Score * 10 = bonus in rupees (₹10 per point, max ₹500 per day)
-const calculateScoreAndBonus = (form) => {
+const calculateScoreAndBonus = (form, { requireAdminApproval = true } = {}) => {
   let score = 0;
+
+  const isTaskCompleted = (task = {}) => {
+    if (requireAdminApproval) {
+      if (typeof task.isCompleted === "boolean") {
+        return task.isCompleted;
+      }
+      return Boolean(task.employeeChecked && task.adminChecked);
+    }
+    return Boolean(task.employeeChecked || task.adminChecked);
+  };
   
-  // Count completed tasks (both employee and admin checked)
-  const completedTasks = (form.tasks || []).filter(t => t.isCompleted).length;
-  const completedCustomTasks = (form.customTasks || []).filter(t => t.isCompleted).length;
+  // Count completed tasks
+  const completedTasks = (form.tasks || []).reduce(
+    (count, task) => count + (isTaskCompleted(task) ? 1 : 0),
+    0
+  );
+  const completedCustomTasks = (form.customTasks || []).reduce(
+    (count, task) => count + (isTaskCompleted(task) ? 1 : 0),
+    0
+  );
   score += completedTasks + completedCustomTasks;
   
   // Screensharing bonus: +5 points
@@ -417,18 +433,15 @@ router.post("/custom/:employeeId", authenticateToken, async (req, res) => {
 // Leaderboard: Get employee rankings based on daily bonuses
 router.get("/leaderboard", authenticateToken, async (req, res) => {
   try {
-    // Get date range (default: last 30 days, or specific date)
-    const { date, days = 30 } = req.query;
+    const { date, days = 30, view = "auto" } = req.query;
     
     let startDate, endDate;
     if (date) {
-      // Get leaderboard for specific date
       startDate = new Date(date);
       startDate.setHours(0, 0, 0, 0);
       endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
     } else {
-      // Get leaderboard for last N days
       endDate = new Date();
       endDate.setHours(23, 59, 59, 999);
       startDate = new Date();
@@ -436,17 +449,44 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
       startDate.setHours(0, 0, 0, 0);
     }
 
-    const confirmedForms = await DailyForm.find({
-      date: { $gte: startDate, $lt: endDate },
-      submitted: true,
-      adminConfirmed: true
-    })
-      .populate("employee", "name email status")
-      .lean();
+    const baseMatch = {
+      date: { $gte: startDate, $lt: endDate }
+    };
+
+    const fetchForms = async (criteria = {}) => {
+      return DailyForm.find({ ...baseMatch, ...criteria })
+        .populate("employee", "name email status roles")
+        .lean();
+    };
+
+    let resolvedView = view;
+    let forms = [];
+
+    if (view === "approved") {
+      forms = await fetchForms({ submitted: true, adminConfirmed: true });
+      resolvedView = "approved";
+    } else if (view === "submitted") {
+      forms = await fetchForms({ submitted: true });
+      resolvedView = "submitted";
+    } else {
+      forms = await fetchForms({ submitted: true, adminConfirmed: true });
+      resolvedView = forms.length ? "approved" : "submitted";
+
+      if (!forms.length) {
+        forms = await fetchForms({ submitted: true });
+      }
+
+      if (!forms.length) {
+        forms = await fetchForms({});
+        resolvedView = forms.length ? "historical" : "none";
+      }
+    }
 
     const statsByEmployee = {};
+    let approvalsUsed = 0;
+    let pendingUsed = 0;
 
-    confirmedForms.forEach((form) => {
+    forms.forEach((form) => {
       if (!form.employee) {
         return;
       }
@@ -463,13 +503,36 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
           totalScore: 0,
           totalBonus: 0,
           daysWorked: 0,
-          averageScore: 0
+          averageScore: 0,
+          provisionalDays: 0,
+          approvedDays: 0
         };
       }
 
-      statsByEmployee[empId].totalScore += form.score || 0;
-      statsByEmployee[empId].totalBonus += form.dailyBonus || 0;
+      const requireAdminApproval =
+        view === "approved"
+          ? true
+          : form.adminConfirmed === true;
+
+      if (requireAdminApproval) {
+        approvalsUsed += 1;
+      } else {
+        pendingUsed += 1;
+      }
+
+      const { score, dailyBonus } = calculateScoreAndBonus(form, {
+        requireAdminApproval
+      });
+
+      statsByEmployee[empId].totalScore += score;
+      statsByEmployee[empId].totalBonus += dailyBonus;
       statsByEmployee[empId].daysWorked += 1;
+
+      if (requireAdminApproval) {
+        statsByEmployee[empId].approvedDays += 1;
+      } else {
+        statsByEmployee[empId].provisionalDays += 1;
+      }
     });
 
     const leaderboard = Object.values(statsByEmployee)
@@ -478,15 +541,27 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
         averageScore:
           entry.daysWorked > 0
             ? Number((entry.totalScore / entry.daysWorked).toFixed(2))
-            : 0
+            : 0,
+        hasProvisionalData: entry.provisionalDays > 0
       }))
-      .sort((a, b) => b.totalBonus - a.totalBonus);
+      .sort((a, b) => {
+        if (b.totalBonus === a.totalBonus) {
+          return b.totalScore - a.totalScore;
+        }
+        return b.totalBonus - a.totalBonus;
+      });
 
     res.json({
       leaderboard,
       dateRange: {
         start: startDate,
         end: endDate
+      },
+      summary: {
+        dataSource: resolvedView,
+        formsEvaluated: forms.length,
+        approvalsUsed,
+        pendingUsed
       }
     });
   } catch (err) {
