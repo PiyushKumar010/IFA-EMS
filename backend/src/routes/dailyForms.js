@@ -436,69 +436,57 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
       startDate.setHours(0, 0, 0, 0);
     }
 
-    // Get all approved employees
-    const employees = await User.find({
-      roles: "employee",
-      status: { $ne: "rejected" }
-    }).select("_id name email status");
-
-    // Get all forms in date range
-    const forms = await DailyForm.find({
-      date: { $gte: startDate, $lt: endDate },
-      submitted: true,
-      $or: [
-        { adminConfirmed: true },
-        { adminConfirmed: { $exists: false } }
-      ]
-    }).populate("employee", "name email");
-
-    // Calculate totals for each employee
-    const employeeStats = {};
-    
-    employees.forEach(emp => {
-      employeeStats[emp._id.toString()] = {
-        employee: {
-          _id: emp._id,
-          name: emp.name,
-          email: emp.email
-        },
-        totalScore: 0,
-        totalBonus: 0,
-        daysWorked: 0,
-        averageScore: 0
-      };
-    });
-
-    // Aggregate scores and bonuses
-    forms.forEach(form => {
-      const empId = form.employee._id.toString();
-
-      if (!employeeStats[empId]) {
-        employeeStats[empId] = {
+    const leaderboard = await DailyForm.aggregate([
+      {
+        $match: {
+          date: { $gte: startDate, $lt: endDate },
+          submitted: true,
+          adminConfirmed: true
+        }
+      },
+      {
+        $group: {
+          _id: "$employee",
+          totalScore: { $sum: { $ifNull: ["$score", 0] } },
+          totalBonus: { $sum: { $ifNull: ["$dailyBonus", 0] } },
+          daysWorked: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "employee"
+        }
+      },
+      {
+        $unwind: {
+          path: "$employee",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
           employee: {
-            _id: form.employee._id,
-            name: form.employee.name,
-            email: form.employee.email
+            _id: "$_id",
+            name: { $ifNull: ["$employee.name", "Unnamed Employee"] },
+            email: "$employee.email"
           },
-          totalScore: 0,
-          totalBonus: 0,
-          daysWorked: 0,
-          averageScore: 0
-        };
-      }
-
-      employeeStats[empId].totalScore += form.score || 0;
-      employeeStats[empId].totalBonus += form.dailyBonus || 0;
-      employeeStats[empId].daysWorked += 1;
-    });
-
-    // Calculate averages and convert to array
-    const leaderboard = Object.values(employeeStats)
-      .map(stat => ({
-        ...stat,
-        averageScore: stat.daysWorked > 0 ? (stat.totalScore / stat.daysWorked).toFixed(2) : 0
-      }))
-      .sort((a, b) => b.totalBonus - a.totalBonus); // Sort by total bonus descending
+          totalScore: 1,
+          totalBonus: 1,
+          daysWorked: 1,
+          averageScore: {
+            $cond: [
+              { $gt: ["$daysWorked", 0] },
+              { $round: [{ $divide: ["$totalScore", "$daysWorked"] }, 2] },
+              0
+            ]
+          }
+        }
+      },
+      { $sort: { totalBonus: -1 } }
+    ]);
 
     res.json({
       leaderboard,
@@ -531,10 +519,7 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       employee: req.user.userId,
       date: { $gte: startDate, $lt: endDate },
       submitted: true,
-      $or: [
-        { adminConfirmed: true },
-        { adminConfirmed: { $exists: false } }
-      ]
+      adminConfirmed: true
     }).sort({ date: -1 });
 
     const stats = {
@@ -561,7 +546,10 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       employee: req.user.userId,
       date: { $gte: startDate, $lt: endDate },
       submitted: true,
-      adminConfirmed: false
+      $or: [
+        { adminConfirmed: false },
+        { adminConfirmed: { $exists: false } }
+      ]
     });
 
     res.json({ stats });
