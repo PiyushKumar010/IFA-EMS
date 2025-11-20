@@ -436,57 +436,51 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
       startDate.setHours(0, 0, 0, 0);
     }
 
-    const leaderboard = await DailyForm.aggregate([
-      {
-        $match: {
-          date: { $gte: startDate, $lt: endDate },
-          submitted: true,
-          adminConfirmed: true
-        }
-      },
-      {
-        $group: {
-          _id: "$employee",
-          totalScore: { $sum: { $ifNull: ["$score", 0] } },
-          totalBonus: { $sum: { $ifNull: ["$dailyBonus", 0] } },
-          daysWorked: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "employee"
-        }
-      },
-      {
-        $unwind: {
-          path: "$employee",
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $project: {
+    const confirmedForms = await DailyForm.find({
+      date: { $gte: startDate, $lt: endDate },
+      submitted: true,
+      adminConfirmed: true
+    })
+      .populate("employee", "name email status")
+      .lean();
+
+    const statsByEmployee = {};
+
+    confirmedForms.forEach((form) => {
+      if (!form.employee) {
+        return;
+      }
+
+      const empId = form.employee._id.toString();
+      if (!statsByEmployee[empId]) {
+        statsByEmployee[empId] = {
           employee: {
-            _id: "$_id",
-            name: { $ifNull: ["$employee.name", "Unnamed Employee"] },
-            email: "$employee.email"
+            _id: form.employee._id,
+            name: form.employee.name || "Unnamed Employee",
+            email: form.employee.email,
+            status: form.employee.status
           },
-          totalScore: 1,
-          totalBonus: 1,
-          daysWorked: 1,
-          averageScore: {
-            $cond: [
-              { $gt: ["$daysWorked", 0] },
-              { $round: [{ $divide: ["$totalScore", "$daysWorked"] }, 2] },
-              0
-            ]
-          }
-        }
-      },
-      { $sort: { totalBonus: -1 } }
-    ]);
+          totalScore: 0,
+          totalBonus: 0,
+          daysWorked: 0,
+          averageScore: 0
+        };
+      }
+
+      statsByEmployee[empId].totalScore += form.score || 0;
+      statsByEmployee[empId].totalBonus += form.dailyBonus || 0;
+      statsByEmployee[empId].daysWorked += 1;
+    });
+
+    const leaderboard = Object.values(statsByEmployee)
+      .map((entry) => ({
+        ...entry,
+        averageScore:
+          entry.daysWorked > 0
+            ? Number((entry.totalScore / entry.daysWorked).toFixed(2))
+            : 0
+      }))
+      .sort((a, b) => b.totalBonus - a.totalBonus);
 
     res.json({
       leaderboard,
@@ -520,7 +514,9 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       date: { $gte: startDate, $lt: endDate },
       submitted: true,
       adminConfirmed: true
-    }).sort({ date: -1 });
+    })
+      .sort({ date: -1 })
+      .lean();
 
     const stats = {
       totalScore: 0,
