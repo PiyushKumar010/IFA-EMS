@@ -81,7 +81,7 @@ export default function AdminEmployeesPage() {
               className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              Back to Overview
             </button>
             <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
               Team management

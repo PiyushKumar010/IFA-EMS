@@ -14,6 +14,7 @@ import {
   Inbox,
   Trophy,
   Video,
+  ArrowLeft,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -131,11 +132,18 @@ export default function AdminDashboard() {
         {/* Top Navigation */}
         <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
+            <button
+              onClick={() => navigate("/admin")}
+              className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Overview
+            </button>
             <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-              Admin dashboard
+              Project Management
             </p>
-            <h1 className="mt-2 text-4xl font-bold">Welcome back, Admin</h1>
-            <p className="text-sm text-slate-300">Here's what's happening with your projects today</p>
+            <h1 className="mt-2 text-4xl font-bold">Projects</h1>
+            <p className="text-sm text-slate-300">Manage and track all your projects</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative hidden md:block">
@@ -150,7 +158,15 @@ export default function AdminDashboard() {
             </div>
             <button
               className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/admin")}
+              title="Overview"
+            >
+              <LayoutGrid className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
               onClick={() => navigate("/admin/employees")}
+              title="Employees"
             >
               <Users className="h-5 w-5" />
             </button>

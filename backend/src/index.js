@@ -72,6 +72,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/employees",employeeInfo);
+app.use("/api/admin",requests);
 app.use("/api/requests",requests);
 app.use("/api/messages", messagesRoutes);
 app.use("/api/daily-forms", dailyFormRoutes);

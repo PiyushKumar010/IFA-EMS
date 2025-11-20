@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { UserPlus, Check, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { UserPlus, Check, X, ArrowLeft } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function AdminRequestsPage() {
   const [requests, setRequests] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("/api/requests/pending-users", { credentials: "include" })
@@ -44,6 +46,13 @@ export default function AdminRequestsPage() {
       <div className="mx-auto min-h-screen w-full max-w-5xl px-6 pb-20 pt-10 text-white">
         <header className="flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
+            <button
+              onClick={() => navigate("/admin")}
+              className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Overview
+            </button>
             <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
               Access pipeline
             </p>

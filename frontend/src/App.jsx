@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import VerifyPage from "./pages/VerifyPage";
 import AdminPage from "./pages/AdminPage";
+import AdminOverviewPage from "./pages/AdminOverviewPage";
 import AdminProjectEdit from './pages/AdminProjectEdit';
 import EmployeePage from "./pages/EmployeePage";
 import EmployeeProject from "./pages/EmployeeProject";
@@ -36,6 +37,14 @@ export default function App() {
         {/* Admin Routes - Admin only */}
         <Route
           path="/admin"
+          element={
+            <AdminRoute>
+              <AdminOverviewPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/projects"
           element={
             <AdminRoute>
               <AdminPage />
