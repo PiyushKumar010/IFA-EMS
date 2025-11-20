@@ -6,6 +6,44 @@ import mongoose from "mongoose";
 
 const router = express.Router();
 
+// Helper function to check if form editing is allowed (before midnight of form date)
+const isFormEditableByEmployee = (formDate) => {
+  const now = new Date();
+  const formDateObj = new Date(formDate);
+  
+  // Set the deadline to midnight of the form date
+  const deadline = new Date(formDateObj);
+  deadline.setHours(23, 59, 59, 999);
+  
+  return now <= deadline;
+};
+
+// Helper function to get time remaining until midnight
+const getTimeUntilMidnight = (formDate) => {
+  const now = new Date();
+  const formDateObj = new Date(formDate);
+  const midnight = new Date(formDateObj);
+  midnight.setDate(midnight.getDate() + 1);
+  midnight.setHours(0, 0, 0, 0);
+  
+  const timeRemaining = midnight - now;
+  
+  if (timeRemaining <= 0) {
+    return { expired: true, message: "Editing period has expired" };
+  }
+  
+  const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return {
+    expired: false,
+    timeRemaining,
+    hours,
+    minutes,
+    message: `${hours}h ${minutes}m remaining to edit today's form`
+  };
+};
+
 // Standard daily tasks list
 const STANDARD_TASKS = [
   { taskId: "attended_morning", taskText: "Attended morning session", category: "Disciplinary Tasks", frequency: "daily" },
@@ -158,7 +196,16 @@ router.get("/today", authenticateToken, async (req, res) => {
 
     const formObj = form.toObject();
     calculateTaskCompletion(formObj);
-    res.json({ form: formObj });
+    
+    // Add editability status
+    const isEditable = isFormEditableByEmployee(form.date);
+    const timeInfo = getTimeUntilMidnight(form.date);
+    
+    res.json({ 
+      form: formObj, 
+      canEdit: isEditable,
+      timeRemaining: timeInfo
+    });
   } catch (err) {
     console.error("Error fetching today's form:", err);
     res.status(500).json({ error: "Failed to fetch form" });
@@ -213,33 +260,24 @@ router.post("/submit", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Form already submitted for today" });
     }
 
-    const { tasks, customTasks, hoursAttended, screensharing } = req.body;
-
     let form = await DailyForm.findOne({
       employee: req.user.userId,
       date: { $gte: today, $lt: tomorrow }
     });
 
     if (!form) {
-      // Create new form with standard tasks if not exists
-      const standardTasks = STANDARD_TASKS.map(task => ({
-        taskId: task.taskId,
-        taskText: task.taskText,
-        category: task.category,
-        frequency: task.frequency,
-        employeeChecked: false,
-        adminChecked: false
-      }));
+      return res.status(404).json({ error: "No form found for today" });
+    }
 
-      form = new DailyForm({
-        employee: req.user.userId,
-        date: today,
-        tasks: standardTasks,
-        customTasks: [],
-        hoursAttended: 0,
-        screensharing: false
+    // Check if form is still editable (midnight restriction)
+    if (!isFormEditableByEmployee(form.date)) {
+      return res.status(403).json({ 
+        error: "Form editing period has expired",
+        message: "You can only edit forms until midnight of the same day"
       });
     }
+
+    const { tasks, customTasks, hoursAttended, screensharing } = req.body;
 
     // Update form with submitted data
     if (tasks) form.tasks = tasks;
@@ -260,7 +298,16 @@ router.post("/submit", authenticateToken, async (req, res) => {
     await form.save();
     const updatedFormObj = form.toObject();
     calculateTaskCompletion(updatedFormObj);
-    res.json({ success: true, form: updatedFormObj });
+    
+    // Add editability info to response
+    const timeInfo = getTimeUntilMidnight(form.date);
+    
+    res.json({ 
+      success: true, 
+      form: updatedFormObj,
+      canEdit: false, // After submission, form becomes non-editable
+      timeRemaining: timeInfo
+    });
   } catch (err) {
     console.error("Error submitting form:", err);
     res.status(500).json({ error: "Failed to submit form" });
@@ -740,6 +787,14 @@ router.put("/time-tracking/:formId", authenticateToken, async (req, res) => {
       return res.status(403).json({ error: "Unauthorized to update this form" });
     }
 
+    // For employees, check midnight restriction
+    if (!isAdmin && !isFormEditableByEmployee(form.date)) {
+      return res.status(403).json({ 
+        error: "Form editing period has expired",
+        message: "You can only edit forms until midnight of the same day"
+      });
+    }
+
     // Update time tracking
     if (entryTime) form.entryTime = new Date(entryTime);
     if (exitTime) form.exitTime = new Date(exitTime);
@@ -749,10 +804,16 @@ router.put("/time-tracking/:formId", authenticateToken, async (req, res) => {
 
     await form.save();
 
+    // Add editability info to response
+    const canEdit = isAdmin || isFormEditableByEmployee(form.date);
+    const timeInfo = getTimeUntilMidnight(form.date);
+
     res.json({ 
       success: true, 
       message: "Time tracking updated",
-      form
+      form,
+      canEdit,
+      timeRemaining: timeInfo
     });
   } catch (error) {
     console.error("Time tracking error:", error);

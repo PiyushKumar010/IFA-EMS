@@ -13,14 +13,41 @@ export default function EmployeeDailyFormPage() {
   const [assignedProjects, setAssignedProjects] = useState([]);
   const [showTimeTracking, setShowTimeTracking] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [canEdit, setCanEdit] = useState(true);
+  const [timeRemaining, setTimeRemaining] = useState(null);
+  const [midnightRestricted, setMidnightRestricted] = useState(false);
 
-  // Update current time every minute
+  // Update current time every minute and check editability
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
+      // Update time remaining if we have the info
+      if (timeRemaining && !timeRemaining.expired) {
+        const now = new Date();
+        const formDate = new Date(form?.date);
+        const midnight = new Date(formDate);
+        midnight.setDate(midnight.getDate() + 1);
+        midnight.setHours(0, 0, 0, 0);
+        
+        const remaining = midnight - now;
+        if (remaining <= 0) {
+          setCanEdit(false);
+          setMidnightRestricted(true);
+          setTimeRemaining({ expired: true, message: "Editing period has expired" });
+        } else {
+          const hours = Math.floor(remaining / (1000 * 60 * 60));
+          const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+          setTimeRemaining({
+            expired: false,
+            hours,
+            minutes,
+            message: `${hours}h ${minutes}m remaining to edit today's form`
+          });
+        }
+      }
     }, 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [timeRemaining, form]);
 
   useEffect(() => {
     // Check if form can be submitted
@@ -36,6 +63,9 @@ export default function EmployeeDailyFormPage() {
       .then((res) => res.json())
       .then((data) => {
         setForm(data.form);
+        setCanEdit(data.canEdit ?? true);
+        setTimeRemaining(data.timeRemaining);
+        setMidnightRestricted(!data.canEdit && !data.form?.submitted);
         if (data.form?.submitted) {
           setAlreadySubmitted(true);
         }
@@ -53,7 +83,7 @@ export default function EmployeeDailyFormPage() {
   }, []);
 
   const handleTaskChange = (taskIndex, checked) => {
-    if (alreadySubmitted) return; // Prevent changes if already submitted
+    if (alreadySubmitted || !canEdit || midnightRestricted) return; // Prevent changes if restricted
 
     setForm((prev) => {
       const updated = { ...prev };
@@ -63,7 +93,7 @@ export default function EmployeeDailyFormPage() {
   };
 
   const handleCustomTaskChange = (taskIndex, checked) => {
-    if (alreadySubmitted) return;
+    if (alreadySubmitted || !canEdit || midnightRestricted) return;
 
     setForm((prev) => {
       const updated = { ...prev };
@@ -73,7 +103,7 @@ export default function EmployeeDailyFormPage() {
   };
 
   const handleHoursChange = (e) => {
-    if (alreadySubmitted) return;
+    if (alreadySubmitted || !canEdit || midnightRestricted) return;
     setForm((prev) => ({
       ...prev,
       hoursAttended: parseFloat(e.target.value) || 0,
@@ -81,7 +111,7 @@ export default function EmployeeDailyFormPage() {
   };
 
   const handleScreensharingChange = (checked) => {
-    if (alreadySubmitted) return;
+    if (alreadySubmitted || !canEdit || midnightRestricted) return;
     setForm((prev) => ({
       ...prev,
       screensharing: checked,
@@ -89,7 +119,7 @@ export default function EmployeeDailyFormPage() {
   };
 
   const handleEntryTime = async () => {
-    if (!form?._id) return;
+    if (!form?._id || !canEdit || midnightRestricted) return;
     
     try {
       const res = await fetch(`/api/daily-forms/time-tracking/${form._id}`, {
@@ -104,15 +134,21 @@ export default function EmployeeDailyFormPage() {
       if (res.ok) {
         const data = await res.json();
         setForm(data.form);
+        setCanEdit(data.canEdit ?? true);
+        setTimeRemaining(data.timeRemaining);
         alert("Entry time recorded!");
+      } else {
+        const error = await res.json();
+        alert(error.message || "Failed to record entry time");
       }
     } catch (error) {
       console.error("Error recording entry time:", error);
+      alert("Network error occurred");
     }
   };
 
   const handleExitTime = async () => {
-    if (!form?._id) return;
+    if (!form?._id || !canEdit || midnightRestricted) return;
     
     try {
       const res = await fetch(`/api/daily-forms/time-tracking/${form._id}`, {
@@ -127,10 +163,16 @@ export default function EmployeeDailyFormPage() {
       if (res.ok) {
         const data = await res.json();
         setForm(data.form);
+        setCanEdit(data.canEdit ?? true);
+        setTimeRemaining(data.timeRemaining);
         alert("Exit time recorded!");
+      } else {
+        const error = await res.json();
+        alert(error.message || "Failed to record exit time");
       }
     } catch (error) {
       console.error("Error recording exit time:", error);
+      alert("Network error occurred");
     }
   };
 
@@ -150,8 +192,12 @@ export default function EmployeeDailyFormPage() {
   };
 
   const handleSubmit = async () => {
-    if (alreadySubmitted || !canSubmit) {
-      alert("Form already submitted for today. You can only submit once per day.");
+    if (alreadySubmitted || !canSubmit || !canEdit || midnightRestricted) {
+      if (midnightRestricted) {
+        alert("Form editing period has expired. You can only edit forms until midnight of the same day.");
+      } else {
+        alert("Form already submitted for today. You can only submit once per day.");
+      }
       return;
     }
 
@@ -172,13 +218,15 @@ export default function EmployeeDailyFormPage() {
       if (res.ok) {
         const data = await res.json();
         setForm(data.form);
+        setCanEdit(data.canEdit ?? false);
+        setTimeRemaining(data.timeRemaining);
         setAlreadySubmitted(true);
         setCanSubmit(false);
         alert("Form submitted successfully!");
         navigate("/employee");
       } else {
         const error = await res.json();
-        alert(error.error || "Failed to submit form");
+        alert(error.message || error.error || "Failed to submit form");
       }
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -189,7 +237,12 @@ export default function EmployeeDailyFormPage() {
   };
 
   const handleSave = async () => {
-    if (alreadySubmitted) return;
+    if (alreadySubmitted || !canEdit || midnightRestricted) {
+      if (midnightRestricted) {
+        alert("Form editing period has expired. You can only edit forms until midnight of the same day.");
+      }
+      return;
+    }
 
     setSaving(true);
     try {
@@ -208,7 +261,8 @@ export default function EmployeeDailyFormPage() {
       if (res.ok) {
         alert("Form saved successfully!");
       } else {
-        alert("Failed to save form");
+        const error = await res.json();
+        alert(error.message || "Failed to save form");
       }
     } catch (err) {
       console.error("Error saving form:", err);
@@ -296,6 +350,38 @@ export default function EmployeeDailyFormPage() {
           </div>
         )}
 
+        {!alreadySubmitted && midnightRestricted && (
+          <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/20 p-4">
+            <p className="text-sm text-red-200">
+              <strong>Editing Period Expired:</strong> Forms can only be edited until midnight of the same day.
+            </p>
+            <p className="mt-2 text-xs text-red-100">
+              This form is now read-only. Contact your admin if you need to make changes.
+            </p>
+          </div>
+        )}
+
+        {!alreadySubmitted && !midnightRestricted && timeRemaining && !timeRemaining.expired && (
+          <div className="mb-6 rounded-lg border border-blue-500/50 bg-blue-500/20 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-200">
+                  <strong>Time Remaining:</strong> {timeRemaining.message}
+                </p>
+                <p className="mt-1 text-xs text-blue-100">
+                  Form becomes read-only after midnight today.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-blue-300">
+                <Clock className="h-4 w-4" />
+                <span className="font-mono text-lg">
+                  {timeRemaining.hours.toString().padStart(2, '0')}:{timeRemaining.minutes.toString().padStart(2, '0')}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Time Tracking Section */}
         <div className="mb-8 glass-card p-6">
           <div className="flex items-center justify-between mb-4">
@@ -323,7 +409,7 @@ export default function EmployeeDailyFormPage() {
               </div>
               <button
                 onClick={handleEntryTime}
-                disabled={alreadySubmitted || form.entryTime}
+                disabled={alreadySubmitted || form.entryTime || !canEdit || midnightRestricted}
                 className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {form.entryTime ? "Recorded" : "Record Entry"}
@@ -355,7 +441,7 @@ export default function EmployeeDailyFormPage() {
               </div>
               <button
                 onClick={handleExitTime}
-                disabled={alreadySubmitted || form.exitTime || !form.entryTime}
+                disabled={alreadySubmitted || form.exitTime || !form.entryTime || !canEdit || midnightRestricted}
                 className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {form.exitTime ? "Recorded" : "Record Exit"}
@@ -430,7 +516,7 @@ export default function EmployeeDailyFormPage() {
                         task.employeeChecked
                           ? "border-emerald-500/50 bg-emerald-500/10"
                           : "border-white/10 bg-white/5 hover:bg-white/10"
-                      } ${alreadySubmitted ? "cursor-not-allowed opacity-60" : ""}`}
+                      } ${alreadySubmitted || !canEdit || midnightRestricted ? "cursor-not-allowed opacity-60" : ""}`}
                     >
                       <input
                         type="checkbox"
@@ -438,7 +524,7 @@ export default function EmployeeDailyFormPage() {
                         onChange={(e) =>
                           handleTaskChange(globalIndex, e.target.checked)
                         }
-                        disabled={alreadySubmitted}
+                        disabled={alreadySubmitted || !canEdit || midnightRestricted}
                         className="mt-1 h-5 w-5 cursor-pointer rounded border-white/30 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-transparent"
                       />
                       <span className="flex-1 text-sm text-white">
@@ -533,16 +619,16 @@ export default function EmployeeDailyFormPage() {
             <div className="flex gap-4">
               <button
                 onClick={handleSave}
-                disabled={saving}
-                className="btn-ghost flex items-center gap-2"
+                disabled={saving || !canEdit || midnightRestricted}
+                className="btn-ghost flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="h-4 w-4" />
                 Save Draft
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={saving}
-                className="btn-primary flex flex-1 items-center justify-center gap-2"
+                disabled={saving || !canEdit || midnightRestricted}
+                className="btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>
