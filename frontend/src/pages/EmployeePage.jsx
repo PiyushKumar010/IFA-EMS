@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   Trophy,
   Video,
+  RefreshCw,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -19,6 +20,9 @@ export default function EmployeeDashboard() {
   const [projects, setProjects] = useState([]);
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
+  const [statsMeta, setStatsMeta] = useState(null);
+  const [statsRange, setStatsRange] = useState("30");
+  const [statsLoading, setStatsLoading] = useState(false);
   const navigate = useNavigate();
 
   const logout = async () => {
@@ -56,17 +60,43 @@ export default function EmployeeDashboard() {
       const data = await res.json();
       setProjects(data.projects || []);
     });
+  }, [navigate]);
 
-    // Fetch employee stats and bonus
-    fetch("/api/daily-forms/my-stats?days=30", { credentials: "include" })
-      .then(async (res) => {
+  const fetchStats = React.useCallback(
+    async (rangeValue = statsRange) => {
+      const params = new URLSearchParams();
+      if (rangeValue === "all") {
+        params.set("range", "all");
+      } else {
+        params.set("days", rangeValue);
+      }
+
+      setStatsLoading(true);
+      try {
+        const res = await fetch(`/api/daily-forms/my-stats?${params.toString()}`, {
+          credentials: "include",
+        });
         if (res.ok) {
           const data = await res.json();
-          setStats(data.stats);
+          setStats(data.stats || null);
+          setStatsMeta(data.meta || null);
         }
-      })
-      .catch((err) => console.error("Error fetching stats:", err));
-  }, [navigate]);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+      } finally {
+        setStatsLoading(false);
+      }
+    },
+    [statsRange],
+  );
+
+  useEffect(() => {
+    fetchStats(statsRange);
+    const intervalId = setInterval(() => {
+      fetchStats(statsRange);
+    }, 60000);
+    return () => clearInterval(intervalId);
+  }, [fetchStats, statsRange]);
 
   // Create tasks from projects
   const tasks = projects.map((project, idx) => ({
@@ -80,6 +110,14 @@ export default function EmployeeDashboard() {
 
   const completedCount = tasks.filter((t) => t.status === "completed").length;
   const activeCount = tasks.filter((t) => t.status !== "completed").length;
+
+  const bonusRangeLabel =
+    statsMeta?.type === "all" || statsRange === "all"
+      ? "All time"
+      : `Last ${statsMeta?.days || Number(statsRange) || 30} days`;
+  const statsLastUpdated = statsMeta?.lastUpdated
+    ? new Date(statsMeta.lastUpdated).toLocaleTimeString()
+    : null;
 
   return (
     <PageBackground variant="emerald">
@@ -167,7 +205,9 @@ export default function EmployeeDashboard() {
                     <span className="text-xl">₹</span>
                     {stats ? stats.totalBonus.toLocaleString("en-IN") : "0"}
                   </div>
-                  <div className="text-sm text-slate-300">Total Bonus (30d)</div>
+                  <div className="text-sm text-slate-300">
+                    Total Bonus ({bonusRangeLabel})
+                  </div>
                 </div>
               </div>
             </div>
@@ -282,8 +322,41 @@ export default function EmployeeDashboard() {
             {/* Bonus Stats */}
             {stats && (
               <div className="glass-card p-6">
-                <p className="mb-2 text-xs uppercase tracking-[0.6em] text-slate-300">Performance</p>
-                <h3 className="mb-4 text-xl font-bold text-white">Bonus & Score</h3>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.6em] text-slate-300">Performance</p>
+                    <h3 className="text-xl font-bold text-white">Bonus & Score</h3>
+                    {statsLastUpdated && (
+                      <p className="text-xs text-slate-400">
+                        Updated {statsLastUpdated}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={statsRange}
+                      onChange={(e) => setStatsRange(e.target.value)}
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-xs text-white outline-none"
+                    >
+                      <option value="7">Last 7 days</option>
+                      <option value="30">Last 30 days</option>
+                      <option value="90">Last 90 days</option>
+                      <option value="365">Last 365 days</option>
+                      <option value="all">All time</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => fetchStats(statsRange)}
+                      className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10"
+                      title="Refresh stats"
+                      disabled={statsLoading}
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${statsLoading ? "animate-spin text-emerald-300" : "text-slate-200"}`}
+                      />
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-300">Total Bonus</span>

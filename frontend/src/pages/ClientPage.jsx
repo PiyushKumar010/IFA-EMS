@@ -147,6 +147,8 @@ export default function ClientPage() {
     clientName: "",
     clientEmail: "",
     description: "",
+    startDate: "",
+    endDate: "",
   });
   const navigate = useNavigate();
 
@@ -178,11 +180,26 @@ export default function ClientPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      if (end < start) {
+        alert("End date cannot be earlier than start date.");
+        return;
+      }
+    }
+
+    const payload = {
+      ...formData,
+    };
+    if (!payload.startDate) delete payload.startDate;
+    if (!payload.endDate) delete payload.endDate;
+
     const resp = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(formData),
+      body: JSON.stringify(payload),
     });
 
     if (resp.ok) {
@@ -192,6 +209,8 @@ export default function ClientPage() {
         clientName: "",
         clientEmail: "",
         description: "",
+        startDate: "",
+        endDate: "",
       });
       fetchProjects();
     } else if (resp.status === 401) {
@@ -367,6 +386,33 @@ export default function ClientPage() {
               required
               className="input-field h-36 resize-none"
             />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.4em] text-slate-400">
+                  Start date
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.4em] text-slate-400">
+                  End date
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  value={formData.endDate}
+                  onChange={handleChange}
+                  className="input-field"
+                  min={formData.startDate || undefined}
+                />
+              </div>
+            </div>
             <button
               type="submit"
               className="btn-primary w-full justify-center bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500"

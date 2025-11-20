@@ -579,19 +579,30 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    const { days = 30 } = req.query;
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(days));
-    startDate.setHours(0, 0, 0, 0);
+    const { days = 30, range } = req.query;
+    const isAllTime = range === "all" || days === "all";
 
-    const forms = await DailyForm.find({
+    let startDate = null;
+    let endDate = null;
+    if (!isAllTime) {
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - parseInt(days, 10));
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    const baseFilters = {
       employee: req.user.userId,
-      date: { $gte: startDate, $lt: endDate },
       submitted: true,
       adminConfirmed: true
-    })
+    };
+
+    if (!isAllTime) {
+      baseFilters.date = { $gte: startDate, $lt: endDate };
+    }
+
+    const forms = await DailyForm.find(baseFilters)
       .sort({ date: -1 })
       .lean();
 
@@ -613,19 +624,34 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       stats.totalBonus += form.dailyBonus || 0;
     });
 
-    stats.averageScore = stats.daysWorked > 0 ? (stats.totalScore / stats.daysWorked).toFixed(2) : 0;
+    stats.averageScore = stats.daysWorked > 0 ? Number((stats.totalScore / stats.daysWorked).toFixed(2)) : 0;
 
-    stats.pendingApproval = await DailyForm.countDocuments({
+    const pendingFilters = {
       employee: req.user.userId,
-      date: { $gte: startDate, $lt: endDate },
       submitted: true,
       $or: [
         { adminConfirmed: false },
         { adminConfirmed: { $exists: false } }
       ]
-    });
+    };
+    if (!isAllTime) {
+      pendingFilters.date = { $gte: startDate, $lt: endDate };
+    }
 
-    res.json({ stats });
+    stats.pendingApproval = await DailyForm.countDocuments(pendingFilters);
+
+    res.json({
+      stats,
+      meta: {
+        type: isAllTime ? "all" : "rolling",
+        days: isAllTime ? null : parseInt(days, 10),
+        dateRange: {
+          start: startDate,
+          end: endDate
+        },
+        lastUpdated: new Date()
+      }
+    });
   } catch (err) {
     console.error("Error fetching employee stats:", err);
     res.status(500).json({ error: "Failed to fetch stats" });
