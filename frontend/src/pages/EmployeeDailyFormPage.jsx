@@ -21,45 +21,52 @@ export default function EmployeeDailyFormPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-      // Update time remaining if we have the info
-      if (form?.date && canEdit) {
-        const now = new Date();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+      
+      // Always calculate time remaining until end of TODAY
+      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+      
+      const remaining = endOfToday - now;
+      
+      if (remaining <= 0) {
+        // If it's past midnight, check if we need to refresh
+        setCanEdit(false);
+        setMidnightRestricted(true);
+        setTimeRemaining({ expired: true, message: "Today's editing period has expired" });
+      } else {
+        // Calculate hours and minutes remaining in current day
+        const hours = Math.floor(remaining / (1000 * 60 * 60));
+        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
         
-        const formDate = new Date(form.date);
-        formDate.setHours(0, 0, 0, 0);
-        
-        // If form is not from today, mark as restricted
-        if (formDate.getTime() !== today.getTime()) {
-          setCanEdit(false);
-          setMidnightRestricted(true);
-          setTimeRemaining({ expired: true, message: "Can only edit today's form" });
-        } else {
-          // Calculate time remaining until end of today
-          const endOfToday = new Date(today);
-          endOfToday.setHours(23, 59, 59, 999);
+        // Only update if we haven't already marked it as restricted
+        if (!midnightRestricted && form?.date) {
+          const formDate = new Date(form.date);
+          formDate.setHours(0, 0, 0, 0);
           
-          const remaining = endOfToday - now;
-          if (remaining <= 0) {
-            setCanEdit(false);
-            setMidnightRestricted(true);
-            setTimeRemaining({ expired: true, message: "Today's editing period has expired" });
-          } else {
-            const hours = Math.floor(remaining / (1000 * 60 * 60));
-            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+          // If form is from today, it's editable
+          if (formDate.getTime() === today.getTime()) {
+            setCanEdit(true);
+            setMidnightRestricted(false);
             setTimeRemaining({
               expired: false,
               hours,
               minutes,
               message: `${hours}h ${minutes}m remaining to edit today's form`
             });
+          } else if (formDate.getTime() < today.getTime()) {
+            // Form is from a previous day
+            setCanEdit(false);
+            setMidnightRestricted(true);
+            setTimeRemaining({ expired: true, message: "Can only edit today's form" });
           }
         }
       }
-    }, 60000);
+    }, 60000); // Update every minute
     return () => clearInterval(timer);
-  }, [form, canEdit]);
+  }, [form, midnightRestricted]);
 
   useEffect(() => {
     // Check if form can be submitted
@@ -76,16 +83,30 @@ export default function EmployeeDailyFormPage() {
       .then((data) => {
         setForm(data.form);
         
-        // Check if this form is editable based on date
+        // Set initial states from server response
         const formCanEdit = data.canEdit ?? true;
         const timeInfo = data.timeRemaining;
         
         setCanEdit(formCanEdit);
         setTimeRemaining(timeInfo);
         
-        // Check if it's restricted due to day change (not submission)
-        const isFromPreviousDay = timeInfo?.expired && timeInfo?.message?.includes("edit today's");
-        setMidnightRestricted(isFromPreviousDay);
+        // Check if form is from a previous day
+        if (data.form?.date) {
+          const now = new Date();
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const formDate = new Date(data.form.date);
+          formDate.setHours(0, 0, 0, 0);
+          
+          // If form is not from today, it's restricted
+          if (formDate.getTime() !== today.getTime()) {
+            setMidnightRestricted(true);
+            setCanEdit(false);
+          } else {
+            setMidnightRestricted(false);
+          }
+        }
         
         if (data.form?.submitted) {
           setAlreadySubmitted(true);

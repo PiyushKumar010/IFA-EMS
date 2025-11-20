@@ -229,9 +229,9 @@ router.get("/today", authenticateToken, async (req, res) => {
     const formObj = form.toObject();
     calculateTaskCompletion(formObj);
     
-    // Add editability status
+    // Add editability status - always calculate time based on current day
     const isEditable = isFormEditableByEmployee(form.date);
-    const timeInfo = getTimeUntilMidnight(form.date);
+    const timeInfo = getTimeUntilMidnight(); // Remove form.date parameter
     
     res.json({ 
       form: formObj, 
@@ -332,7 +332,7 @@ router.post("/submit", authenticateToken, async (req, res) => {
     calculateTaskCompletion(updatedFormObj);
     
     // Add editability info to response
-    const timeInfo = getTimeUntilMidnight(form.date);
+    const timeInfo = getTimeUntilMidnight(); // Remove form.date parameter
     
     res.json({ 
       success: true, 
@@ -838,7 +838,7 @@ router.put("/time-tracking/:formId", authenticateToken, async (req, res) => {
 
     // Add editability info to response
     const canEdit = isAdmin || isFormEditableByEmployee(form.date);
-    const timeInfo = getTimeUntilMidnight(form.date);
+    const timeInfo = getTimeUntilMidnight(); // Remove form.date parameter
 
     res.json({ 
       success: true, 
