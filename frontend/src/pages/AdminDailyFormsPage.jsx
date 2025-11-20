@@ -17,6 +17,7 @@ import {
   Timer,
   Tag,
   Check,
+  Settings,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -34,13 +35,17 @@ function AdminDailyFormsPage() {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [showEditTimeModal, setShowEditTimeModal] = useState(false);
     const [showAddTagModal, setShowAddTagModal] = useState(false);
+    const [showDefaultTemplateModal, setShowDefaultTemplateModal] = useState(false);
     const [newTag, setNewTag] = useState({ name: "", color: TAG_COLORS[0] });
     const [editingNotes, setEditingNotes] = useState(false);
     const [adminNotes, setAdminNotes] = useState("");
+    const [defaultTemplate, setDefaultTemplate] = useState(null);
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchEmployees();
+        fetchDefaultTemplate();
     }, []);
 
     const fetchEmployees = async () => {
@@ -52,6 +57,20 @@ function AdminDailyFormsPage() {
             }
         } catch (error) {
             console.error("Error fetching employees:", error);
+        }
+    };
+
+    const fetchDefaultTemplate = async () => {
+        try {
+            const res = await fetch("/api/daily-forms/admin/default-template", {
+                credentials: "include"
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setDefaultTemplate(data.template);
+            }
+        } catch (error) {
+            console.error("Error fetching default template:", error);
         }
     };
 
@@ -182,29 +201,38 @@ function AdminDailyFormsPage() {
 
     const handleCreateForm = async (employeeId, formData) => {
         try {
+            setError("");
+            const requestData = {
+                employeeId,
+                ...formData
+            };
+            
+            console.log("Creating form with data:", requestData);
+            
             const res = await fetch("/api/daily-forms/admin/create-for-employee", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({
-                    employeeId,
-                    ...formData
-                })
+                body: JSON.stringify(requestData)
             });
 
+            const responseData = await res.json();
+            
             if (res.ok) {
-                const data = await res.json();
                 setShowCreateForm(false);
                 if (selectedEmployee) {
                     fetchEmployeeForms(selectedEmployee._id);
                 }
                 alert("Daily form created for employee!");
             } else {
-                const error = await res.json();
-                alert(error.error || "Failed to create form");
+                console.error("Server error:", responseData);
+                setError(responseData.error || "Failed to create form");
+                alert(responseData.error || "Failed to create form");
             }
         } catch (error) {
             console.error("Create form error:", error);
+            setError("Network error occurred");
+            alert("Network error occurred");
         }
     };
 
@@ -240,10 +268,21 @@ function AdminDailyFormsPage() {
                             <ArrowLeft className="h-4 w-4" />
                             Back to Overview
                         </button>
-                        <h1 className="text-4xl font-bold">Daily Forms Management</h1>
-                        <p className="mt-2 text-slate-300">
-                            Manage employee daily update sheets with auto-selection and time tracking
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-4xl font-bold">Daily Forms Management</h1>
+                                <p className="mt-2 text-slate-300">
+                                    Manage employee daily update sheets with auto-selection and time tracking
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowDefaultTemplateModal(true)}
+                                className="btn-ghost flex items-center gap-2"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Default Template
+                            </button>
+                        </div>
                     </div>
                 </header>
 
@@ -519,8 +558,10 @@ function AdminDailyFormsPage() {
                 {showCreateForm && (
                     <CreateFormModal
                         employee={selectedEmployee}
+                        defaultTemplate={defaultTemplate}
                         onClose={() => setShowCreateForm(false)}
                         onSubmit={handleCreateForm}
+                        error={error}
                     />
                 )}
 
@@ -541,23 +582,69 @@ function AdminDailyFormsPage() {
                         onSubmit={() => handleAddCustomTag(selectedForm._id)}
                     />
                 )}
+
+                {showDefaultTemplateModal && (
+                    <DefaultTemplateModal
+                        template={defaultTemplate}
+                        onClose={() => setShowDefaultTemplateModal(false)}
+                        onUpdate={fetchDefaultTemplate}
+                    />
+                )}
             </div>
         </PageBackground>
     );
 }
 
 // Modal Components
-const CreateFormModal = ({ employee, onClose, onSubmit }) => {
+const CreateFormModal = ({ employee, defaultTemplate, onClose, onSubmit, error }) => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     entryTime: "",
     exitTime: "",
-    adminNotes: ""
+    adminNotes: "",
+    customTasks: [],
+    customTags: []
   });
+  const [newCustomTask, setNewCustomTask] = useState("");
+  const [newCustomTag, setNewCustomTag] = useState({ name: "", color: TAG_COLORS[0] });
+
+  const addCustomTask = () => {
+    if (newCustomTask.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        customTasks: [...prev.customTasks, { taskText: newCustomTask.trim() }]
+      }));
+      setNewCustomTask("");
+    }
+  };
+
+  const removeCustomTask = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      customTasks: prev.customTasks.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addCustomTag = () => {
+    if (newCustomTag.name.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        customTags: [...prev.customTags, { ...newCustomTag }]
+      }));
+      setNewCustomTag({ name: "", color: TAG_COLORS[0] });
+    }
+  };
+
+  const removeCustomTag = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      customTags: prev.customTags.filter((_, i) => i !== index)
+    }));
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
-      <div className="glass-panel w-full max-w-md rounded-[32px] px-8 py-8">
+      <div className="glass-panel w-full max-w-2xl rounded-[32px] px-8 py-8 max-h-[90vh] overflow-y-auto">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold">Create Daily Form</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-white">
@@ -565,7 +652,13 @@ const CreateFormModal = ({ employee, onClose, onSubmit }) => {
           </button>
         </div>
 
-        <div className="space-y-4">
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-500/20 border border-red-500/30 p-3 text-red-200">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-6">
           <div>
             <label className="block text-sm text-slate-300 mb-2">Employee</label>
             <div className="input-field bg-white/5 text-slate-400">
@@ -604,6 +697,89 @@ const CreateFormModal = ({ employee, onClose, onSubmit }) => {
             </div>
           </div>
 
+          {/* Custom Tasks Section */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-2">Custom Tasks (Optional)</label>
+            <div className="space-y-2">
+              {formData.customTasks.map((task, index) => (
+                <div key={index} className="flex items-center gap-2 bg-white/5 p-2 rounded">
+                  <span className="flex-1">{task.taskText}</span>
+                  <button 
+                    onClick={() => removeCustomTask(index)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCustomTask}
+                  onChange={(e) => setNewCustomTask(e.target.value)}
+                  placeholder="Add custom task..."
+                  className="input-field flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && addCustomTask()}
+                />
+                <button 
+                  onClick={addCustomTask}
+                  className="btn-ghost px-3"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Custom Tags Section */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-2">Custom Tags (Optional)</label>
+            <div className="space-y-2">
+              {formData.customTags.map((tag, index) => (
+                <div key={index} className="flex items-center gap-2 bg-white/5 p-2 rounded">
+                  <div 
+                    className="h-4 w-4 rounded-full"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  <span className="flex-1">{tag.name}</span>
+                  <button 
+                    onClick={() => removeCustomTag(index)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCustomTag.name}
+                  onChange={(e) => setNewCustomTag(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Add custom tag..."
+                  className="input-field flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && addCustomTag()}
+                />
+                <select
+                  value={newCustomTag.color}
+                  onChange={(e) => setNewCustomTag(prev => ({ ...prev, color: e.target.value }))}
+                  className="input-field w-20"
+                >
+                  {TAG_COLORS.map((color) => (
+                    <option key={color} value={color} style={{ backgroundColor: color }}>
+                      ●
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  onClick={addCustomTag}
+                  className="btn-ghost px-3"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm text-slate-300 mb-2">Admin Notes</label>
             <textarea
@@ -624,6 +800,70 @@ const CreateFormModal = ({ employee, onClose, onSubmit }) => {
             className="btn-primary flex-1"
           >
             Create Form
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Default Template Modal
+const DefaultTemplateModal = ({ template, onClose, onUpdate }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
+      <div className="glass-panel w-full max-w-4xl rounded-[32px] px-8 py-8 max-h-[90vh] overflow-y-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Default Form Template</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {template ? (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Standard Tasks ({template.standardTasks?.length || 0})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                {template.standardTasks?.map((task, index) => (
+                  <div key={index} className="bg-white/5 p-3 rounded border border-white/10">
+                    <div className="font-medium text-sm">{task.taskText}</div>
+                    <div className="text-xs text-slate-400 mt-1">{task.category}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 pt-4">
+              <h3 className="text-lg font-semibold mb-2">Template Settings</h3>
+              <div className="bg-white/5 p-4 rounded">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>Entry Time Required: <span className="text-emerald-400">✓ Yes</span></div>
+                  <div>Exit Time Required: <span className="text-emerald-400">✓ Yes</span></div>
+                  <div>Custom Tasks: <span className="text-emerald-400">✓ Allowed</span></div>
+                  <div>Custom Tags: <span className="text-emerald-400">✓ Allowed</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-500/20 border border-blue-500/30 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-200 mb-2">How it works:</h4>
+              <ul className="text-sm text-blue-100 space-y-1">
+                <li>• When you create a form for an employee, they get all standard tasks</li>
+                <li>• If no custom form is created, employees get the default template automatically</li>
+                <li>• You can add custom tasks and tags when creating forms</li>
+                <li>• Employees can see and complete tasks assigned by admin</li>
+              </ul>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-slate-400">Loading template...</div>
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end">
+          <button onClick={onClose} className="btn-primary">
+            Close
           </button>
         </div>
       </div>

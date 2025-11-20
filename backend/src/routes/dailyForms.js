@@ -855,7 +855,7 @@ router.delete("/custom-tag/:formId/:tagId", authenticateToken, async (req, res) 
 // Admin create new daily form for employee
 router.post("/admin/create-for-employee", authenticateToken, async (req, res) => {
   try {
-    const { employeeId, date, entryTime, exitTime, adminNotes } = req.body;
+    const { employeeId, date, entryTime, exitTime, adminNotes, customTasks = [], customTags = [] } = req.body;
     const adminId = req.user.userId;
 
     // Verify admin role
@@ -870,14 +870,19 @@ router.post("/admin/create-for-employee", authenticateToken, async (req, res) =>
       return res.status(404).json({ error: "Employee not found" });
     }
 
+    // Fix date handling
     const formDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(formDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(formDate);
+    endOfDay.setHours(23, 59, 59, 999);
     
     // Check if form already exists for this date
     const existingForm = await DailyForm.findOne({
       employee: employeeId,
       date: {
-        $gte: new Date(formDate.setHours(0, 0, 0, 0)),
-        $lt: new Date(formDate.setHours(23, 59, 59, 999))
+        $gte: startOfDay,
+        $lt: endOfDay
       }
     });
 
@@ -885,20 +890,44 @@ router.post("/admin/create-for-employee", authenticateToken, async (req, res) =>
       return res.status(400).json({ error: "Daily form already exists for this date" });
     }
 
+    // Create entry and exit DateTime objects
+    let entryDateTime = null;
+    let exitDateTime = null;
+    
+    if (entryTime) {
+      entryDateTime = new Date(`${formDate.toISOString().split('T')[0]}T${entryTime}`);
+    }
+    if (exitTime) {
+      exitDateTime = new Date(`${formDate.toISOString().split('T')[0]}T${exitTime}`);
+    }
+
     // Create new form with standard tasks
     const newForm = new DailyForm({
       employee: employeeId,
-      date: formDate,
-      entryTime: entryTime ? new Date(entryTime) : null,
-      exitTime: exitTime ? new Date(exitTime) : null,
+      date: startOfDay,
+      entryTime: entryDateTime,
+      exitTime: exitDateTime,
       tasks: STANDARD_TASKS.map(task => ({
         ...task,
         employeeChecked: false,
         adminChecked: false,
         isCompleted: false
       })),
-      customTasks: [],
-      customTags: [],
+      customTasks: customTasks.map(task => ({
+        taskText: task.taskText || task.text || task,
+        employeeChecked: false,
+        adminChecked: false,
+        isCompleted: false
+      })),
+      customTags: customTags.map(tag => ({
+        name: tag.name || tag,
+        color: tag.color || "#6366f1",
+        employeeChecked: false,
+        adminChecked: false,
+        isCompleted: false,
+        createdBy: adminId,
+        createdAt: new Date()
+      })),
       adminNotes: adminNotes || "",
       submitted: false,
       lastEditedBy: adminId,
@@ -919,6 +948,56 @@ router.post("/admin/create-for-employee", authenticateToken, async (req, res) =>
   } catch (error) {
     console.error("Create form error:", error);
     res.status(500).json({ error: "Failed to create daily form" });
+  }
+});
+
+// Get default form template for admin
+router.get("/admin/default-template", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // Return the current standard tasks as the default template
+    const defaultTemplate = {
+      standardTasks: STANDARD_TASKS,
+      customTasks: [],
+      customTags: [],
+      settings: {
+        requireEntryTime: true,
+        requireExitTime: true,
+        allowCustomTasks: true,
+        allowCustomTags: true
+      }
+    };
+
+    res.json({
+      success: true,
+      template: defaultTemplate
+    });
+  } catch (error) {
+    console.error("Get default template error:", error);
+    res.status(500).json({ error: "Failed to get default template" });
+  }
+});
+
+// Update default form template (admin can customize the standard form)
+router.put("/admin/default-template", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // This is a placeholder for future implementation
+    // In the future, you could store custom default templates in the database
+    res.json({
+      success: true,
+      message: "Default template updated (feature coming soon)",
+      note: "Currently using hardcoded standard tasks. Custom templates will be available in future updates."
+    });
+  } catch (error) {
+    console.error("Update default template error:", error);
+    res.status(500).json({ error: "Failed to update default template" });
   }
 });
 
