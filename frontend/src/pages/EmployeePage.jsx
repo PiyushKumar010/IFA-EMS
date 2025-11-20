@@ -10,12 +10,14 @@ import {
   MessageCircle,
   ChevronRight,
   LayoutGrid,
+  Trophy,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function EmployeeDashboard() {
   const [projects, setProjects] = useState([]);
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
   const navigate = useNavigate();
 
   const logout = async () => {
@@ -53,6 +55,16 @@ export default function EmployeeDashboard() {
       const data = await res.json();
       setProjects(data.projects || []);
     });
+
+    // Fetch employee stats and bonus
+    fetch("/api/daily-forms/my-stats?days=30", { credentials: "include" })
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data.stats);
+        }
+      })
+      .catch((err) => console.error("Error fetching stats:", err));
   }, [navigate]);
 
   // Create tasks from projects
@@ -111,6 +123,13 @@ export default function EmployeeDashboard() {
               <AlertCircle className="h-5 w-5" />
               <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
             </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/employee/leaderboard")}
+              title="Leaderboard"
+            >
+              <Trophy className="h-5 w-5" />
+            </button>
             <button className="btn-ghost rounded-lg p-2" onClick={logout}>
               <LogOut className="h-5 w-5" />
             </button>
@@ -122,7 +141,7 @@ export default function EmployeeDashboard() {
           <div className="space-y-6 lg:col-span-2">
             {/* Welcome Section */}
             <div className="glass-panel p-8">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="rounded-lg bg-white/10 p-4 backdrop-blur">
                   <div className="text-2xl font-bold text-white">{activeCount}</div>
                   <div className="text-sm text-slate-300">Active Tasks</div>
@@ -134,6 +153,13 @@ export default function EmployeeDashboard() {
                 <div className="rounded-lg bg-white/10 p-4 backdrop-blur">
                   <div className="text-2xl font-bold text-white">{projects.length}</div>
                   <div className="text-sm text-slate-300">Projects</div>
+                </div>
+                <div className="rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-600/20 p-4 backdrop-blur border border-emerald-500/30">
+                  <div className="flex items-center gap-1 text-2xl font-bold text-white">
+                    <span className="text-xl">₹</span>
+                    {stats ? stats.totalBonus.toLocaleString("en-IN") : "0"}
+                  </div>
+                  <div className="text-sm text-slate-300">Total Bonus (30d)</div>
                 </div>
               </div>
             </div>
@@ -245,6 +271,44 @@ export default function EmployeeDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Bonus Stats */}
+            {stats && (
+              <div className="glass-card p-6">
+                <p className="mb-2 text-xs uppercase tracking-[0.6em] text-slate-300">Performance</p>
+                <h3 className="mb-4 text-xl font-bold text-white">Bonus & Score</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Total Bonus</span>
+                    <span className="flex items-center gap-1 font-semibold text-white">
+                      <span>₹</span>
+                      {stats.totalBonus.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Total Score</span>
+                    <span className="font-semibold text-white">{stats.totalScore}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Average Score</span>
+                    <span className="font-semibold text-white">{stats.averageScore}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300">Days Worked</span>
+                    <span className="font-semibold text-white">{stats.daysWorked}</span>
+                  </div>
+                  <div className="pt-2 border-t border-white/10">
+                    <button
+                      onClick={() => navigate("/employee/leaderboard")}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      <Trophy className="h-4 w-4" />
+                      View Leaderboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Quick Stats */}
             <div className="glass-card p-6">
               <p className="mb-2 text-xs uppercase tracking-[0.6em] text-slate-300">This Week</p>

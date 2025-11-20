@@ -16,6 +16,7 @@ import AdminMessagesPage from "./pages/AdminMessagesPage";
 import AdminEmployeesPage from "./pages/AdminEmployeesPage";
 import AdminEmployeeDetailsPage from "./pages/AdminEmployeeDetailsPage";
 import ClientMessagesPage from "./pages/ClientMessagesPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import EmployeeRoute from "./components/EmployeeRoute";
@@ -78,6 +79,14 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/leaderboard"
+          element={
+            <AdminRoute>
+              <LeaderboardPage />
+            </AdminRoute>
+          }
+        />
 
         {/* Employee Routes - Employee only */}
         <Route
@@ -118,6 +127,14 @@ export default function App() {
           element={
             <EmployeeRoute>
               <EmployeeProfileCompletionPage />
+            </EmployeeRoute>
+          }
+        />
+        <Route
+          path="/employee/leaderboard"
+          element={
+            <EmployeeRoute>
+              <LeaderboardPage />
             </EmployeeRoute>
           }
         />

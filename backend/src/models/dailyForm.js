@@ -50,7 +50,11 @@ const dailyFormSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User" 
   },
-  lastEditedAt: { type: Date }
+  lastEditedAt: { type: Date },
+  // Scoring and bonus fields
+  score: { type: Number, default: 0 }, // Score based on completed tasks
+  dailyBonus: { type: Number, default: 0 }, // Bonus in Indian Rupees
+  scoreCalculatedAt: { type: Date } // When score was last calculated
 }, {
   timestamps: true,
   toJSON: { getters: true },

@@ -12,6 +12,7 @@ import {
   LogOut,
   MessageCircle,
   Inbox,
+  Trophy,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -151,6 +152,13 @@ export default function AdminDashboard() {
               onClick={() => navigate("/admin/employees")}
             >
               <Users className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/admin/leaderboard")}
+              title="Leaderboard"
+            >
+              <Trophy className="h-5 w-5" />
             </button>
             <button
               className="btn-ghost rounded-lg p-2"

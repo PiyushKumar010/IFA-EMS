@@ -13,6 +13,7 @@ import {
   Save,
   Plus,
   X,
+  TrendingUp,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -118,7 +119,7 @@ export default function AdminEmployeeDetailsPage() {
         const data = await res.json();
         setSelectedForm(data.form);
         await fetchData();
-        alert("Form updated successfully!");
+        alert("Form updated successfully! Score and bonus have been recalculated.");
       } else {
         alert("Failed to update form");
       }
@@ -399,9 +400,34 @@ export default function AdminEmployeeDetailsPage() {
                               <span className="text-emerald-300">Screensharing</span>
                             </>
                           )}
+                          {(form.score || form.dailyBonus) && (
+                            <>
+                              <span>•</span>
+                              <span className="flex items-center gap-1 text-emerald-300">
+                                <TrendingUp className="h-3 w-3" />
+                                Score: {form.score || 0}
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1 font-semibold text-emerald-300">
+                                <span>₹</span>
+                                {form.dailyBonus || 0}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
-                      <Edit className="h-5 w-5 text-slate-400" />
+                      <div className="flex items-center gap-2">
+                        {(form.score || form.dailyBonus) && (
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 text-xs text-emerald-300">
+                              <span>₹</span>
+                              <span className="font-semibold">{form.dailyBonus || 0}</span>
+                            </div>
+                            <div className="text-xs text-slate-400">Score: {form.score || 0}</div>
+                          </div>
+                        )}
+                        <Edit className="h-5 w-5 text-slate-400" />
+                      </div>
                     </div>
                   </div>
                 );
@@ -564,6 +590,38 @@ export default function AdminEmployeeDetailsPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Score and Bonus */}
+                {(selectedForm.score || selectedForm.dailyBonus) && (
+                  <div className="rounded-lg border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-600/10 p-4">
+                    <h3 className="mb-3 text-lg font-semibold text-white">
+                      Performance Score & Bonus
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-slate-300 mb-1">Score</p>
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-emerald-300" />
+                          <span className="text-2xl font-bold text-white">
+                            {selectedForm.score || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-300 mb-1">Daily Bonus</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl text-emerald-300">₹</span>
+                          <span className="text-2xl font-bold text-white">
+                            {selectedForm.dailyBonus || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-400">
+                      Score and bonus are automatically calculated based on completed tasks, screensharing, and hours attended.
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-4">
                   <button

@@ -1,5 +1,6 @@
 import express from "express";
 import DailyForm from "../models/dailyForm.js";
+import User from "../models/user.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import mongoose from "mongoose";
 
@@ -64,6 +65,39 @@ const calculateTaskCompletion = (form) => {
     });
   }
   return form;
+};
+
+// Helper function to calculate score and bonus
+// Score: Each completed task = 1 point, screensharing bonus = 5 points, hours bonus (max 8 hours = 10 points)
+// Bonus: Score * 10 = bonus in rupees (₹10 per point, max ₹500 per day)
+const calculateScoreAndBonus = (form) => {
+  let score = 0;
+  
+  // Count completed tasks (both employee and admin checked)
+  const completedTasks = (form.tasks || []).filter(t => t.isCompleted).length;
+  const completedCustomTasks = (form.customTasks || []).filter(t => t.isCompleted).length;
+  score += completedTasks + completedCustomTasks;
+  
+  // Screensharing bonus: +5 points
+  if (form.screensharing) {
+    score += 5;
+  }
+  
+  // Hours bonus: up to 10 points for 8+ hours
+  if (form.hoursAttended >= 8) {
+    score += 10;
+  } else if (form.hoursAttended >= 6) {
+    score += 7;
+  } else if (form.hoursAttended >= 4) {
+    score += 4;
+  } else if (form.hoursAttended >= 2) {
+    score += 2;
+  }
+  
+  // Calculate bonus: ₹10 per point, capped at ₹500 per day
+  const dailyBonus = Math.min(score * 10, 500);
+  
+  return { score, dailyBonus };
 };
 
 // Employee: Get today's form or create a new one
@@ -200,10 +234,18 @@ router.post("/submit", authenticateToken, async (req, res) => {
     form.submitted = true;
     form.submittedAt = new Date();
 
-    await form.save();
+    // Calculate initial score (will be recalculated when admin approves)
     const formObj = form.toObject();
     calculateTaskCompletion(formObj);
-    res.json({ success: true, form: formObj });
+    const { score, dailyBonus } = calculateScoreAndBonus(formObj);
+    form.score = score;
+    form.dailyBonus = dailyBonus;
+    form.scoreCalculatedAt = new Date();
+
+    await form.save();
+    const updatedFormObj = form.toObject();
+    calculateTaskCompletion(updatedFormObj);
+    res.json({ success: true, form: updatedFormObj });
   } catch (err) {
     console.error("Error submitting form:", err);
     res.status(500).json({ error: "Failed to submit form" });
@@ -293,10 +335,18 @@ router.put("/:formId", authenticateToken, async (req, res) => {
     form.lastEditedBy = req.user.userId;
     form.lastEditedAt = new Date();
 
-    await form.save();
+    // Calculate score and bonus before saving
     const formObj = form.toObject();
     calculateTaskCompletion(formObj);
-    res.json({ success: true, form: formObj });
+    const { score, dailyBonus } = calculateScoreAndBonus(formObj);
+    form.score = score;
+    form.dailyBonus = dailyBonus;
+    form.scoreCalculatedAt = new Date();
+
+    await form.save();
+    const updatedFormObj = form.toObject();
+    calculateTaskCompletion(updatedFormObj);
+    res.json({ success: true, form: updatedFormObj });
   } catch (err) {
     console.error("Error updating form:", err);
     res.status(500).json({ error: "Failed to update form" });
@@ -360,6 +410,134 @@ router.post("/custom/:employeeId", authenticateToken, async (req, res) => {
   } catch (err) {
     console.error("Error creating custom form:", err);
     res.status(500).json({ error: "Failed to create custom form" });
+  }
+});
+
+// Leaderboard: Get employee rankings based on daily bonuses
+router.get("/leaderboard", authenticateToken, async (req, res) => {
+  try {
+    // Get date range (default: last 30 days, or specific date)
+    const { date, days = 30 } = req.query;
+    
+    let startDate, endDate;
+    if (date) {
+      // Get leaderboard for specific date
+      startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+    } else {
+      // Get leaderboard for last N days
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - parseInt(days));
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    // Get all approved employees
+    const employees = await User.find({
+      roles: "employee",
+      status: "approved"
+    }).select("_id name email");
+
+    // Get all forms in date range
+    const forms = await DailyForm.find({
+      date: { $gte: startDate, $lt: endDate },
+      submitted: true
+    }).populate("employee", "name email");
+
+    // Calculate totals for each employee
+    const employeeStats = {};
+    
+    employees.forEach(emp => {
+      employeeStats[emp._id.toString()] = {
+        employee: {
+          _id: emp._id,
+          name: emp.name,
+          email: emp.email
+        },
+        totalScore: 0,
+        totalBonus: 0,
+        daysWorked: 0,
+        averageScore: 0
+      };
+    });
+
+    // Aggregate scores and bonuses
+    forms.forEach(form => {
+      const empId = form.employee._id.toString();
+      if (employeeStats[empId]) {
+        employeeStats[empId].totalScore += form.score || 0;
+        employeeStats[empId].totalBonus += form.dailyBonus || 0;
+        employeeStats[empId].daysWorked += 1;
+      }
+    });
+
+    // Calculate averages and convert to array
+    const leaderboard = Object.values(employeeStats)
+      .map(stat => ({
+        ...stat,
+        averageScore: stat.daysWorked > 0 ? (stat.totalScore / stat.daysWorked).toFixed(2) : 0
+      }))
+      .sort((a, b) => b.totalBonus - a.totalBonus); // Sort by total bonus descending
+
+    res.json({
+      leaderboard,
+      dateRange: {
+        start: startDate,
+        end: endDate
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching leaderboard:", err);
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+});
+
+// Get employee's own stats and bonus
+router.get("/my-stats", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("employee")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { days = 30 } = req.query;
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+    startDate.setHours(0, 0, 0, 0);
+
+    const forms = await DailyForm.find({
+      employee: req.user.userId,
+      date: { $gte: startDate, $lt: endDate },
+      submitted: true
+    }).sort({ date: -1 });
+
+    const stats = {
+      totalScore: 0,
+      totalBonus: 0,
+      daysWorked: forms.length,
+      averageScore: 0,
+      recentForms: forms.slice(0, 7).map(form => ({
+        date: form.date,
+        score: form.score || 0,
+        bonus: form.dailyBonus || 0
+      }))
+    };
+
+    forms.forEach(form => {
+      stats.totalScore += form.score || 0;
+      stats.totalBonus += form.dailyBonus || 0;
+    });
+
+    stats.averageScore = stats.daysWorked > 0 ? (stats.totalScore / stats.daysWorked).toFixed(2) : 0;
+
+    res.json({ stats });
+  } catch (err) {
+    console.error("Error fetching employee stats:", err);
+    res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 
