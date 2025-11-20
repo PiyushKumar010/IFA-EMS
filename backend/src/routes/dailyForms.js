@@ -196,21 +196,26 @@ router.get("/today", authenticateToken, async (req, res) => {
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
-    console.log(`Fetching today's form for user ${req.user.userId} - Today: ${today.toISOString()}, Tomorrow: ${tomorrow.toISOString()}`);
+    console.log(`Fetching today's form for user ${req.user.userId} - Today Start: ${todayStart.toISOString()}, Today End: ${todayEnd.toISOString()}`);
+
+    // First, let's find all forms for this user to debug
+    const allUserForms = await DailyForm.find({ employee: req.user.userId }).sort({ date: -1 }).limit(5);
+    console.log("All recent forms for user:", allUserForms.map(f => ({ id: f._id, date: f.date.toISOString() })));
 
     let form = await DailyForm.findOne({
       employee: req.user.userId,
-      date: { $gte: today, $lt: tomorrow }
+      date: { $gte: todayStart, $lte: todayEnd }
     });
 
-    console.log("Found existing form:", form ? `ID: ${form._id}, Date: ${form.date}` : "None");
+    console.log("Found existing form:", form ? `ID: ${form._id}, Date: ${form.date.toISOString()}` : "None");
 
-    // Always create a new form for today if it doesn't exist
-    if (!form) {
+    // Always create a new form for today if it doesn't exist OR if the found form is not from today
+    if (!form || (form && new Date(form.date) < todayStart)) {
+      console.log("Creating new form because:", !form ? "no form exists" : "existing form is from previous day");
+      
       const tasks = STANDARD_TASKS.map(task => ({
         taskId: task.taskId,
         taskText: task.taskText,
@@ -222,7 +227,7 @@ router.get("/today", authenticateToken, async (req, res) => {
 
       form = new DailyForm({
         employee: req.user.userId,
-        date: today,
+        date: todayStart,  // Use todayStart to ensure it's exactly today
         tasks: tasks,
         customTasks: [],
         customTags: [],
@@ -231,21 +236,40 @@ router.get("/today", authenticateToken, async (req, res) => {
         submitted: false
       });
       await form.save();
-      console.log(`Created new daily form for employee ${req.user.userId} for date ${today.toISOString()}, Form ID: ${form._id}`);
+      console.log(`Created new daily form for employee ${req.user.userId} for date ${todayStart.toISOString()}, Form ID: ${form._id}`);
+      
+      // Fetch the form again to ensure it was saved properly
+      form = await DailyForm.findById(form._id);
+      console.log("Refetched created form:", form ? `ID: ${form._id}, Date: ${form.date.toISOString()}` : "Failed to refetch");
+    } else {
+      console.log("Using existing form from today");
     }
 
     const formObj = form.toObject();
     calculateTaskCompletion(formObj);
     
-    // Today's form is always editable (unless submitted)
-    const isEditable = !form.submitted;
-    const timeInfo = getTimeUntilMidnight();
+    // Check if this form is actually from today
+    const formDate = new Date(form.date);
+    const isFormFromToday = formDate >= todayStart && formDate <= todayEnd;
+    
+    // Form is editable only if it's from today and not submitted
+    const isEditable = !form.submitted && isFormFromToday;
+    
+    // Calculate time remaining only if form is from today
+    let timeInfo;
+    if (isFormFromToday) {
+      timeInfo = getTimeUntilMidnight();
+    } else {
+      timeInfo = { expired: true, message: "Can only edit today's form" };
+    }
+    
+    console.log(`Form check - Form Date: ${formDate.toISOString()}, Is from today: ${isFormFromToday}, Is editable: ${isEditable}`);
     
     res.json({ 
       form: formObj, 
       canEdit: isEditable,
       timeRemaining: timeInfo,
-      isToday: true
+      isToday: isFormFromToday
     });
   } catch (err) {
     console.error("Error fetching today's form:", err);
