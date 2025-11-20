@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://ifa-bck.onrender.com',
+        target: process.env.NODE_ENV === 'production' ? 'https://ifa-bck.onrender.com' : 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       }

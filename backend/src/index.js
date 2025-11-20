@@ -27,7 +27,12 @@ const parseOrigins = (raw) =>
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-const DEFAULT_ORIGINS = ["https://ifa-frt.onrender.com"];
+const DEFAULT_ORIGINS = [
+  "https://ifa-frt.onrender.com",
+  "https://ifa-ems.onrender.com", 
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
 const configuredOrigins = parseOrigins(process.env.CORS_ORIGINS);
 const fallbackOrigins = parseOrigins(process.env.FRONTEND_URL);
 const allowedOrigins = configuredOrigins.length
@@ -35,6 +40,8 @@ const allowedOrigins = configuredOrigins.length
   : fallbackOrigins.length
     ? fallbackOrigins
     : DEFAULT_ORIGINS;
+
+console.log("CORS - Allowed origins:", allowedOrigins);
 
 const app = express();
 
@@ -44,7 +51,7 @@ app.use(cookieParser());
 // Request logger to help debug whether requests reach the backend
 app.use((req, res, next) => {
   console.log(
-    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - Host: ${req.headers.host}`,
+    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - Host: ${req.headers.host} - Origin: ${req.headers.origin}`,
   );
   next();
 });
@@ -52,14 +59,23 @@ app.use((req, res, next) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        console.log("CORS - No origin, allowing request");
         return callback(null, true);
       }
-      console.warn(`Blocked CORS origin: ${origin}`);
-      return callback(new Error("Not allowed by CORS"));
+      
+      if (allowedOrigins.includes(origin)) {
+        console.log(`CORS - Allowing origin: ${origin}`);
+        return callback(null, true);
+      }
+      
+      console.warn(`CORS - Blocked origin: ${origin}. Allowed origins:`, allowedOrigins);
+      return callback(new Error(`CORS policy: Origin ${origin} is not allowed`));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   }),
 );
 
