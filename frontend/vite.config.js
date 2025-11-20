@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://ifa-ems.onrender.com',
+        target: 'https://ifa-bck.onrender.com',
         changeOrigin: true,
         secure: false,
       }
