@@ -295,141 +295,6 @@ router.get("/employee/:employeeId", authenticateToken, async (req, res) => {
   }
 });
 
-// Admin: Get a specific form by ID
-router.get("/:formId", authenticateToken, async (req, res) => {
-  try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const { formId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(formId)) {
-      return res.status(400).json({ error: "Invalid form ID" });
-    }
-
-    const form = await DailyForm.findById(formId)
-      .populate("employee", "name email");
-
-    if (!form) {
-      return res.status(404).json({ error: "Form not found" });
-    }
-
-    const formObj = form.toObject();
-    calculateTaskCompletion(formObj);
-    res.json({ form: formObj });
-  } catch (err) {
-    console.error("Error fetching form:", err);
-    res.status(500).json({ error: "Failed to fetch form" });
-  }
-});
-
-// Admin: Update form (edit and approve)
-router.put("/:formId", authenticateToken, async (req, res) => {
-  try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const { formId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(formId)) {
-      return res.status(400).json({ error: "Invalid form ID" });
-    }
-
-    const { tasks, customTasks, hoursAttended, screensharing } = req.body;
-
-    const form = await DailyForm.findById(formId);
-    if (!form) {
-      return res.status(404).json({ error: "Form not found" });
-    }
-
-    if (tasks) form.tasks = tasks;
-    if (customTasks) form.customTasks = customTasks;
-    if (hoursAttended !== undefined) form.hoursAttended = hoursAttended;
-    if (screensharing !== undefined) form.screensharing = screensharing;
-    
-    form.lastEditedBy = req.user.userId;
-    form.lastEditedAt = new Date();
-
-    // Calculate score and bonus before saving
-    const formObj = form.toObject();
-    calculateTaskCompletion(formObj);
-    const { score, dailyBonus } = calculateScoreAndBonus(formObj);
-    form.score = score;
-    form.dailyBonus = dailyBonus;
-    form.scoreCalculatedAt = new Date();
-    form.adminConfirmed = true;
-    form.adminConfirmedAt = new Date();
-
-    await form.save();
-    const updatedFormObj = form.toObject();
-    calculateTaskCompletion(updatedFormObj);
-    res.json({ success: true, form: updatedFormObj });
-  } catch (err) {
-    console.error("Error updating form:", err);
-    res.status(500).json({ error: "Failed to update form" });
-  }
-});
-
-// Admin: Create custom form/tasks for an employee
-router.post("/custom/:employeeId", authenticateToken, async (req, res) => {
-  try {
-    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const { employeeId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(employeeId)) {
-      return res.status(400).json({ error: "Invalid employee ID" });
-    }
-
-    const { customTasks, date } = req.body;
-
-    const targetDate = date ? new Date(date) : new Date();
-    targetDate.setHours(0, 0, 0, 0);
-    const nextDay = new Date(targetDate);
-    nextDay.setDate(nextDay.getDate() + 1);
-
-    let form = await DailyForm.findOne({
-      employee: employeeId,
-      date: { $gte: targetDate, $lt: nextDay }
-    });
-
-    if (!form) {
-      // Create new form with standard tasks
-      const standardTasks = STANDARD_TASKS.map(task => ({
-        taskId: task.taskId,
-        taskText: task.taskText,
-        category: task.category,
-        frequency: task.frequency,
-        employeeChecked: false,
-        adminChecked: false
-      }));
-
-      form = new DailyForm({
-        employee: employeeId,
-        date: targetDate,
-        tasks: standardTasks,
-        customTasks: customTasks || [],
-        hoursAttended: 0,
-        screensharing: false
-      });
-    } else {
-      // Add custom tasks to existing form
-      if (customTasks && Array.isArray(customTasks)) {
-        form.customTasks = [...(form.customTasks || []), ...customTasks];
-      }
-    }
-
-    await form.save();
-    const formObj = form.toObject();
-    calculateTaskCompletion(formObj);
-    res.json({ success: true, form: formObj });
-  } catch (err) {
-    console.error("Error creating custom form:", err);
-    res.status(500).json({ error: "Failed to create custom form" });
-  }
-});
-
 // Leaderboard: Get employee rankings based on daily bonuses
 router.get("/leaderboard", authenticateToken, async (req, res) => {
   try {
@@ -569,6 +434,143 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
+
+// Admin: Get a specific form by ID
+router.get("/:formId", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { formId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(formId)) {
+      return res.status(400).json({ error: "Invalid form ID" });
+    }
+
+    const form = await DailyForm.findById(formId)
+      .populate("employee", "name email");
+
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
+    const formObj = form.toObject();
+    calculateTaskCompletion(formObj);
+    res.json({ form: formObj });
+  } catch (err) {
+    console.error("Error fetching form:", err);
+    res.status(500).json({ error: "Failed to fetch form" });
+  }
+});
+
+// Admin: Update form (edit and approve)
+router.put("/:formId", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { formId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(formId)) {
+      return res.status(400).json({ error: "Invalid form ID" });
+    }
+
+    const { tasks, customTasks, hoursAttended, screensharing } = req.body;
+
+    const form = await DailyForm.findById(formId);
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
+    if (tasks) form.tasks = tasks;
+    if (customTasks) form.customTasks = customTasks;
+    if (hoursAttended !== undefined) form.hoursAttended = hoursAttended;
+    if (screensharing !== undefined) form.screensharing = screensharing;
+    
+    form.lastEditedBy = req.user.userId;
+    form.lastEditedAt = new Date();
+
+    // Calculate score and bonus before saving
+    const formObj = form.toObject();
+    calculateTaskCompletion(formObj);
+    const { score, dailyBonus } = calculateScoreAndBonus(formObj);
+    form.score = score;
+    form.dailyBonus = dailyBonus;
+    form.scoreCalculatedAt = new Date();
+    form.adminConfirmed = true;
+    form.adminConfirmedAt = new Date();
+
+    await form.save();
+    const updatedFormObj = form.toObject();
+    calculateTaskCompletion(updatedFormObj);
+    res.json({ success: true, form: updatedFormObj });
+  } catch (err) {
+    console.error("Error updating form:", err);
+    res.status(500).json({ error: "Failed to update form" });
+  }
+});
+
+// Admin: Create custom form/tasks for an employee
+router.post("/custom/:employeeId", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { employeeId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(employeeId)) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+
+    const { customTasks, date } = req.body;
+
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    let form = await DailyForm.findOne({
+      employee: employeeId,
+      date: { $gte: targetDate, $lt: nextDay }
+    });
+
+    if (!form) {
+      // Create new form with standard tasks
+      const standardTasks = STANDARD_TASKS.map(task => ({
+        taskId: task.taskId,
+        taskText: task.taskText,
+        category: task.category,
+        frequency: task.frequency,
+        employeeChecked: false,
+        adminChecked: false
+      }));
+
+      form = new DailyForm({
+        employee: employeeId,
+        date: targetDate,
+        tasks: standardTasks,
+        customTasks: customTasks || [],
+        hoursAttended: 0,
+        screensharing: false
+      });
+    } else {
+      // Add custom tasks to existing form
+      if (customTasks && Array.isArray(customTasks)) {
+        form.customTasks = [...(form.customTasks || []), ...customTasks];
+      }
+    }
+
+    await form.save();
+    const formObj = form.toObject();
+    calculateTaskCompletion(formObj);
+    res.json({ success: true, form: formObj });
+  } catch (err) {
+    console.error("Error creating custom form:", err);
+    res.status(500).json({ error: "Failed to create custom form" });
+  }
+});
+
+// Leaderboard: Get employee rankings based on daily bonuses
 
 // Get employee's own stats and bonus
 router.get("/my-stats", authenticateToken, async (req, res) => {
