@@ -225,6 +225,121 @@ function AdminDailyFormsPage() {
         }
     };
 
+    const handleTaskToggle = async (taskIndex, field) => {
+        if (!selectedForm) return;
+
+        try {
+            // Create updated form data
+            const updatedForm = { ...selectedForm };
+            if (field === 'adminChecked') {
+                updatedForm.tasks[taskIndex].adminChecked = !updatedForm.tasks[taskIndex].adminChecked;
+            }
+
+            // Update the form on the backend
+            const res = await fetch(`/api/daily-forms/${selectedForm._id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    tasks: updatedForm.tasks,
+                    customTasks: updatedForm.customTasks,
+                    hoursAttended: updatedForm.hoursAttended,
+                    screensharing: updatedForm.screensharing
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setSelectedForm(data.form);
+                // Refresh the form list to show updated status
+                if (selectedEmployee) {
+                    fetchEmployeeForms(selectedEmployee._id);
+                }
+            } else {
+                alert("Failed to update task");
+            }
+        } catch (error) {
+            console.error("Task toggle error:", error);
+            alert("Failed to update task");
+        }
+    };
+
+    const handleCustomTaskToggle = async (taskIndex, field) => {
+        if (!selectedForm) return;
+
+        try {
+            // Create updated form data
+            const updatedForm = { ...selectedForm };
+            if (field === 'adminChecked') {
+                updatedForm.customTasks[taskIndex].adminChecked = !updatedForm.customTasks[taskIndex].adminChecked;
+            }
+
+            // Update the form on the backend
+            const res = await fetch(`/api/daily-forms/${selectedForm._id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    tasks: updatedForm.tasks,
+                    customTasks: updatedForm.customTasks,
+                    hoursAttended: updatedForm.hoursAttended,
+                    screensharing: updatedForm.screensharing
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setSelectedForm(data.form);
+                // Refresh the form list to show updated status
+                if (selectedEmployee) {
+                    fetchEmployeeForms(selectedEmployee._id);
+                }
+            } else {
+                alert("Failed to update custom task");
+            }
+        } catch (error) {
+            console.error("Custom task toggle error:", error);
+            alert("Failed to update custom task");
+        }
+    };
+
+    const handleFormFieldUpdate = async (field, value) => {
+        if (!selectedForm?._id) return;
+        
+        try {
+            const updatedForm = {
+                ...selectedForm,
+                [field]: value
+            };
+
+            const res = await fetch(`/api/daily-forms/${selectedForm._id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(updatedForm)
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to update form field");
+            }
+
+            const result = await res.json();
+            
+            // Update the selected form
+            setSelectedForm(result);
+            
+            // Update the forms list
+            const updatedForms = forms.map(form => 
+                form._id === selectedForm._id ? result : form
+            );
+            setForms(updatedForms);
+
+        } catch (error) {
+            console.error(`Error updating ${field}:`, error);
+            alert(`Failed to update ${field}`);
+        }
+    };
+
     const handleCreateForm = async (employeeId, formData) => {
         try {
             setError("");
@@ -460,6 +575,47 @@ function AdminDailyFormsPage() {
                                     </button>
                                 </div>
 
+                                {/* Admin Editable Fields */}
+                                <div className="glass-card p-6">
+                                    <h3 className="text-lg font-semibold mb-4">Admin Edit Fields</h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Hours Attended */}
+                                        <div>
+                                            <label className="block text-sm text-slate-400 mb-2">Hours Attended</label>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-blue-400" />
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="24"
+                                                    step="0.5"
+                                                    value={selectedForm.hoursAttended || 0}
+                                                    onChange={(e) => handleFormFieldUpdate('hoursAttended', parseFloat(e.target.value) || 0)}
+                                                    className="flex-1 rounded border border-white/10 bg-black/20 px-3 py-2 text-sm focus:border-emerald-400 focus:outline-none"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Screensharing Status */}
+                                        <div>
+                                            <label className="block text-sm text-slate-400 mb-2">Screensharing Status</label>
+                                            <div 
+                                                className="flex items-center gap-2 cursor-pointer hover:bg-white/10 rounded p-2 transition-colors"
+                                                onClick={() => handleFormFieldUpdate('screensharing', !selectedForm.screensharing)}
+                                            >
+                                                {selectedForm.screensharing ? (
+                                                    <CheckSquare className="h-4 w-4 text-emerald-400" />
+                                                ) : (
+                                                    <Square className="h-4 w-4 text-slate-400" />
+                                                )}
+                                                <span className="text-sm">Screensharing Active</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Tasks */}
                                 <div className="glass-card p-6">
                                     <h3 className="mb-4 text-lg font-semibold">Standard Tasks</h3>
@@ -474,7 +630,10 @@ function AdminDailyFormsPage() {
                                                     )}
                                                     <span className="text-xs text-blue-300">Emp</span>
                                                 </div>
-                                                <div className="flex items-center gap-2">
+                                                <div 
+                                                    className="flex items-center gap-2 cursor-pointer hover:bg-white/10 rounded p-1 transition-colors"
+                                                    onClick={() => handleTaskToggle(index, 'adminChecked')}
+                                                >
                                                     {task.adminChecked ? (
                                                         <CheckSquare className="h-4 w-4 text-emerald-400" />
                                                     ) : (
@@ -491,6 +650,43 @@ function AdminDailyFormsPage() {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Custom Tasks */}
+                                {selectedForm.customTasks && selectedForm.customTasks.length > 0 && (
+                                    <div className="glass-card p-6">
+                                        <h3 className="mb-4 text-lg font-semibold">Custom Tasks</h3>
+                                        <div className="space-y-2">
+                                            {selectedForm.customTasks.map((task, index) => (
+                                                <div key={index} className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
+                                                    <div className="flex items-center gap-2">
+                                                        {task.employeeChecked ? (
+                                                            <CheckSquare className="h-4 w-4 text-blue-400" />
+                                                        ) : (
+                                                            <Square className="h-4 w-4 text-slate-400" />
+                                                        )}
+                                                        <span className="text-xs text-blue-300">Emp</span>
+                                                    </div>
+                                                    <div 
+                                                        className="flex items-center gap-2 cursor-pointer hover:bg-white/10 rounded p-1 transition-colors"
+                                                        onClick={() => handleCustomTaskToggle(index, 'adminChecked')}
+                                                    >
+                                                        {task.adminChecked ? (
+                                                            <CheckSquare className="h-4 w-4 text-emerald-400" />
+                                                        ) : (
+                                                            <Square className="h-4 w-4 text-slate-400" />
+                                                        )}
+                                                        <span className="text-xs text-emerald-300">Admin</span>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <span className={task.isCompleted ? "text-emerald-300" : "text-slate-300"}>
+                                                            {task.taskText}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Form Approval */}
                                 <div className="glass-card p-6">
