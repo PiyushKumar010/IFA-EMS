@@ -42,6 +42,8 @@ const dailyFormSchema = new mongoose.Schema({
   // Additional fields
   hoursAttended: { type: Number, default: 0 },
   screensharing: { type: Boolean, default: false },
+  adminConfirmed: { type: Boolean, default: false },
+  adminConfirmedAt: { type: Date },
   // Form status
   submitted: { type: Boolean, default: false },
   submittedAt: { type: Date },

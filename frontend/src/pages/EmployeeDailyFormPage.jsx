@@ -219,6 +219,9 @@ export default function EmployeeDailyFormPage() {
             <p className="text-sm text-amber-200">
               You have already submitted this form for today. You can only submit once per day.
             </p>
+            <p className="mt-2 text-xs text-amber-100">
+              Your score and bonus will be calculated once an admin reviews and confirms your checklist.
+            </p>
           </div>
         )}
 

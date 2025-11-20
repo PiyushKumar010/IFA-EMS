@@ -120,7 +120,10 @@ export default function LeaderboardPage() {
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center text-slate-300">
               <Trophy className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>No data available for the selected period</p>
+              <p>No approved bonus data for the selected period yet.</p>
+              <p className="mt-2 text-sm text-slate-400">
+                Leaderboard updates once admins confirm employee daily forms.
+              </p>
             </div>
           </div>
         ) : (

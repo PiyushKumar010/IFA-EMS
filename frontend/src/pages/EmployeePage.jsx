@@ -304,6 +304,15 @@ export default function EmployeeDashboard() {
                     <span className="text-sm text-slate-300">Days Worked</span>
                     <span className="font-semibold text-white">{stats.daysWorked}</span>
                   </div>
+                  {stats.pendingApproval > 0 ? (
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+                      {stats.pendingApproval} daily form{stats.pendingApproval > 1 ? "s" : ""} are awaiting admin confirmation. Bonus is credited only after approval.
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">
+                      All bonuses shown here have been approved by the admin team.
+                    </p>
+                  )}
                   <div className="pt-2 border-t border-white/10">
                     <button
                       onClick={() => navigate("/employee/leaderboard")}

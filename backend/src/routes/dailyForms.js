@@ -234,13 +234,12 @@ router.post("/submit", authenticateToken, async (req, res) => {
     form.submitted = true;
     form.submittedAt = new Date();
 
-    // Calculate initial score (will be recalculated when admin approves)
-    const formObj = form.toObject();
-    calculateTaskCompletion(formObj);
-    const { score, dailyBonus } = calculateScoreAndBonus(formObj);
-    form.score = score;
-    form.dailyBonus = dailyBonus;
-    form.scoreCalculatedAt = new Date();
+    // Reset scoring until admin confirms
+    form.adminConfirmed = false;
+    form.adminConfirmedAt = null;
+    form.score = 0;
+    form.dailyBonus = 0;
+    form.scoreCalculatedAt = null;
 
     await form.save();
     const updatedFormObj = form.toObject();
@@ -342,6 +341,8 @@ router.put("/:formId", authenticateToken, async (req, res) => {
     form.score = score;
     form.dailyBonus = dailyBonus;
     form.scoreCalculatedAt = new Date();
+    form.adminConfirmed = true;
+    form.adminConfirmedAt = new Date();
 
     await form.save();
     const updatedFormObj = form.toObject();
@@ -444,7 +445,8 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
     // Get all forms in date range
     const forms = await DailyForm.find({
       date: { $gte: startDate, $lt: endDate },
-      submitted: true
+      submitted: true,
+      adminConfirmed: true
     }).populate("employee", "name email");
 
     // Calculate totals for each employee
@@ -467,11 +469,24 @@ router.get("/leaderboard", authenticateToken, async (req, res) => {
     // Aggregate scores and bonuses
     forms.forEach(form => {
       const empId = form.employee._id.toString();
-      if (employeeStats[empId]) {
-        employeeStats[empId].totalScore += form.score || 0;
-        employeeStats[empId].totalBonus += form.dailyBonus || 0;
-        employeeStats[empId].daysWorked += 1;
+
+      if (!employeeStats[empId]) {
+        employeeStats[empId] = {
+          employee: {
+            _id: form.employee._id,
+            name: form.employee.name,
+            email: form.employee.email
+          },
+          totalScore: 0,
+          totalBonus: 0,
+          daysWorked: 0,
+          averageScore: 0
+        };
       }
+
+      employeeStats[empId].totalScore += form.score || 0;
+      employeeStats[empId].totalBonus += form.dailyBonus || 0;
+      employeeStats[empId].daysWorked += 1;
     });
 
     // Calculate averages and convert to array
@@ -512,7 +527,8 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
     const forms = await DailyForm.find({
       employee: req.user.userId,
       date: { $gte: startDate, $lt: endDate },
-      submitted: true
+      submitted: true,
+      adminConfirmed: true
     }).sort({ date: -1 });
 
     const stats = {
@@ -520,6 +536,7 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
       totalBonus: 0,
       daysWorked: forms.length,
       averageScore: 0,
+      pendingApproval: 0,
       recentForms: forms.slice(0, 7).map(form => ({
         date: form.date,
         score: form.score || 0,
@@ -533,6 +550,13 @@ router.get("/my-stats", authenticateToken, async (req, res) => {
     });
 
     stats.averageScore = stats.daysWorked > 0 ? (stats.totalScore / stats.daysWorked).toFixed(2) : 0;
+
+    stats.pendingApproval = await DailyForm.countDocuments({
+      employee: req.user.userId,
+      date: { $gte: startDate, $lt: endDate },
+      submitted: true,
+      adminConfirmed: false
+    });
 
     res.json({ stats });
   } catch (err) {
