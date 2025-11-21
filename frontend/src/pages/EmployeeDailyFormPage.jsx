@@ -933,7 +933,6 @@ export default function EmployeeDailyFormPage() {
               </div>
             </div>
           ))}
-          )}
 
           {/* Custom Tasks */}
           {form.customTasks && form.customTasks.length > 0 && (
