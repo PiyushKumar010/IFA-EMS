@@ -189,6 +189,8 @@ export default function EmployeeDailyFormPage() {
       })
       .then((data) => {
         console.log("Today's form data:", data);
+        console.log("Form tasks:", data.form?.tasks);
+        console.log("Number of tasks:", data.form?.tasks?.length);
         setForm(data.form);
         setAuthError(null); // Clear any auth errors
         
@@ -473,12 +475,15 @@ export default function EmployeeDailyFormPage() {
   // Group tasks by category
   const tasksByCategory = {};
   form.tasks.forEach((task) => {
-    const category = task.category || "Other";
+    const category = task.category || "General";
     if (!tasksByCategory[category]) {
       tasksByCategory[category] = [];
     }
     tasksByCategory[category].push(task);
   });
+
+  console.log("Tasks by category:", tasksByCategory);
+  console.log("Form tasks:", form.tasks);
 
   return (
     <PageBackground variant="emerald">
@@ -883,22 +888,27 @@ export default function EmployeeDailyFormPage() {
 
         <div className="space-y-6">
           {/* Tasks by Category */}
-          {Object.entries(tasksByCategory).map(([category, tasks]) => (
+          {Object.keys(tasksByCategory).length === 0 ? (
+            <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 text-center">
+              <p className="text-slate-400">No tasks assigned for today</p>
+            </div>
+          ) : (
+          Object.entries(tasksByCategory).map(([category, tasks]) => (
             <div
               key={category}
               className="rounded-[32px] border border-white/10 bg-white/5 p-6"
             >
               <h2 className="mb-4 text-lg font-semibold text-white">
-                {category}
+                {category} ({tasks.length} tasks)
               </h2>
               <div className="space-y-3">
                 {tasks.map((task, idx) => {
                   const globalIndex = form.tasks.findIndex(
-                    (t) => t.taskId === task.taskId
+                    (t) => t.taskId === task.taskId || t._id === task._id
                   );
                   return (
                     <label
-                      key={task.taskId}
+                      key={task.taskId || task._id || idx}
                       className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
                         task.employeeChecked
                           ? "border-emerald-500/50 bg-emerald-500/10"
@@ -909,7 +919,7 @@ export default function EmployeeDailyFormPage() {
                         type="checkbox"
                         checked={task.employeeChecked}
                         onChange={(e) =>
-                          handleTaskChange(globalIndex, e.target.checked)
+                          handleTaskChange(globalIndex >= 0 ? globalIndex : idx, e.target.checked)
                         }
                         disabled={alreadySubmitted || midnightRestricted}
                         className="mt-1 h-5 w-5 cursor-pointer rounded border-white/30 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-transparent"
@@ -923,6 +933,7 @@ export default function EmployeeDailyFormPage() {
               </div>
             </div>
           ))}
+          )}
 
           {/* Custom Tasks */}
           {form.customTasks && form.customTasks.length > 0 && (

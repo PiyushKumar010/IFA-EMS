@@ -1432,6 +1432,8 @@ const CreateTemplateModal = ({ template, onClose, onSubmit, onChange }) => {
       const task = {
         taskId: `task-${Date.now()}`,
         taskText: newTask.trim(),
+        category: "General", // Add default category
+        frequency: "daily", // Add default frequency
         isCompleted: false,
         employeeChecked: false,
         adminChecked: false

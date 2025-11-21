@@ -1399,18 +1399,26 @@ router.post("/admin/create-for-employee", authenticateToken, async (req, res) =>
     if (templateId) {
       const template = await DefaultFormTemplate.findById(templateId);
       if (template) {
+        console.log("Using template:", template.name);
+        console.log("Template tasks:", template.tasks);
+        
         formTasks = template.tasks.map(task => ({
-          ...task,
+          taskId: task.taskId || `task-${Date.now()}-${Math.random()}`,
+          taskText: task.taskText,
+          category: task.category || "General",
+          frequency: task.frequency || "daily",
           employeeChecked: false,
           adminChecked: false,
           isCompleted: false
         }));
         formCustomTasks = template.customTasks.map(task => ({
-          ...task,
+          taskText: task.taskText,
           employeeChecked: false,
           adminChecked: false,
           isCompleted: false
         }));
+        
+        console.log("Formatted tasks for form:", formTasks);
       }
     } else {
       // Use provided tasks or fallback to standard tasks
