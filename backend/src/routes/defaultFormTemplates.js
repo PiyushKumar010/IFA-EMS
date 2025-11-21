@@ -1,12 +1,12 @@
 import express from "express";
 import DefaultFormTemplate from "../models/defaultFormTemplate.js";
 import authAdmin from "../middlewares/authAdmin.js";
-import auth from "../middlewares/auth.js";
+import { authenticateToken } from "../middlewares/auth.js";
 
 const router = express.Router();
 
 // Get all default form templates
-router.get("/", auth, async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
   try {
     const templates = await DefaultFormTemplate.find({ isActive: true })
       .populate("createdBy", "name email")
@@ -20,7 +20,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // Get a specific template by ID
-router.get("/:id", auth, async (req, res) => {
+router.get("/:id", authenticateToken, async (req, res) => {
   try {
     const template = await DefaultFormTemplate.findById(req.params.id)
       .populate("createdBy", "name email");
@@ -123,7 +123,7 @@ router.delete("/:id", authAdmin, async (req, res) => {
 });
 
 // Get default template for a role
-router.get("/default/:roleType", auth, async (req, res) => {
+router.get("/default/:roleType", authenticateToken, async (req, res) => {
   try {
     const template = await DefaultFormTemplate.findOne({
       roleType: req.params.roleType,
