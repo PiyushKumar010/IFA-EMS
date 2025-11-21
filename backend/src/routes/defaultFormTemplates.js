@@ -8,10 +8,13 @@ const router = express.Router();
 // Get all default form templates
 router.get("/", authenticateToken, async (req, res) => {
   try {
+    console.log("GET templates request, user:", req.user);
+    
     const templates = await DefaultFormTemplate.find({ isActive: true })
       .populate("createdBy", "name email")
       .sort({ isDefault: -1, createdAt: -1 });
     
+    console.log("Found templates:", templates.length);
     res.json(templates);
   } catch (error) {
     console.error("Error fetching default form templates:", error);
@@ -39,24 +42,36 @@ router.get("/:id", authenticateToken, async (req, res) => {
 // Create a new default form template (Admin only)
 router.post("/", authAdmin, async (req, res) => {
   try {
+    console.log("Creating template, user:", req.user);
+    console.log("Request body:", req.body);
+    
     const { name, description, roleType, tasks, customTasks, isDefault } = req.body;
+    
+    // Validate required fields
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Template name is required" });
+    }
+    
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ error: "User authentication failed" });
+    }
     
     // If this is being set as default, unset other defaults for the same role
     if (isDefault) {
       await DefaultFormTemplate.updateMany(
-        { roleType, isDefault: true },
+        { roleType: roleType || "general", isDefault: true },
         { isDefault: false }
       );
     }
     
     const template = new DefaultFormTemplate({
-      name,
-      description,
-      roleType,
-      tasks: tasks || [],
-      customTasks: customTasks || [],
-      isDefault,
-      createdBy: req.user._id,
+      name: name.trim(),
+      description: description || "",
+      roleType: roleType || "general",
+      tasks: Array.isArray(tasks) ? tasks : [],
+      customTasks: Array.isArray(customTasks) ? customTasks : [],
+      isDefault: Boolean(isDefault),
+      createdBy: req.user.userId,
     });
     
     await template.save();
@@ -65,7 +80,8 @@ router.post("/", authAdmin, async (req, res) => {
     res.status(201).json(template);
   } catch (error) {
     console.error("Error creating template:", error);
-    res.status(500).json({ error: "Failed to create template" });
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ error: "Failed to create template", details: error.message });
   }
 });
 
