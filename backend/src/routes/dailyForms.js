@@ -223,26 +223,62 @@ router.get("/today", authenticateToken, async (req, res) => {
       let formCustomTasks = [];
       
       if (user) {
-        // Find default template for user's role (assuming user has a role field)
-        const userRole = user.roleType || "general"; // fallback to general
-        const defaultTemplate = await DefaultFormTemplate.findOne({
+        // Find default template for user's role using designation or department
+        let userRole = "general"; // fallback
+        
+        // Try to match user's designation/department to template roleTypes
+        if (user.designation) {
+          const designation = user.designation.toLowerCase();
+          if (designation.includes('developer') || designation.includes('dev')) {
+            userRole = "developer";
+          } else if (designation.includes('designer') || designation.includes('design')) {
+            userRole = "designer";
+          } else if (designation.includes('manager') || designation.includes('lead')) {
+            userRole = "manager";
+          } else if (designation.includes('intern')) {
+            userRole = "intern";
+          }
+        }
+        
+        console.log(`User ${user.email} has designation: ${user.designation}, department: ${user.department}, mapped to role: ${userRole}`);
+        
+        let defaultTemplate = await DefaultFormTemplate.findOne({
           roleType: userRole,
           isDefault: true,
           isActive: true
         });
         
+        // If no specific template found, try general
+        if (!defaultTemplate && userRole !== "general") {
+          console.log(`No template found for ${userRole}, trying general`);
+          defaultTemplate = await DefaultFormTemplate.findOne({
+            roleType: "general",
+            isDefault: true,
+            isActive: true
+          });
+        }
+        
         if (defaultTemplate) {
           console.log(`Using default template for role ${userRole}:`, defaultTemplate.name);
+          console.log("Template tasks:", defaultTemplate.tasks);
+          console.log("Template custom tasks:", defaultTemplate.customTasks);
           formTasks = defaultTemplate.tasks.map(task => ({
-            ...task,
+            taskId: task.taskId,
+            taskText: task.taskText,
+            category: task.category,
+            frequency: task.frequency,
+            isCompleted: task.isCompleted || false,
             employeeChecked: false,
             adminChecked: false
           }));
           formCustomTasks = defaultTemplate.customTasks.map(task => ({
-            ...task,
+            taskText: task.taskText,
+            isCompleted: task.isCompleted || false,
             employeeChecked: false,
             adminChecked: false
           }));
+          console.log("Mapped form tasks:", formTasks);
+          console.log("Mapped form custom tasks:", formCustomTasks);
         } else {
           // Fallback to standard tasks if no template found
           console.log(`No default template found for role ${userRole}, using standard tasks`);
@@ -688,6 +724,12 @@ router.get("/employee/:employeeId", authenticateToken, async (req, res) => {
     const forms = await DailyForm.find({ employee: employeeId })
       .populate("employee", "name email")
       .sort({ date: -1 });
+
+    console.log(`Found ${forms.length} forms for employee ${employeeId}`);
+    if (forms.length > 0) {
+      console.log("First form tasks:", forms[0].tasks?.length || 0);
+      console.log("First form task details:", forms[0].tasks?.[0]);
+    }
 
     const formsWithCompletion = forms.map(form => {
       const formObj = form.toObject();
@@ -1467,7 +1509,15 @@ router.post("/admin/create-for-employee", authenticateToken, async (req, res) =>
       lastEditedAt: new Date()
     });
 
+    console.log("About to save form with tasks:", {
+      taskCount: formTasks.length,
+      customTaskCount: formCustomTasks.length,
+      tasks: formTasks,
+      customTasks: formCustomTasks
+    });
+
     await newForm.save();
+    console.log("Form saved successfully with ID:", newForm._id);
 
     const populatedForm = await DailyForm.findById(newForm._id)
       .populate("employee", "name email")
