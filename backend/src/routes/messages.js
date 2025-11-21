@@ -149,21 +149,38 @@ router.get("/client/chat", authenticateToken, async (req, res) => {
 
 // Client: send message to admin
 router.post("/client/send", authenticateToken, async (req, res) => {
-  if (!Array.isArray(req.user.roles) || !req.user.roles.includes("client")) return res.status(403).json({ error: "Forbidden" });
-  const { content } = req.body;
-  if (!content) return res.status(400).json({ error: "Message content required" });
-  // Find first admin user
-  const admin = await User.findOne({ roles: { $in: ["admin"] } }, "_id");
-  if (!admin) return res.status(400).json({ error: "No admin found" });
-  const message = new Message({
-    sender: req.user.userId,
-    receiver: admin._id,
-    content,
-    type: "client-to-admin"
-  });
-  await message.save();
-  await emitMessages(message);
-  res.json({ success: true });
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("client")) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: "Message content required" });
+    }
+    
+    // Find first admin user
+    const admin = await User.findOne({ roles: { $in: ["admin"] } }, "_id");
+    if (!admin) {
+      console.error("No admin user found in database");
+      return res.status(500).json({ error: "No admin available to receive messages" });
+    }
+    
+    const message = new Message({
+      sender: req.user.userId,
+      receiver: admin._id,
+      content: content.trim(),
+      type: "client-to-admin"
+    });
+    
+    await message.save();
+    await emitMessages(message);
+    
+    res.json({ success: true, message: "Message sent successfully" });
+  } catch (error) {
+    console.error("Error sending client message:", error);
+    res.status(500).json({ error: "Failed to send message" });
+  }
 });
 
 // Admin: get all clients

@@ -22,18 +22,26 @@ export default function ClientMessagesPage() {
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
     setSending(true);
-    const res = await fetch("/api/messages/client/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ content: newMessage }),
-    });
-    setSending(false);
-    if (res.ok) {
-      setNewMessage("");
-      loadMessages();
-    } else {
-      alert("Failed to send message.");
+    try {
+      const res = await fetch("/api/messages/client/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: newMessage }),
+      });
+      
+      if (res.ok) {
+        setNewMessage("");
+        loadMessages();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Failed to send message.");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again.");
+    } finally {
+      setSending(false);
     }
   };
 
