@@ -893,46 +893,47 @@ export default function EmployeeDailyFormPage() {
               <p className="text-slate-400">No tasks assigned for today</p>
             </div>
           ) : (
-          Object.entries(tasksByCategory).map(([category, tasks]) => (
-            <div
-              key={category}
-              className="rounded-[32px] border border-white/10 bg-white/5 p-6"
-            >
-              <h2 className="mb-4 text-lg font-semibold text-white">
-                {category} ({tasks.length} tasks)
-              </h2>
-              <div className="space-y-3">
-                {tasks.map((task, idx) => {
-                  const globalIndex = form.tasks.findIndex(
-                    (t) => t.taskId === task.taskId || t._id === task._id
-                  );
-                  return (
-                    <label
-                      key={task.taskId || task._id || idx}
-                      className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                        task.employeeChecked
-                          ? "border-emerald-500/50 bg-emerald-500/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
-                      } ${alreadySubmitted || midnightRestricted ? "cursor-not-allowed opacity-60" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={task.employeeChecked}
-                        onChange={(e) =>
-                          handleTaskChange(globalIndex >= 0 ? globalIndex : idx, e.target.checked)
-                        }
-                        disabled={alreadySubmitted || midnightRestricted}
-                        className="mt-1 h-5 w-5 cursor-pointer rounded border-white/30 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-transparent"
-                      />
-                      <span className="flex-1 text-sm text-white">
-                        {task.taskText}
-                      </span>
-                    </label>
-                  );
-                })}
+            Object.entries(tasksByCategory).map(([category, tasks]) => (
+              <div
+                key={category}
+                className="rounded-[32px] border border-white/10 bg-white/5 p-6"
+              >
+                <h2 className="mb-4 text-lg font-semibold text-white">
+                  {category} ({tasks.length} tasks)
+                </h2>
+                <div className="space-y-3">
+                  {tasks.map((task, idx) => {
+                    const globalIndex = form.tasks.findIndex(
+                      (t) => t.taskId === task.taskId || t._id === task._id
+                    );
+                    return (
+                      <label
+                        key={task.taskId || task._id || idx}
+                        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                          task.employeeChecked
+                            ? "border-emerald-500/50 bg-emerald-500/10"
+                            : "border-white/10 bg-white/5 hover:bg-white/10"
+                        } ${alreadySubmitted || midnightRestricted ? "cursor-not-allowed opacity-60" : ""}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={task.employeeChecked}
+                          onChange={(e) =>
+                            handleTaskChange(globalIndex >= 0 ? globalIndex : idx, e.target.checked)
+                          }
+                          disabled={alreadySubmitted || midnightRestricted}
+                          className="mt-1 h-5 w-5 cursor-pointer rounded border-white/30 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-transparent"
+                        />
+                        <span className="flex-1 text-sm text-white">
+                          {task.taskText}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
 
           {/* Custom Tasks */}
           {form.customTasks && form.customTasks.length > 0 && (
