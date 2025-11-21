@@ -13,6 +13,8 @@ import {
   Trophy,
   Video,
   RefreshCw,
+  Code,
+  Calendar,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -23,6 +25,7 @@ export default function EmployeeDashboard() {
   const [statsMeta, setStatsMeta] = useState(null);
   const [statsRange, setStatsRange] = useState("30");
   const [statsLoading, setStatsLoading] = useState(false);
+  const [hackathons, setHackathons] = useState([]);
   const navigate = useNavigate();
 
   const logout = async () => {
@@ -59,6 +62,14 @@ export default function EmployeeDashboard() {
     fetch("/api/projects", { credentials: "include" }).then(async (res) => {
       const data = await res.json();
       setProjects(data.projects || []);
+    });
+
+    // Fetch active hackathons
+    fetch("/api/hackathon/active", { credentials: "include" }).then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        setHackathons(data.hackathons || []);
+      }
     });
   }, [navigate]);
 
@@ -424,6 +435,61 @@ export default function EmployeeDashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Active Hackathons */}
+            {hackathons.length > 0 && (
+              <div className="glass-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Code className="h-5 w-5 text-purple-400" />
+                  <h3 className="text-xl font-bold text-white">Active Hackathons</h3>
+                </div>
+                <div className="space-y-3">
+                  {hackathons.slice(0, 2).map((hackathon) => {
+                    const now = new Date();
+                    const regDeadline = new Date(hackathon.registrationDeadline);
+                    const isRegistrationOpen = now < regDeadline;
+                    const isUserRegistered = hackathon.registeredUsers?.some(
+                      reg => (reg.user._id || reg.user) === user?._id
+                    );
+                    
+                    return (
+                      <div key={hackathon._id} className="bg-white/5 rounded-lg p-4">
+                        <h4 className="font-semibold text-white mb-2">{hackathon.title}</h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-300 mb-2">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(hackathon.startDate).toLocaleDateString()} - {new Date(hackathon.endDate).toLocaleDateString()}
+                        </div>
+                        {isUserRegistered ? (
+                          <div className="flex items-center gap-1 text-xs text-emerald-400">
+                            <CheckCircle className="h-3 w-3" />
+                            Registered
+                          </div>
+                        ) : isRegistrationOpen ? (
+                          <div className="text-xs text-yellow-400">Registration Open</div>
+                        ) : (
+                          <div className="text-xs text-red-400">Registration Closed</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {hackathons.length > 2 && (
+                    <button
+                      onClick={() => {
+                        // Check if user has hackathon-applicant role
+                        if (user?.roles?.includes("hackathon-applicant")) {
+                          navigate("/hackathon-applicant");
+                        } else {
+                          alert("Please contact admin to get hackathon access");
+                        }
+                      }}
+                      className="text-xs text-purple-400 hover:text-purple-300 underline"
+                    >
+                      View all {hackathons.length} hackathons
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

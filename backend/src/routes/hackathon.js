@@ -1,182 +1,227 @@
 import express from "express";
-import HackathonApplication from "../models/hackathonApplication.js";
+import Hackathon from "../models/hackathon.js";
 import User from "../models/user.js";
 import { authenticateToken } from "../middlewares/auth.js";
+import { authAdmin } from "../middlewares/authAdmin.js";
 
 const router = express.Router();
 
-// Get hackathon application for current user
-router.get("/application", authenticateToken, async (req, res) => {
+// Get all active hackathons (public for all users)
+router.get("/active", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
-    
-    const application = await HackathonApplication.findOne({ 
-      applicant: userId 
-    }).populate("applicant", "name email");
+    const hackathons = await Hackathon.find({ 
+      isActive: true, 
+      isPublished: true 
+    })
+    .populate("createdBy", "name email")
+    .sort({ startDate: 1 });
 
-    res.json({ 
-      application: application || null 
-    });
+    res.json({ hackathons });
   } catch (err) {
-    console.error("Error fetching hackathon application:", err);
+    console.error("Error fetching active hackathons:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Submit hackathon application
-router.post("/apply", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const {
-      fullName,
-      phone,
-      university,
-      degree,
-      graduationYear,
-      experience,
-      skills,
-      projectIdea,
-      teamStatus,
-      teamMembers,
-      previousHackathons,
-      motivation,
-      githubProfile,
-      portfolioUrl
-    } = req.body;
-
-    // Check if user already has an application
-    const existingApplication = await HackathonApplication.findOne({ 
-      applicant: userId 
-    });
-
-    if (existingApplication) {
-      return res.status(400).json({ 
-        error: "You have already submitted an application" 
-      });
-    }
-
-    // Create new application
-    const application = new HackathonApplication({
-      applicant: userId,
-      fullName,
-      phone,
-      university,
-      degree,
-      graduationYear,
-      experience,
-      skills,
-      projectIdea,
-      teamStatus,
-      teamMembers,
-      previousHackathons,
-      motivation,
-      githubProfile,
-      portfolioUrl,
-      status: "submitted",
-      submittedAt: new Date()
-    });
-
-    await application.save();
-
-    res.json({ 
-      success: true, 
-      message: "Application submitted successfully",
-      application 
-    });
-  } catch (err) {
-    console.error("Error submitting hackathon application:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Save application draft
-router.post("/save-draft", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const applicationData = req.body;
-
-    // Find existing draft or create new one
-    let application = await HackathonApplication.findOne({ 
-      applicant: userId 
-    });
-
-    if (application) {
-      // Update existing draft
-      Object.assign(application, applicationData);
-      application.updatedAt = new Date();
-    } else {
-      // Create new draft
-      application = new HackathonApplication({
-        ...applicationData,
-        applicant: userId,
-        status: "draft"
-      });
-    }
-
-    await application.save();
-
-    res.json({ 
-      success: true, 
-      message: "Draft saved successfully",
-      application 
-    });
-  } catch (err) {
-    console.error("Error saving hackathon application draft:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Get all applications (admin only)
-router.get("/admin/applications", authenticateToken, async (req, res) => {
-  try {
-    // Check if user is admin
-    const user = await User.findById(req.user.userId);
-    if (!user || !user.roles.includes("admin")) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    const applications = await HackathonApplication.find({})
-      .populate("applicant", "name email")
-      .sort({ submittedAt: -1 });
-
-    res.json({ applications });
-  } catch (err) {
-    console.error("Error fetching hackathon applications:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Update application status (admin only)
-router.put("/admin/application/:id/status", authenticateToken, async (req, res) => {
+// Get hackathon details by ID
+router.get("/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reviewNotes } = req.body;
+    
+    const hackathon = await Hackathon.findById(id)
+      .populate("createdBy", "name email")
+      .populate("registeredUsers.user", "name email");
 
-    // Check if user is admin
-    const user = await User.findById(req.user.userId);
-    if (!user || !user.roles.includes("admin")) {
-      return res.status(403).json({ error: "Admin access required" });
+    if (!hackathon) {
+      return res.status(404).json({ error: "Hackathon not found" });
     }
 
-    const application = await HackathonApplication.findById(id);
-    if (!application) {
-      return res.status(404).json({ error: "Application not found" });
+    res.json({ hackathon });
+  } catch (err) {
+    console.error("Error fetching hackathon:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Register for hackathon
+router.post("/:id/register", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { teamName, teamMembers } = req.body;
+    const userId = req.user.userId;
+
+    const hackathon = await Hackathon.findById(id);
+    if (!hackathon) {
+      return res.status(404).json({ error: "Hackathon not found" });
     }
 
-    application.status = status;
-    application.reviewNotes = reviewNotes;
-    application.reviewedAt = new Date();
-    application.reviewedBy = req.user.userId;
+    // Check if registration is still open
+    if (new Date() > hackathon.registrationDeadline) {
+      return res.status(400).json({ error: "Registration deadline has passed" });
+    }
 
-    await application.save();
+    // Check if user already registered
+    const alreadyRegistered = hackathon.registeredUsers.some(
+      reg => reg.user.toString() === userId
+    );
+
+    if (alreadyRegistered) {
+      return res.status(400).json({ error: "You are already registered for this hackathon" });
+    }
+
+    // Check if maximum participants reached
+    if (hackathon.registeredUsers.length >= hackathon.maxParticipants) {
+      return res.status(400).json({ error: "Maximum participants reached" });
+    }
+
+    // Add registration
+    hackathon.registeredUsers.push({
+      user: userId,
+      teamName: teamName || "",
+      teamMembers: teamMembers || []
+    });
+
+    await hackathon.save();
 
     res.json({ 
       success: true, 
-      message: "Application status updated",
-      application 
+      message: "Successfully registered for hackathon" 
     });
   } catch (err) {
-    console.error("Error updating application status:", err);
+    console.error("Error registering for hackathon:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ADMIN ROUTES
+
+// Get all hackathons (admin only)
+router.get("/admin/all", authAdmin, async (req, res) => {
+  try {
+    const hackathons = await Hackathon.find({})
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json({ hackathons });
+  } catch (err) {
+    console.error("Error fetching hackathons:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Create new hackathon (admin only)
+router.post("/admin/create", authAdmin, async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      theme,
+      startDate,
+      endDate,
+      registrationDeadline,
+      location,
+      maxParticipants,
+      prizes,
+      requirements,
+      contactInfo
+    } = req.body;
+
+    const hackathon = new Hackathon({
+      title,
+      description,
+      theme,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      registrationDeadline: new Date(registrationDeadline),
+      location,
+      maxParticipants: maxParticipants || 100,
+      prizes: prizes || [],
+      requirements: requirements || [],
+      contactInfo: contactInfo || {},
+      createdBy: req.user.userId,
+      isActive: true,
+      isPublished: true
+    });
+
+    await hackathon.save();
+
+    res.json({ 
+      success: true, 
+      message: "Hackathon created successfully",
+      hackathon 
+    });
+  } catch (err) {
+    console.error("Error creating hackathon:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Update hackathon (admin only)
+router.put("/admin/:id", authAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const hackathon = await Hackathon.findByIdAndUpdate(
+      id, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
+
+    if (!hackathon) {
+      return res.status(404).json({ error: "Hackathon not found" });
+    }
+
+    res.json({ 
+      success: true, 
+      message: "Hackathon updated successfully",
+      hackathon 
+    });
+  } catch (err) {
+    console.error("Error updating hackathon:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Delete hackathon (admin only)
+router.delete("/admin/:id", authAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hackathon = await Hackathon.findByIdAndDelete(id);
+
+    if (!hackathon) {
+      return res.status(404).json({ error: "Hackathon not found" });
+    }
+
+    res.json({ 
+      success: true, 
+      message: "Hackathon deleted successfully" 
+    });
+  } catch (err) {
+    console.error("Error deleting hackathon:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get hackathon registrations (admin only)
+router.get("/admin/:id/registrations", authAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hackathon = await Hackathon.findById(id)
+      .populate("registeredUsers.user", "name email picture");
+
+    if (!hackathon) {
+      return res.status(404).json({ error: "Hackathon not found" });
+    }
+
+    res.json({ 
+      registrations: hackathon.registeredUsers,
+      totalRegistrations: hackathon.registeredUsers.length
+    });
+  } catch (err) {
+    console.error("Error fetching hackathon registrations:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   FileText,
   ClipboardCheck,
+  Code,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -192,6 +193,13 @@ export default function AdminDashboard() {
               title="Leaderboard"
             >
               <Trophy className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/admin/hackathon")}
+              title="Hackathon Management"
+            >
+              <Code className="h-5 w-5" />
             </button>
             <button
               className="btn-ghost rounded-lg p-2"

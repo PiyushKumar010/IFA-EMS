@@ -12,6 +12,7 @@ import {
   Activity,
   AlertCircle,
   CheckCircle,
+  Code,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -117,6 +118,14 @@ export default function AdminOverviewPage() {
       icon: BarChart3,
       color: "bg-cyan-500",
       path: "/admin/leaderboard",
+      count: 0
+    },
+    {
+      name: "Hackathon",
+      description: "Manage hackathon events",
+      icon: Code,
+      color: "bg-violet-500",
+      path: "/admin/hackathon",
       count: 0
     },
     {
