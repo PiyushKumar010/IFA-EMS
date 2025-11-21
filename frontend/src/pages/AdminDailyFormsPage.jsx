@@ -36,6 +36,18 @@ function AdminDailyFormsPage() {
     const [showEditTimeModal, setShowEditTimeModal] = useState(false);
     const [showAddTagModal, setShowAddTagModal] = useState(false);
     const [showDefaultTemplateModal, setShowDefaultTemplateModal] = useState(false);
+    const [showTemplateSelectionModal, setShowTemplateSelectionModal] = useState(false);
+    const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+    const [availableTemplates, setAvailableTemplates] = useState([]);
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [newTemplate, setNewTemplate] = useState({
+        name: "",
+        description: "",
+        roleType: "general",
+        tasks: [],
+        customTasks: [],
+        isDefault: false
+    });
     const [newTag, setNewTag] = useState({ name: "", color: TAG_COLORS[0] });
     const [editingNotes, setEditingNotes] = useState(false);
     const [adminNotes, setAdminNotes] = useState("");
@@ -88,6 +100,49 @@ function AdminDailyFormsPage() {
             console.error("Error fetching forms:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAvailableTemplates = async () => {
+        try {
+            const res = await fetch("/api/default-form-templates", { credentials: "include" });
+            if (res.ok) {
+                const data = await res.json();
+                setAvailableTemplates(data || []);
+            }
+        } catch (error) {
+            console.error("Error fetching templates:", error);
+        }
+    };
+
+    const createTemplate = async () => {
+        try {
+            const res = await fetch("/api/default-form-templates", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(newTemplate)
+            });
+            
+            if (res.ok) {
+                await fetchAvailableTemplates();
+                setShowCreateTemplateModal(false);
+                setNewTemplate({
+                    name: "",
+                    description: "",
+                    roleType: "general",
+                    tasks: [],
+                    customTasks: [],
+                    isDefault: false
+                });
+                alert("Template created successfully!");
+            } else {
+                const errorData = await res.json();
+                alert(errorData.error || "Failed to create template");
+            }
+        } catch (error) {
+            console.error("Error creating template:", error);
+            alert("Failed to create template");
         }
     };
 
@@ -340,11 +395,18 @@ function AdminDailyFormsPage() {
         }
     };
 
-    const handleCreateForm = async (employeeId, formData) => {
+    const showTemplateSelection = async (employeeId) => {
+        setSelectedEmployee(employees.find(emp => emp._id === employeeId));
+        await fetchAvailableTemplates();
+        setShowTemplateSelectionModal(true);
+    };
+
+    const handleCreateForm = async (employeeId, formData, templateId = null) => {
         try {
             setError("");
             const requestData = {
                 employeeId,
+                templateId,
                 ...formData
             };
             
@@ -361,6 +423,7 @@ function AdminDailyFormsPage() {
             
             if (res.ok) {
                 setShowCreateForm(false);
+                setShowTemplateSelectionModal(false);
                 if (selectedEmployee) {
                     fetchEmployeeForms(selectedEmployee._id);
                 }
@@ -416,13 +479,22 @@ function AdminDailyFormsPage() {
                                     Manage employee daily update sheets with auto-selection and time tracking
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setShowDefaultTemplateModal(true)}
-                                className="btn-ghost flex items-center gap-2"
-                            >
-                                <FileText className="h-4 w-4" />
-                                Default Template
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowDefaultTemplateModal(true)}
+                                    className="btn-ghost flex items-center gap-2"
+                                >
+                                    <FileText className="h-4 w-4" />
+                                    Default Template
+                                </button>
+                                <button
+                                    onClick={() => setShowCreateTemplateModal(true)}
+                                    className="btn-ghost flex items-center gap-2"
+                                >
+                                    <Settings className="h-4 w-4" />
+                                    Manage Templates
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -464,7 +536,7 @@ function AdminDailyFormsPage() {
                                         Daily Forms
                                     </h2>
                                     <button
-                                        onClick={() => setShowCreateForm(true)}
+                                        onClick={() => showTemplateSelection(selectedEmployee._id)}
                                         className="btn-primary flex items-center gap-2 px-3 py-1 text-sm"
                                     >
                                         <Plus className="h-4 w-4" />
@@ -808,6 +880,28 @@ function AdminDailyFormsPage() {
                         template={defaultTemplate}
                         onClose={() => setShowDefaultTemplateModal(false)}
                         onUpdate={fetchDefaultTemplate}
+                    />
+                )}
+
+                {showTemplateSelectionModal && (
+                    <TemplateSelectionModal
+                        employee={selectedEmployee}
+                        templates={availableTemplates}
+                        onClose={() => setShowTemplateSelectionModal(false)}
+                        onSubmit={handleCreateForm}
+                        onCreateTemplate={() => {
+                            setShowTemplateSelectionModal(false);
+                            setShowCreateTemplateModal(true);
+                        }}
+                    />
+                )}
+
+                {showCreateTemplateModal && (
+                    <CreateTemplateModal
+                        template={newTemplate}
+                        onClose={() => setShowCreateTemplateModal(false)}
+                        onSubmit={createTemplate}
+                        onChange={setNewTemplate}
                     />
                 )}
             </div>
@@ -1202,6 +1296,309 @@ const AddTagModal = ({ newTag, setNewTag, tagColors, onClose, onSubmit }) => {
             className="btn-primary flex-1 disabled:opacity-50"
           >
             Add Tag
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Template Selection Modal
+const TemplateSelectionModal = ({ employee, templates, onClose, onSubmit, onCreateTemplate }) => {
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    entryTime: "",
+    exitTime: "",
+    adminNotes: ""
+  });
+
+  const handleSubmit = () => {
+    if (selectedTemplate) {
+      onSubmit(employee._id, formData, selectedTemplate._id);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-white/10 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold">Select Form Template</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-slate-400 mb-2">Creating form for: <span className="text-white font-medium">{employee?.name}</span></p>
+          
+          {/* Form Basic Info */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Date</label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Entry Time</label>
+              <input
+                type="time"
+                value={formData.entryTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, entryTime: e.target.value }))}
+                className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Template Selection */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Available Templates</h3>
+            <button
+              onClick={onCreateTemplate}
+              className="btn-ghost flex items-center gap-2 text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Template
+            </button>
+          </div>
+
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {templates.map((template) => (
+              <div
+                key={template._id}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  selectedTemplate?._id === template._id
+                    ? 'border-emerald-500 bg-emerald-500/20'
+                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                }`}
+                onClick={() => setSelectedTemplate(template)}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">{template.name}</h4>
+                    <p className="text-sm text-slate-400">{template.description}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
+                        {template.roleType}
+                      </span>
+                      {template.isDefault && (
+                        <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    {template.tasks?.length || 0} tasks, {template.customTasks?.length || 0} custom
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose} className="btn-ghost">
+            Cancel
+          </button>
+          <button 
+            onClick={handleSubmit}
+            disabled={!selectedTemplate}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Create Form with Template
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Create Template Modal
+const CreateTemplateModal = ({ template, onClose, onSubmit, onChange }) => {
+  const [tasks, setTasks] = useState(template.tasks || []);
+  const [customTasks, setCustomTasks] = useState(template.customTasks || []);
+  const [newTask, setNewTask] = useState("");
+  const [newCustomTask, setNewCustomTask] = useState("");
+
+  const addTask = () => {
+    if (newTask.trim()) {
+      const task = {
+        taskId: `task-${Date.now()}`,
+        taskText: newTask.trim(),
+        isCompleted: false,
+        employeeChecked: false,
+        adminChecked: false
+      };
+      setTasks(prev => [...prev, task]);
+      setNewTask("");
+    }
+  };
+
+  const addCustomTask = () => {
+    if (newCustomTask.trim()) {
+      const task = {
+        taskText: newCustomTask.trim(),
+        isCompleted: false,
+        employeeChecked: false,
+        adminChecked: false
+      };
+      setCustomTasks(prev => [...prev, task]);
+      setNewCustomTask("");
+    }
+  };
+
+  const removeTask = (index) => {
+    setTasks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeCustomTask = (index) => {
+    setCustomTasks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = () => {
+    const updatedTemplate = {
+      ...template,
+      tasks,
+      customTasks
+    };
+    onChange(updatedTemplate);
+    onSubmit();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-white/10 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold">Create New Template</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          {/* Basic Info */}
+          <div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Template Name</label>
+              <input
+                type="text"
+                value={template.name}
+                onChange={(e) => onChange({ ...template, name: e.target.value })}
+                className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+                placeholder="Enter template name"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
+              <textarea
+                value={template.description}
+                onChange={(e) => onChange({ ...template, description: e.target.value })}
+                className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+                placeholder="Template description"
+                rows={3}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Role Type</label>
+              <select
+                value={template.roleType}
+                onChange={(e) => onChange({ ...template, roleType: e.target.value })}
+                className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+              >
+                <option value="general">General</option>
+                <option value="developer">Developer</option>
+                <option value="designer">Designer</option>
+                <option value="manager">Manager</option>
+                <option value="intern">Intern</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={template.isDefault}
+                  onChange={(e) => onChange({ ...template, isDefault: e.target.checked })}
+                  className="h-4 w-4 rounded border-white/30 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500"
+                />
+                <span className="text-sm text-slate-300">Set as default template for this role</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Tasks */}
+          <div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Standard Tasks</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  className="flex-1 rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+                  placeholder="Add new task"
+                  onKeyPress={(e) => e.key === 'Enter' && addTask()}
+                />
+                <button onClick={addTask} className="btn-primary">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {tasks.map((task, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-white/5 rounded">
+                    <span className="text-sm">{task.taskText}</span>
+                    <button onClick={() => removeTask(index)} className="text-red-400 hover:text-red-300">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Custom Tasks</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newCustomTask}
+                  onChange={(e) => setNewCustomTask(e.target.value)}
+                  className="flex-1 rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
+                  placeholder="Add custom task"
+                  onKeyPress={(e) => e.key === 'Enter' && addCustomTask()}
+                />
+                <button onClick={addCustomTask} className="btn-primary">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {customTasks.map((task, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-white/5 rounded">
+                    <span className="text-sm">{task.taskText}</span>
+                    <button onClick={() => removeCustomTask(index)} className="text-red-400 hover:text-red-300">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button onClick={onClose} className="btn-ghost">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} className="btn-primary">
+            Create Template
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import express from "express";
 import DailyForm from "../models/dailyForm.js";
+import DefaultFormTemplate from "../models/defaultFormTemplate.js";
 import User from "../models/user.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import mongoose from "mongoose";
@@ -216,20 +217,61 @@ router.get("/today", authenticateToken, async (req, res) => {
     if (!form || (form && new Date(form.date) < todayStart)) {
       console.log("Creating new form because:", !form ? "no form exists" : "existing form is from previous day");
       
-      const tasks = STANDARD_TASKS.map(task => ({
-        taskId: task.taskId,
-        taskText: task.taskText,
-        category: task.category,
-        frequency: task.frequency,
-        employeeChecked: false,
-        adminChecked: false
-      }));
+      // Try to get user's role to find appropriate template
+      const user = await User.findById(req.user.userId);
+      let formTasks = [];
+      let formCustomTasks = [];
+      
+      if (user) {
+        // Find default template for user's role (assuming user has a role field)
+        const userRole = user.roleType || "general"; // fallback to general
+        const defaultTemplate = await DefaultFormTemplate.findOne({
+          roleType: userRole,
+          isDefault: true,
+          isActive: true
+        });
+        
+        if (defaultTemplate) {
+          console.log(`Using default template for role ${userRole}:`, defaultTemplate.name);
+          formTasks = defaultTemplate.tasks.map(task => ({
+            ...task,
+            employeeChecked: false,
+            adminChecked: false
+          }));
+          formCustomTasks = defaultTemplate.customTasks.map(task => ({
+            ...task,
+            employeeChecked: false,
+            adminChecked: false
+          }));
+        } else {
+          // Fallback to standard tasks if no template found
+          console.log(`No default template found for role ${userRole}, using standard tasks`);
+          formTasks = STANDARD_TASKS.map(task => ({
+            taskId: task.taskId,
+            taskText: task.taskText,
+            category: task.category,
+            frequency: task.frequency,
+            employeeChecked: false,
+            adminChecked: false
+          }));
+        }
+      } else {
+        // Fallback to standard tasks if user not found
+        formTasks = STANDARD_TASKS.map(task => ({
+          taskId: task.taskId,
+          taskText: task.taskText,
+          category: task.category,
+          frequency: task.frequency,
+          employeeChecked: false,
+          adminChecked: false
+        }));
+      }
 
       form = new DailyForm({
         employee: req.user.userId,
         date: todayStart,  // Use todayStart to ensure it's exactly today
-        tasks: tasks,
-        customTasks: [],
+        tasks: formTasks,
+        customTasks: formCustomTasks,
         customTags: [],
         hoursAttended: 0,
         screensharing: false,
@@ -1294,7 +1336,17 @@ router.delete("/custom-tag/:formId/:tagId", authenticateToken, async (req, res) 
 // Admin create new daily form for employee
 router.post("/admin/create-for-employee", authenticateToken, async (req, res) => {
   try {
-    const { employeeId, date, entryTime, exitTime, adminNotes, customTasks = [], customTags = [] } = req.body;
+    const { 
+      employeeId, 
+      date, 
+      entryTime, 
+      exitTime, 
+      adminNotes, 
+      customTasks = [], 
+      customTags = [],
+      templateId,
+      tasks = []
+    } = req.body;
     const adminId = req.user.userId;
 
     // Verify admin role
@@ -1340,24 +1392,58 @@ router.post("/admin/create-for-employee", authenticateToken, async (req, res) =>
       exitDateTime = new Date(`${formDate.toISOString().split('T')[0]}T${exitTime}`);
     }
 
-    // Create new form with standard tasks
+    // Get tasks based on template or use provided tasks
+    let formTasks = [];
+    let formCustomTasks = [];
+    
+    if (templateId) {
+      const template = await DefaultFormTemplate.findById(templateId);
+      if (template) {
+        formTasks = template.tasks.map(task => ({
+          ...task,
+          employeeChecked: false,
+          adminChecked: false,
+          isCompleted: false
+        }));
+        formCustomTasks = template.customTasks.map(task => ({
+          ...task,
+          employeeChecked: false,
+          adminChecked: false,
+          isCompleted: false
+        }));
+      }
+    } else {
+      // Use provided tasks or fallback to standard tasks
+      formTasks = tasks.length > 0 ? 
+        tasks.map(task => ({
+          ...task,
+          employeeChecked: false,
+          adminChecked: false,
+          isCompleted: false
+        })) :
+        STANDARD_TASKS.map(task => ({
+          ...task,
+          employeeChecked: false,
+          adminChecked: false,
+          isCompleted: false
+        }));
+      
+      formCustomTasks = customTasks.map(task => ({
+        taskText: task.taskText || task.text || task,
+        employeeChecked: false,
+        adminChecked: false,
+        isCompleted: false
+      }));
+    }
+
+    // Create new form
     const newForm = new DailyForm({
       employee: employeeId,
       date: startOfDay,
       entryTime: entryDateTime,
       exitTime: exitDateTime,
-      tasks: STANDARD_TASKS.map(task => ({
-        ...task,
-        employeeChecked: false,
-        adminChecked: false,
-        isCompleted: false
-      })),
-      customTasks: customTasks.map(task => ({
-        taskText: task.taskText || task.text || task,
-        employeeChecked: false,
-        adminChecked: false,
-        isCompleted: false
-      })),
+      tasks: formTasks,
+      customTasks: formCustomTasks,
       customTags: customTags.map(tag => ({
         name: tag.name || tag,
         color: tag.color || "#6366f1",

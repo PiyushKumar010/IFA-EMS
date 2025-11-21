@@ -20,6 +20,7 @@ export default function EmployeeDailyFormPage() {
   const [formHistory, setFormHistory] = useState([]);
   const [selectedHistoryForm, setSelectedHistoryForm] = useState(null);
   const [authError, setAuthError] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const logout = async () => {
     try {
@@ -56,9 +57,10 @@ export default function EmployeeDailyFormPage() {
   };
 
   const saveFormData = async () => {
-    if (!form?._id || alreadySubmitted || midnightRestricted) return;
+    if (!form?._id || alreadySubmitted || midnightRestricted || isUpdating) return;
     
     try {
+      setIsUpdating(true);
       const res = await fetch("/api/daily-forms/save", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -74,12 +76,15 @@ export default function EmployeeDailyFormPage() {
       if (res.ok) {
         const data = await res.json();
         console.log("Form auto-saved successfully");
-        setForm(data.form);
+        // Don't update form state to prevent checkbox flickering
+        // setForm(data.form);
       } else {
         console.error("Failed to auto-save form:", res.status);
       }
     } catch (err) {
       console.error("Error saving form:", err);
+    } finally {
+      setIsUpdating(false);
     }
   };
 

@@ -17,6 +17,7 @@ import requests from "./routes/admin.js"
 import messagesRoutes from "./routes/messages.js"
 import dailyFormRoutes from "./routes/dailyForms.js"
 import meetingsRoutes from "./routes/meetings.js"
+import defaultFormTemplateRoutes from "./routes/defaultFormTemplates.js"
 import { initSocketServer } from "./socket.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -112,6 +113,7 @@ app.use("/api/requests",requests);
 app.use("/api/messages", messagesRoutes);
 app.use("/api/daily-forms", dailyFormRoutes);
 app.use("/api/meetings", meetingsRoutes);
+app.use("/api/default-form-templates", defaultFormTemplateRoutes);
 
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
