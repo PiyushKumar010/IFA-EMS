@@ -82,7 +82,7 @@ export default function HackathonApplicantPage() {
 
   const applicationStatus = application?.status || "not-started";
   const hackathonInfo = {
-    name: "Tech Innovation Hackathon 2025",
+    name: "IFA Hackathon",
     date: "December 15-17, 2025",
     location: "Virtual & Physical Hub",
     prizes: ["₹50,000 First Prize", "₹25,000 Second Prize", "₹10,000 Third Prize"],

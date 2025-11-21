@@ -127,7 +127,7 @@ export default function HackathonApplicationPage() {
           <div>
             <h1 className="text-4xl font-bold">Hackathon Application</h1>
             <p className="mt-2 text-slate-300">
-              Join the Tech Innovation Hackathon 2025 - AI for Social Good
+              Join the IFA Hackathon - AI for Social Good
             </p>
           </div>
         </header>
