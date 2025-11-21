@@ -1,7 +1,7 @@
 import express from "express";
 import Hackathon from "../models/hackathon.js";
 import User from "../models/user.js";
-import { authMiddleware } from "../middlewares/auth.js";
+import { authenticateToken } from "../middlewares/auth.js";
 import authenticateAdmin from "../middlewares/authAdmin.js";
 
 const router = express.Router();
