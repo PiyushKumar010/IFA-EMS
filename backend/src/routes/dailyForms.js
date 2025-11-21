@@ -743,6 +743,81 @@ router.get("/employee/:employeeId", authenticateToken, async (req, res) => {
   }
 });
 
+// Admin: Generate task tracking report for employee
+router.get("/reports/task-tracking", authenticateToken, async (req, res) => {
+  try {
+    const { employeeId, startDate, endDate } = req.query;
+    const adminId = req.user.userId;
+
+    // Check if user is admin
+    const admin = await User.findById(adminId);
+    if (!admin || !admin.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // Verify employee exists
+    const employee = await User.findById(employeeId);
+    if (!employee || !employee.roles.includes("employee")) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Parse dates
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    console.log(`Generating task report for employee ${employeeId} from ${start.toISOString()} to ${end.toISOString()}`);
+
+    // Get all forms within date range
+    const forms = await DailyForm.find({
+      employee: employeeId,
+      date: { $gte: start, $lte: end }
+    })
+    .populate("employee", "name email")
+    .sort({ date: 1 }); // Sort ascending for report
+
+    console.log(`Found ${forms.length} forms for report`);
+
+    // Format data for report
+    const reportData = forms.map(form => {
+      const formObj = form.toObject();
+      
+      return {
+        date: formObj.date,
+        tasks: formObj.tasks || [],
+        customTasks: formObj.customTasks || [],
+        hoursAttended: formObj.hoursAttended || 0,
+        screensharing: formObj.screensharing || false,
+        submitted: formObj.submitted || false,
+        adminConfirmed: formObj.adminConfirmed || false,
+        score: formObj.score || 0,
+        dailyBonus: formObj.dailyBonus || 0,
+        entryTime: formObj.entryTime,
+        exitTime: formObj.exitTime
+      };
+    });
+
+    res.json({
+      employee: {
+        _id: employee._id,
+        name: employee.name,
+        email: employee.email
+      },
+      dateRange: {
+        startDate: start,
+        endDate: end
+      },
+      reportData,
+      totalDays: reportData.length
+    });
+
+  } catch (err) {
+    console.error("Error generating task tracking report:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Leaderboard: Get employee rankings based on daily bonuses
 router.get("/leaderboard", authenticateToken, async (req, res) => {
   try {

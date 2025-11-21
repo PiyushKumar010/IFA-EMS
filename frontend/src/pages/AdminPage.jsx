@@ -15,6 +15,8 @@ import {
   Trophy,
   Video,
   ArrowLeft,
+  FileText,
+  ClipboardCheck,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -169,6 +171,20 @@ export default function AdminDashboard() {
               title="Employees"
             >
               <Users className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/admin/daily-forms")}
+              title="Daily Forms"
+            >
+              <ClipboardCheck className="h-5 w-5" />
+            </button>
+            <button
+              className="btn-ghost rounded-lg p-2"
+              onClick={() => navigate("/admin/reports")}
+              title="Reports"
+            >
+              <FileText className="h-5 w-5" />
             </button>
             <button
               className="btn-ghost rounded-lg p-2"

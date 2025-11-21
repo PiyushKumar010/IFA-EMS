@@ -17,6 +17,7 @@ import AdminMessagesPage from "./pages/AdminMessagesPage";
 import AdminDailyFormsPage from "./pages/AdminDailyFormsPage";
 import AdminEmployeesPage from "./pages/AdminEmployeesPage";
 import AdminEmployeeDetailsPage from "./pages/AdminEmployeeDetailsPage";
+import AdminReportsPage from "./pages/AdminReportsPage";
 import ClientMessagesPage from "./pages/ClientMessagesPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import AdminMeetingsPage from "./pages/AdminMeetingsPage";
@@ -113,6 +114,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminMeetingsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoute>
+              <AdminReportsPage />
             </AdminRoute>
           }
         />
