@@ -33,7 +33,7 @@ async function verifyGoogleToken(token) {
 
 router.post("/google", async (req, res) => {
   try {
-    const { googleToken, role } = req.body;
+    const { googleToken, role, employeeType } = req.body;
     if (!googleToken || !role) return res.status(400).json({ error: "Missing token or role" });
 
     const user = await verifyGoogleToken(googleToken);
@@ -42,6 +42,68 @@ router.post("/google", async (req, res) => {
 
     if (role === "admin" && !isAdmin) {
       return res.status(403).json({ error: "Unauthorized for admin access" });
+    }
+
+    // Special handling for hackathon applicants
+    if (role === "employee" && employeeType === "hackathon-applicant") {
+      // For hackathon applicants, we use a simpler flow with automatic approval
+      let dbUser = await User.findOne({ email: user.email });
+      
+      if (!dbUser) {
+        dbUser = new User({ 
+          email: user.email, 
+          roles: ["hackathon-applicant"], 
+          name: user.name, 
+          picture: user.picture,
+          lastLogin: Date.now(),
+          status: "approved", // Auto-approve hackathon applicants
+        });
+        await dbUser.save();
+      } else {
+        // Update existing user
+        dbUser.lastLogin = Date.now();
+        dbUser.name = user.name;
+        dbUser.picture = user.picture;
+        if (!dbUser.roles.includes("hackathon-applicant")) {
+          dbUser.roles.push("hackathon-applicant");
+        }
+        await dbUser.save();
+      }
+
+      // Create JWT token for hackathon applicant
+      const JWT_SECRET = process.env.JWT_SECRET;
+      if (!JWT_SECRET) {
+        throw new Error("JWT_SECRET is not set in environment variables");
+      }
+      
+      const tokenPayload = { 
+        userId: dbUser._id, 
+        email: user.email, 
+        roles: dbUser.roles, 
+        name: user.name, 
+        picture: user.picture 
+      };
+      const jwtToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "1d" });
+
+      // Set cookies
+      res.cookie(
+        "ems_token",
+        jwtToken,
+        buildCookieOptions({
+          httpOnly: true,
+          maxAge: 24 * 60 * 60 * 1000,
+        }),
+      );
+      res.cookie(
+        "ems_role",
+        "hackathon-applicant",
+        buildCookieOptions({
+          httpOnly: false,
+          maxAge: 24 * 60 * 60 * 1000,
+        }),
+      );
+
+      return res.json({ success: true, ...tokenPayload });
     }
 
     // find user in database 
@@ -155,6 +217,44 @@ router.post("/logout", (req, res) => {
   res.clearCookie("ems_token", buildCookieOptions({ httpOnly: true }));
   res.clearCookie("ems_role", buildCookieOptions());
   res.json({ success: true });
+});
+
+// Get user profile
+router.get("/profile", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(' ')[1] || req.cookies.ems_token;
+    
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const JWT_SECRET = process.env.JWT_SECRET;
+    if (!JWT_SECRET) {
+      throw new Error("JWT_SECRET is not set in environment variables");
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        roles: user.roles,
+        status: user.status
+      }
+    });
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(401).json({ error: "Invalid token" });
+  }
 });
 
 export default router;

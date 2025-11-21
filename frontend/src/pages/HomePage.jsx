@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
@@ -15,9 +15,19 @@ import PageBackground from "../components/ui/PageBackground";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 
   const gotoRole = (role) => {
+    if (role === "employee") {
+      setShowEmployeeModal(true);
+      return;
+    }
     navigate("/verify", { state: { role } });
+  };
+
+  const handleEmployeeRoleSelect = (employeeType) => {
+    setShowEmployeeModal(false);
+    navigate("/verify", { state: { role: "employee", employeeType } });
   };
 
   const roles = [
@@ -162,6 +172,61 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Employee Role Selection Modal */}
+      {showEmployeeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="glass-panel w-full max-w-2xl mx-6 p-8">
+            <h2 className="text-2xl font-bold text-white mb-6">Select Employee Type</h2>
+            <p className="text-slate-300 mb-8">Choose your role to access the appropriate dashboard and features.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Regular Employee */}
+              <div 
+                className="glass-card group cursor-pointer p-6 transition-all hover:scale-105 hover:border-white/20"
+                onClick={() => handleEmployeeRoleSelect("employee")}
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20">
+                  <Users className="h-6 w-6 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Employee</h3>
+                <p className="text-sm text-slate-300 mb-4">Regular team member with full access to projects, tasks, and collaboration tools.</p>
+                <ul className="text-xs text-slate-400 space-y-1">
+                  <li>• Requires admin approval</li>
+                  <li>• Full project access</li>
+                  <li>• Task management & tracking</li>
+                </ul>
+              </div>
+              
+              {/* Hackathon Applicant */}
+              <div 
+                className="glass-card group cursor-pointer p-6 transition-all hover:scale-105 hover:border-white/20"
+                onClick={() => handleEmployeeRoleSelect("hackathon-applicant")}
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20">
+                  <TrendingUp className="h-6 w-6 text-purple-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Hackathon Applicant</h3>
+                <p className="text-sm text-slate-300 mb-4">Apply for hackathon participation with streamlined onboarding process.</p>
+                <ul className="text-xs text-slate-400 space-y-1">
+                  <li>• Instant access</li>
+                  <li>• Application dashboard</li>
+                  <li>• Event-specific features</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="mt-8 flex justify-center">
+              <button 
+                className="px-6 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors"
+                onClick={() => setShowEmployeeModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageBackground>
   );
 }

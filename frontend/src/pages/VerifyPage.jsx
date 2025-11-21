@@ -34,6 +34,7 @@ export default function VerifyPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const role = location.state?.role || "unknown";
+  const employeeType = location.state?.employeeType || "employee";
   const copy = roleCopy[role] || roleCopy.employee;
 
   async function handleLoginSuccess(credentialResponse) {
@@ -44,7 +45,7 @@ export default function VerifyPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ googleToken, role }),
+        body: JSON.stringify({ googleToken, role, employeeType }),
       });
       
       if (!resp.ok) {
@@ -56,7 +57,12 @@ export default function VerifyPage() {
       const data = await resp.json();
 
       if (data.success) {
-        navigate("/" + role);
+        // Handle different employee types
+        if (employeeType === "hackathon-applicant") {
+          navigate("/hackathon");
+        } else {
+          navigate("/" + role);
+        }
       } else if (data.pending) {
         navigate("/employee/approval");
       } else {

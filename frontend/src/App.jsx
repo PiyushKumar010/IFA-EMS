@@ -18,6 +18,8 @@ import AdminDailyFormsPage from "./pages/AdminDailyFormsPage";
 import AdminEmployeesPage from "./pages/AdminEmployeesPage";
 import AdminEmployeeDetailsPage from "./pages/AdminEmployeeDetailsPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
+import HackathonApplicantPage from "./pages/HackathonApplicantPage";
+import HackathonApplicationPage from "./pages/HackathonApplicationPage";
 import ClientMessagesPage from "./pages/ClientMessagesPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import AdminMeetingsPage from "./pages/AdminMeetingsPage";
@@ -27,6 +29,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import EmployeeRoute from "./components/EmployeeRoute";
 import ClientRoute from "./components/ClientRoute";
+import HackathonRoute from "./components/HackathonRoute";
 
 export default function App() {
   return (
@@ -123,6 +126,24 @@ export default function App() {
             <AdminRoute>
               <AdminReportsPage />
             </AdminRoute>
+          }
+        />
+
+        {/* Hackathon Routes */}
+        <Route
+          path="/hackathon"
+          element={
+            <HackathonRoute>
+              <HackathonApplicantPage />
+            </HackathonRoute>
+          }
+        />
+        <Route
+          path="/hackathon/apply"
+          element={
+            <HackathonRoute>
+              <HackathonApplicationPage />
+            </HackathonRoute>
           }
         />
 
