@@ -1,8 +1,8 @@
 import express from "express";
 import Hackathon from "../models/hackathon.js";
 import User from "../models/user.js";
-import { authenticateToken } from "../middlewares/auth.js";
-import { authAdmin } from "../middlewares/authAdmin.js";
+import { authMiddleware } from "../middlewares/auth.js";
+import authenticateAdmin from "../middlewares/authAdmin.js";
 
 const router = express.Router();
 
@@ -96,7 +96,7 @@ router.post("/:id/register", authenticateToken, async (req, res) => {
 // ADMIN ROUTES
 
 // Get all hackathons (admin only)
-router.get("/admin/all", authAdmin, async (req, res) => {
+router.get("/admin/all", authenticateAdmin, async (req, res) => {
   try {
     const hackathons = await Hackathon.find({})
       .populate("createdBy", "name email")
@@ -110,7 +110,7 @@ router.get("/admin/all", authAdmin, async (req, res) => {
 });
 
 // Create new hackathon (admin only)
-router.post("/admin/create", authAdmin, async (req, res) => {
+router.post("/admin/create", authenticateAdmin, async (req, res) => {
   try {
     const {
       title,
@@ -157,7 +157,7 @@ router.post("/admin/create", authAdmin, async (req, res) => {
 });
 
 // Update hackathon (admin only)
-router.put("/admin/:id", authAdmin, async (req, res) => {
+router.put("/admin/:id", authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -184,7 +184,7 @@ router.put("/admin/:id", authAdmin, async (req, res) => {
 });
 
 // Delete hackathon (admin only)
-router.delete("/admin/:id", authAdmin, async (req, res) => {
+router.delete("/admin/:id", authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -205,7 +205,7 @@ router.delete("/admin/:id", authAdmin, async (req, res) => {
 });
 
 // Get hackathon registrations (admin only)
-router.get("/admin/:id/registrations", authAdmin, async (req, res) => {
+router.get("/admin/:id/registrations", authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
