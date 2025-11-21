@@ -120,6 +120,14 @@ export default function AdminOverviewPage() {
       count: 0
     },
     {
+      name: "Reports",
+      description: "Task tracking reports",
+      icon: Activity,
+      color: "bg-orange-500",
+      path: "/admin/reports",
+      count: 0
+    },
+    {
       name: "Pending Requests",
       description: "Review employee approvals",
       icon: Inbox,
