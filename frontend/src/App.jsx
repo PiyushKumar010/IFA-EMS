@@ -18,6 +18,7 @@ import AdminDailyFormsPage from "./pages/AdminDailyFormsPage";
 import AdminEmployeesPage from "./pages/AdminEmployeesPage";
 import AdminEmployeeDetailsPage from "./pages/AdminEmployeeDetailsPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
+import AdminHackathonPage from "./pages/AdminHackathonPage";
 import HackathonApplicantPage from "./pages/HackathonApplicantPage";
 import HackathonApplicationPage from "./pages/HackathonApplicationPage";
 import ClientMessagesPage from "./pages/ClientMessagesPage";
@@ -125,6 +126,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminReportsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/hackathon"
+          element={
+            <AdminRoute>
+              <AdminHackathonPage />
             </AdminRoute>
           }
         />
