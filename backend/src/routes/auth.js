@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 
 const router = express.Router();
-const ADMIN_EMAILS = ["piyush31221@gmail.com","harshitbali320@gmail.com","soorajr2604@gmail.com"]; // Your admin emails
+const ADMIN_EMAILS = ["piyush31221@gmail.com","harshitbali320@gmail.com","soorajr2604@gmail.com","insightfusionanalytics@gmail.com"]; // Your admin emails
 
 const isProduction = process.env.NODE_ENV === "production";
 const cookieSameSite =
