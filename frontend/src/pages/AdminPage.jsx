@@ -133,43 +133,45 @@ export default function AdminProjectsPage() {
     <PageBackground variant="violet">
       <div className="admin-viewport text-white">
         <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate("/admin")}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              Back
-            </button>
-            <div>
-              <h1 className="text-xl font-bold">Projects</h1>
-              <p className="text-xs text-slate-400">Manage and track all your projects</p>
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate("/admin")}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Back
+              </button>
+              <div>
+                <h1 className="text-xl font-bold">Projects</h1>
+                <p className="text-xs text-slate-400">Manage and track all your projects</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="rounded border border-white/10 bg-black/20 px-2 py-1 pl-7 text-xs focus:border-emerald-400 focus:outline-none w-48"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="rounded border border-white/10 bg-black/20 px-2 py-1 pl-7 text-xs focus:border-emerald-400 focus:outline-none w-48"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <button
+                className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs"
+                onClick={() => setFilterStatus(filterStatus === 'all' ? 'active' : 'all')}
+              >
+                <Filter className="h-3 w-3" />
+                {filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+              </button>
+              <button
+                className="btn-primary flex items-center gap-1 px-3 py-1.5 text-xs"
+                onClick={() => setShowCreateModal(true)}
+              >
+                + New Project
+              </button>
             </div>
-            <button
-              className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs"
-              onClick={() => setFilterStatus(filterStatus === 'all' ? 'active' : 'all')}
-            >
-              <Filter className="h-3 w-3" />
-              {filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
-            </button>
-            <button
-              className="btn-primary flex items-center gap-1 px-3 py-1.5 text-xs"
-              onClick={() => setShowCreateModal(true)}
-            >
-              + New Project
-            </button>
           </div>
         </header>
 
@@ -186,31 +188,31 @@ export default function AdminProjectsPage() {
                 <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1600px', border: '1px solid rgba(255,255,255,0.1)'}}>
                     <thead>
                       <tr className="border-b border-white/20">
-                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10 border-r border-white/10" style={{width: '90px'}}>Project</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Client</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '110px'}}>Email</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '120px'}}>Desc</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '55px'}}>Status</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '55px'}}>Type</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '50px'}}>Prior</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '60px'}}>PType</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '85px'}}>Team</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Lead</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '55px'}}>VA</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Freelan</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Update</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Coders</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '65px'}}>Leader</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '65px'}}>Start</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '65px'}}>End</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '40px'}}>Est</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '40px'}}>Hrs</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '35px'}}>%</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '45px'}}>Git</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '45px'}}>Loom</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '45px'}}>WA</th>
-                        <th className="text-left p-1 border-r border-white/10" style={{width: '55px'}}>Date</th>
-                        <th className="text-left p-1 sticky right-0 bg-slate-800/80 z-10" style={{width: '80px'}}>Action</th>
+                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10 border-r border-white/10" style={{width: '110px'}}>Project Name</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>Client Name</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '130px'}}>Client Email</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '140px'}}>Description</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '65px'}}>Status</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '80px'}}>Client Type</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '60px'}}>Priority</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>Project Type</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '110px'}}>Team Members</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '100px'}}>Lead Assignee</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>VA Incharge</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>Freelancer</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '110px'}}>Update Incharge</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '130px'}}>Coders Recommendation</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '85px'}}>Leadership</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '80px'}}>Start Date</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '80px'}}>End Date</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>Est. Hours Req</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>Hours Taken</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '80px'}}>Completion %</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>GitHub Link</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Loom Link</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>WhatsApp Link</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '85px'}}>Created Date</th>
+                        <th className="text-left p-1 sticky right-0 bg-slate-800/80 z-10" style={{width: '100px'}}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
