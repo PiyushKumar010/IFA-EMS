@@ -185,10 +185,10 @@ export default function AdminProjectsPage() {
               </div>
               
               <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%'}}>
-                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1600px', border: '1px solid rgba(255,255,255,0.1)'}}>
+                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '2500px', border: '1px solid rgba(255,255,255,0.1)'}}>
                     <thead>
                       <tr className="border-b border-white/20">
-                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10 border-r border-white/10" style={{width: '110px'}}>Project Name</th>
+                        <th className="text-left p-1 bg-slate-800 sticky left-0 z-20 border-r border-white/10" style={{width: '110px'}}>Project Name</th>
                         <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>Client Name</th>
                         <th className="text-left p-1 border-r border-white/10" style={{width: '130px'}}>Client Email</th>
                         <th className="text-left p-1 border-r border-white/10" style={{width: '140px'}}>Description</th>
@@ -212,13 +212,13 @@ export default function AdminProjectsPage() {
                         <th className="text-left p-1 border-r border-white/10" style={{width: '70px'}}>Loom Link</th>
                         <th className="text-left p-1 border-r border-white/10" style={{width: '90px'}}>WhatsApp Link</th>
                         <th className="text-left p-1 border-r border-white/10" style={{width: '85px'}}>Created Date</th>
-                        <th className="text-left p-1 sticky right-0 bg-slate-800/80 z-10" style={{width: '100px'}}>Actions</th>
+                        <th className="text-left p-1 sticky right-0 bg-slate-800 z-20" style={{width: '100px'}}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredProjects.map((project) => (
                         <tr key={project._id} className="border-b border-white/10 hover:bg-white/5">
-                          <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10 border-r border-white/10">
+                          <td className="p-2 font-medium bg-slate-800 sticky left-0 z-20 border-r border-white/10">
                             <div className="truncate text-xs" title={project.projectName}>
                               {project.projectName || 'Untitled'}
                             </div>
@@ -307,7 +307,7 @@ export default function AdminProjectsPage() {
                           <td className="p-2 text-xs border-r border-white/10">
                             {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-2 sticky right-0 bg-slate-800/50 z-10">
+                          <td className="p-2 sticky right-0 bg-slate-800 z-20">
                             <div className="flex items-center gap-0.5">
                               <button
                                 className="btn-ghost px-1.5 py-0.5 text-xs"
