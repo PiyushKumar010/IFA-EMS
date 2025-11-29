@@ -169,10 +169,10 @@ export default function AdminReportsPage() {
           </div>
         </header>
 
-        <div className="admin-content-area">
+        <div className="admin-content-area" style={{position: 'relative'}}>
             {/* Filters */}
             {showFilters && (
-              <div className="compact-card p-3 mb-3">
+              <div className="compact-card p-3 mb-3" style={{flexShrink: 0}}>
                 <h2 className="mb-2 text-sm font-bold">Filters</h2>
                 <div className="grid grid-cols-3 gap-2">
                   {/* Employee Selection */}
@@ -237,8 +237,8 @@ export default function AdminReportsPage() {
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div className="compact-card" style={{height: showFilters ? 'calc(100% - 180px)' : '100%', display: 'flex', flexDirection: 'column'}}>
-                <div style={{padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+              <div className="compact-card" style={{height: showFilters ? 'calc(100% - 180px)' : '100%', display: 'flex', flexDirection: 'column', maxWidth: '100%'}}>
+                <div style={{padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0}}>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-white">
                       {selectedEmployee?.name} - {stats.completed}/{stats.total} ({stats.percentage}%)
@@ -249,8 +249,8 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div style={{flex: 1, overflow: 'auto'}}>
-                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%'}}>
+                <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1200px'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10" style={{width: '70px'}}>

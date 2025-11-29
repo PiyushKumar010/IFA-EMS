@@ -173,16 +173,16 @@ export default function AdminProjectsPage() {
           </div>
         </header>
 
-        <div className="admin-content-area">
+        <div className="admin-content-area" style={{position: 'relative'}}>
           {filteredProjects.length > 0 ? (
-            <div className="compact-card" style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-              <div style={{padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+            <div className="compact-card" style={{height: '100%', display: 'flex', flexDirection: 'column', maxWidth: '100%'}}>
+              <div style={{padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0}}>
                 <h2 className="text-sm font-bold text-white">
                   Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
                 </h2>
               </div>
               
-              <div style={{flex: 1, overflow: 'auto'}}>
+              <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%'}}>
                 <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%'}}>
                     <thead>
                       <tr className="border-b border-white/10">
