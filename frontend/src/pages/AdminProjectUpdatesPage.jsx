@@ -141,7 +141,36 @@ export default function AdminProjectUpdatesPage() {
     return (
       <PageBackground variant="violet">
         <div className="flex min-h-screen items-center justify-center text-white">
-          Loading...
+          <div className="flex flex-col items-center gap-4">
+            <div className="loader"></div>
+            <style jsx>{`
+              .loader {
+                display: inline-flex;
+                gap: 10px;
+              }
+              .loader:before,
+              .loader:after {
+                content: "";
+                height: 20px;
+                aspect-ratio: 1;
+                border-radius: 50%;
+                background:
+                  radial-gradient(farthest-side, #8b5cf6 95%, #0000) 35% 35%/6px 6px no-repeat
+                  #fff;
+                transform: scaleX(var(--s, 1)) rotate(0deg);
+                animation: l6 1s infinite linear;
+              }
+              .loader:after {
+                --s: -1;
+                animation-delay: -0.1s;
+              }
+              @keyframes l6 {
+                100% {
+                  transform: scaleX(var(--s, 1)) rotate(360deg);
+                }
+              }
+            `}</style>
+          </div>
         </div>
       </PageBackground>
     );
