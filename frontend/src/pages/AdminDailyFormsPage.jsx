@@ -106,16 +106,21 @@ function AdminDailyFormsPage() {
         }
     };
 
-    const createTemplate = async () => {
+    const createTemplate = async (templateData = null) => {
         try {
+            const dataToSend = templateData || newTemplate;
+            console.log("Creating template with data:", dataToSend);
+            
             const res = await fetch("/api/default-form-templates", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify(newTemplate)
+                body: JSON.stringify(dataToSend)
             });
             
             if (res.ok) {
+                const createdTemplate = await res.json();
+                console.log("Template created successfully:", createdTemplate);
                 await fetchAvailableTemplates();
                 setShowCreateTemplateModal(false);
                 setNewTemplate({
@@ -946,6 +951,7 @@ function QuickSendModal({ templates, employees, onClose, onSend }) {
                             setShowTemplateSelectionModal(false);
                             setShowCreateTemplateModal(true);
                         }}
+                        onDeleteTemplate={handleDeleteTemplate}
                     />
                 )}
 
@@ -1357,7 +1363,7 @@ const AddTagModal = ({ newTag, setNewTag, tagColors, onClose, onSubmit }) => {
 };
 
 // Template Selection Modal
-const TemplateSelectionModal = ({ employee, templates, onClose, onSubmit, onCreateTemplate }) => {
+const TemplateSelectionModal = ({ employee, templates, onClose, onSubmit, onCreateTemplate, onDeleteTemplate }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -1450,13 +1456,13 @@ const TemplateSelectionModal = ({ employee, templates, onClose, onSubmit, onCrea
                   </div>
                 </div>
                 {/* Delete button only for admin-created (not default) templates */}
-                {!template.isDefault && (
+                {!template.isDefault && onDeleteTemplate && (
                   <button
                     className="ml-4 text-red-400 hover:text-red-300 px-2 py-1 rounded transition-colors"
                     onClick={e => {
                       e.stopPropagation();
                       if (window.confirm('Are you sure you want to delete this template?')) {
-                        handleDeleteTemplate(template._id);
+                        onDeleteTemplate(template._id);
                       }
                     }}
                   >
@@ -1535,8 +1541,8 @@ const CreateTemplateModal = ({ template, onClose, onSubmit, onChange }) => {
       tasks,
       customTasks
     };
-    onChange(updatedTemplate);
-    onSubmit();
+    console.log("Submitting template with tasks:", updatedTemplate);
+    onSubmit(updatedTemplate);
   };
 
   return (
