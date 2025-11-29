@@ -147,79 +147,28 @@ export default function AdminProjectsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search projects..."
-                className="input-field w-64 pl-10"
+                placeholder="Search..."
+                className="rounded border border-white/10 bg-black/20 px-2 py-1 pl-7 text-xs focus:border-emerald-400 focus:outline-none w-48"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin")}
-              title="Overview"
+              className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs"
+              onClick={() => setFilterStatus(filterStatus === 'all' ? 'active' : 'all')}
             >
-              <LayoutGrid className="h-5 w-5" />
+              <Filter className="h-3 w-3" />
+              {filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
             </button>
             <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/employees")}
-              title="Employees"
+              className="btn-primary flex items-center gap-1 px-3 py-1.5 text-xs"
+              onClick={() => setShowCreateModal(true)}
             >
-              <Users className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/daily-forms")}
-              title="Daily Forms"
-            >
-              <ClipboardCheck className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/reports")}
-              title="Reports"
-            >
-              <FileText className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/leaderboard")}
-              title="Leaderboard"
-            >
-              <Trophy className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/hackathon")}
-              title="Hackathon Management"
-            >
-              <Code className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/meetings")}
-              title="Meetings"
-            >
-              <Video className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/messages")}
-            >
-              <MessageCircle className="h-5 w-5" />
-            </button>
-            <button
-              className="btn-ghost rounded-lg p-2"
-              onClick={() => navigate("/admin/requests")}
-            >
-              <Inbox className="h-5 w-5" />
-            </button>
-            <button className="btn-ghost rounded-lg p-2" onClick={logout}>
-              <LogOut className="h-5 w-5" />
+              + New Project
             </button>
           </div>
         </header>
@@ -234,34 +183,34 @@ export default function AdminProjectsPage() {
               </div>
               
               <div className="table-scroll-container" style={{flex: 1, background: 'rgba(255,255,255,0.02)'}}>
-                <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse', minWidth: '2000px'}}>
+                <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse'}}>
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[150px]">Project Name</th>
-                        <th className="text-left p-2 min-w-[120px]">Client Name</th>
-                        <th className="text-left p-2 min-w-[150px]">Client Email</th>
-                        <th className="text-left p-2 min-w-[200px]">Description</th>
-                        <th className="text-left p-2 min-w-[80px]">Status</th>
-                        <th className="text-left p-2 min-w-[100px]">Client Type</th>
-                        <th className="text-left p-2 min-w-[80px]">Priority</th>
-                        <th className="text-left p-2 min-w-[100px]">Project Type</th>
-                        <th className="text-left p-2 min-w-[150px]">Team Members</th>
-                        <th className="text-left p-2 min-w-[120px]">Lead Assignee</th>
-                        <th className="text-left p-2 min-w-[100px]">VA Incharge</th>
-                        <th className="text-left p-2 min-w-[100px]">Freelancer</th>
-                        <th className="text-left p-2 min-w-[120px]">Update Incharge</th>
-                        <th className="text-left p-2 min-w-[120px]">Coders Rec.</th>
-                        <th className="text-left p-2 min-w-[100px]">Leadership</th>
-                        <th className="text-left p-2 min-w-[100px]">Start Date</th>
-                        <th className="text-left p-2 min-w-[100px]">End Date</th>
-                        <th className="text-left p-2 min-w-[100px]">Est. Hours</th>
-                        <th className="text-left p-2 min-w-[100px]">Hours Taken</th>
-                        <th className="text-left p-2 min-w-[80px]">Progress</th>
-                        <th className="text-left p-2 min-w-[100px]">GitHub</th>
-                        <th className="text-left p-2 min-w-[100px]">Loom</th>
-                        <th className="text-left p-2 min-w-[100px]">WhatsApp</th>
-                        <th className="text-left p-2 min-w-[100px]">Created</th>
-                        <th className="text-left p-2 min-w-[120px] sticky right-0 bg-slate-800/80 z-10">Actions</th>
+                        <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10" style={{minWidth: '120px', width: '120px'}}>Project</th>
+                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Client</th>
+                        <th className="text-left p-2" style={{minWidth: '140px', width: '140px'}}>Email</th>
+                        <th className="text-left p-2" style={{minWidth: '180px', width: '180px'}}>Description</th>
+                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>Status</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Type</th>
+                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>Priority</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Proj Type</th>
+                        <th className="text-left p-2" style={{minWidth: '120px', width: '120px'}}>Team</th>
+                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Lead</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>VA</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Freelancer</th>
+                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Update By</th>
+                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Coders Rec</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Leadership</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Start</th>
+                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>End</th>
+                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>Est.Hrs</th>
+                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>Hrs</th>
+                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>%</th>
+                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>GitHub</th>
+                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>Loom</th>
+                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>WhatsApp</th>
+                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>Created</th>
+                        <th className="text-left p-2 sticky right-0 bg-slate-800/80 z-10" style={{minWidth: '100px', width: '100px'}}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
