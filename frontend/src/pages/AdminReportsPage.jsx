@@ -134,8 +134,7 @@ export default function AdminReportsPage() {
 
   return (
     <PageBackground variant="slate">
-      <div className="min-h-screen w-full overflow-hidden">
-        <div className="flex flex-col h-screen max-w-full">
+      <div className="w-screen h-screen overflow-hidden flex flex-col">
         <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
           <div className="flex items-center gap-4">
             <button
@@ -170,7 +169,7 @@ export default function AdminReportsPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4">
+        <div className="flex-1 overflow-hidden p-4" style={{width: '100vw', boxSizing: 'border-box'}}>
           <div className="h-full flex flex-col gap-2 max-w-full">
             {/* Filters */}
             {showFilters && (
@@ -239,7 +238,7 @@ export default function AdminReportsPage() {
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div className="flex-1 flex flex-col overflow-hidden max-w-full">
+              <div className="flex-1 flex flex-col" style={{width: '100%', maxWidth: '100%', overflow: 'hidden'}}>
                 <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-white">
@@ -251,8 +250,8 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-auto border border-white/10 rounded-lg bg-slate-900/30" style={{maxWidth: '100%'}}>
-                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', tableLayout: 'fixed', width: 'max-content'}}>
+                <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto', width: '100%', maxWidth: '100%'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: 'max-content'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
@@ -353,8 +352,6 @@ export default function AdminReportsPage() {
               </div>
             ) : null}
           </div>
-        </div>
-        </div>
       </div>
     </PageBackground>
   );

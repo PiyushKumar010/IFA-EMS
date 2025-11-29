@@ -131,8 +131,7 @@ export default function AdminProjectsPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="min-h-screen w-full overflow-hidden">
-        <div className="flex flex-col h-screen max-w-full">
+      <div className="w-screen h-screen overflow-hidden flex flex-col">
         <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
           <div className="flex items-center gap-4">
             <button
@@ -174,17 +173,17 @@ export default function AdminProjectsPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4">
+        <div className="flex-1 overflow-hidden p-4" style={{width: '100vw', boxSizing: 'border-box'}}>
           {filteredProjects.length > 0 ? (
-            <div className="h-full flex flex-col max-w-full">
+            <div className="h-full flex flex-col" style={{width: '100%', maxWidth: '100%'}}>
               <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
                 <h2 className="text-sm font-bold text-white">
                   Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
                 </h2>
               </div>
               
-              <div className="flex-1 overflow-auto border border-white/10 rounded-lg bg-slate-900/30" style={{maxWidth: '100%'}}>
-                <table className="text-xs text-white" style={{borderCollapse: 'collapse', tableLayout: 'fixed', width: 'max-content'}}>
+              <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto', width: '100%', maxWidth: '100%'}}>
+                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: 'max-content'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10" style={{minWidth: '120px', width: '120px'}}>Project</th>
@@ -217,22 +216,24 @@ export default function AdminProjectsPage() {
                     <tbody>
                       {filteredProjects.map((project) => (
                         <tr key={project._id} className="border-b border-white/5 hover:bg-white/5">
-                          <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10">
-                            {project.projectName || 'Untitled'}
+                          <td className="p-1 font-medium bg-slate-800/50 sticky left-0 z-10">
+                            <div className="truncate" style={{maxWidth: '90px'}} title={project.projectName}>
+                              {project.projectName || 'Untitled'}
+                            </div>
                           </td>
-                          <td className="p-2">{project.clientName || '-'}</td>
-                          <td className="p-2">
-                            <div className="max-w-[150px] truncate" title={project.clientEmail}>
+                          <td className="p-1"><div className="truncate" style={{maxWidth: '80px'}} title={project.clientName}>{project.clientName || '-'}</div></td>
+                          <td className="p-1">
+                            <div className="truncate" style={{maxWidth: '110px'}} title={project.clientEmail}>
                               {project.clientEmail || '-'}
                             </div>
                           </td>
-                          <td className="p-2">
-                            <div className="max-w-[200px] truncate" title={project.description}>
+                          <td className="p-1">
+                            <div className="truncate" style={{maxWidth: '130px'}} title={project.description}>
                               {project.description || '-'}
                             </div>
                           </td>
-                          <td className="p-2">
-                            <span className={`px-2 py-0.5 rounded text-xs ${
+                          <td className="p-1">
+                            <span className={`px-1 py-0.5 rounded text-xs ${
                               project.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' :
                               project.status === 'Active' ? 'bg-blue-500/20 text-blue-400' :
                               'bg-amber-500/20 text-amber-400'
@@ -240,9 +241,9 @@ export default function AdminProjectsPage() {
                               {project.status || 'New'}
                             </span>
                           </td>
-                          <td className="p-2">{project.clientType || '-'}</td>
-                          <td className="p-2">
-                            <span className={`px-2 py-0.5 rounded text-xs ${
+                          <td className="p-1">{project.clientType || '-'}</td>
+                          <td className="p-1">
+                            <span className={`px-1 py-0.5 rounded text-xs ${
                               project.priority === 'High' || project.priority === 'high' ? 'bg-red-500/20 text-red-400' :
                               project.priority === 'Medium' || project.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
                               project.priority === 'Low' || project.priority === 'low' ? 'bg-green-500/20 text-green-400' :
@@ -251,8 +252,8 @@ export default function AdminProjectsPage() {
                               {project.priority || 'Normal'}
                             </span>
                           </td>
-                          <td className="p-2">{project.projectType || '-'}</td>
-                          <td className="p-2">
+                          <td className="p-1">{project.projectType || '-'}</td>
+                          <td className="p-1">
                             <div className="max-w-[150px] truncate" title={project.assignees?.map(a => a.name || a.email).join(', ')}>
                               {project.assignees?.length > 0 ? project.assignees.map(a => a.name || a.email).join(', ') : '-'}
                             </div>
@@ -346,7 +347,6 @@ export default function AdminProjectsPage() {
               </p>
             </div>
           )}
-        </div>
         </div>
       </div>
 
