@@ -37,7 +37,7 @@ function Modal({ children, onClose }) {
   );
 }
 
-export default function AdminDashboard() {
+export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);

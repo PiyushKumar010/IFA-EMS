@@ -2,7 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import VerifyPage from "./pages/VerifyPage";
-import AdminPage from "./pages/AdminPage";
+import AdminProjectsPage from "./pages/AdminPage";
+import AdminLayout from "./pages/AdminLayout";
 import AdminOverviewPage from "./pages/AdminOverviewPage";
 import AdminProjectEdit from './pages/AdminProjectEdit';
 import EmployeePage from "./pages/EmployeePage";
@@ -41,11 +42,14 @@ export default function App() {
         <Route path="/verify" element={<VerifyPage />} />
         
         {/* Admin Routes - Admin only */}
+        {/* Admin Layout Wrapper for all admin pages */}
         <Route
           path="/admin"
           element={
             <AdminRoute>
-              <AdminOverviewPage />
+              <AdminLayout>
+                <AdminOverviewPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -53,7 +57,9 @@ export default function App() {
           path="/admin/projects"
           element={
             <AdminRoute>
-              <AdminPage />
+              <AdminLayout>
+                <AdminProjectsPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -61,7 +67,9 @@ export default function App() {
           path="/admin/requests"
           element={
             <AdminRoute>
-              <AdminRequestsPage />
+              <AdminLayout>
+                <AdminRequestsPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -69,7 +77,9 @@ export default function App() {
           path="/admin/messages"
           element={
             <AdminRoute>
-              <AdminMessagesPage />
+              <AdminLayout>
+                <AdminMessagesPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -77,7 +87,9 @@ export default function App() {
           path="/admin/daily-forms"
           element={
             <AdminRoute>
-              <AdminDailyFormsPage />
+              <AdminLayout>
+                <AdminDailyFormsPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -85,7 +97,9 @@ export default function App() {
           path="/admin/employees"
           element={
             <AdminRoute>
-              <AdminEmployeesPage />
+              <AdminLayout>
+                <AdminEmployeesPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -93,7 +107,9 @@ export default function App() {
           path="/admin/employee/:id"
           element={
             <AdminRoute>
-              <AdminEmployeeDetailsPage />
+              <AdminLayout>
+                <AdminEmployeeDetailsPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -101,7 +117,9 @@ export default function App() {
           path="/admin/project/:id"
           element={
             <AdminRoute>
-              <AdminProjectEdit />
+              <AdminLayout>
+                <AdminProjectEdit />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -109,7 +127,9 @@ export default function App() {
           path="/admin/leaderboard"
           element={
             <AdminRoute>
-              <LeaderboardPage />
+              <AdminLayout>
+                <LeaderboardPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -117,7 +137,9 @@ export default function App() {
           path="/admin/meetings"
           element={
             <AdminRoute>
-              <AdminMeetingsPage />
+              <AdminLayout>
+                <AdminMeetingsPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -125,7 +147,9 @@ export default function App() {
           path="/admin/reports"
           element={
             <AdminRoute>
-              <AdminReportsPage />
+              <AdminLayout>
+                <AdminReportsPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -133,7 +157,9 @@ export default function App() {
           path="/admin/hackathon"
           element={
             <AdminRoute>
-              <AdminHackathonPage />
+              <AdminLayout>
+                <AdminHackathonPage />
+              </AdminLayout>
             </AdminRoute>
           }
         />
