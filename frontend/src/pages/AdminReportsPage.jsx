@@ -249,8 +249,8 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto max-h-[calc(100vh-200px)]">
-                  <table className="w-full text-xs">
+                <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)] border border-white/10 rounded-lg">
+                  <table className="w-full text-xs"  style={{minWidth: '100%'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
