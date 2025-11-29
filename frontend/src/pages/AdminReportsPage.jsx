@@ -250,10 +250,10 @@ export default function AdminReportsPage() {
                 </div>
 
                 <div style={{flex: 1, overflow: 'auto'}}>
-                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', minWidth: '1800px'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%'}}>
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
+                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10" style={{width: '70px'}}>
                           Date
                         </th>
                         {/* Get all unique tasks for column headers */}
@@ -264,15 +264,15 @@ export default function AdminReportsPage() {
                             day.customTasks.forEach(task => allTasks.add(task.taskText));
                           });
                           return Array.from(allTasks).map((taskText, idx) => (
-                            <th key={idx} className="text-left p-2 min-w-[150px]">
-                              {taskText}
+                            <th key={idx} className="text-left p-1" style={{width: '110px'}}>
+                              <div className="truncate" title={taskText}>{taskText}</div>
                             </th>
                           ));
                         })()}
-                        <th className="text-left p-2 min-w-[60px]">Hrs</th>
-                        <th className="text-left p-2 min-w-[60px]">Screen</th>
-                        <th className="text-left p-2 min-w-[70px]">Submit</th>
-                        <th className="text-left p-2 min-w-[80px]">Confirm</th>
+                        <th className="text-left p-1" style={{width: '40px'}}>Hrs</th>
+                        <th className="text-left p-1" style={{width: '50px'}}>Screen</th>
+                        <th className="text-left p-1" style={{width: '55px'}}>Submit</th>
+                        <th className="text-left p-1" style={{width: '60px'}}>Confirm</th>
                       </tr>
                 </thead>
                 <tbody>
@@ -286,14 +286,14 @@ export default function AdminReportsPage() {
 
                         return (
                           <tr key={dayIdx} className="border-b border-white/5 hover:bg-white/5">
-                            <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10">
+                            <td className="p-1 font-medium bg-slate-800/50 sticky left-0 z-10 text-xs">
                               {new Date(day.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
                             </td>
                             {Array.from(allTasks).map((taskText, taskIdx) => {
                               const task = day.tasks.find(t => t.taskText === taskText) || 
                                           day.customTasks.find(t => t.taskText === taskText);
                               return (
-                                <td key={taskIdx} className="p-2 text-center">
+                                <td key={taskIdx} className="p-1 text-center">
                                   {task?.employeeChecked ? (
                                     <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                                   ) : task ? (
@@ -304,22 +304,22 @@ export default function AdminReportsPage() {
                                 </td>
                               );
                             })}
-                            <td className="p-2 text-center">{day.hoursAttended || 0}</td>
-                            <td className="p-2 text-center">
+                            <td className="p-1 text-center text-xs">{day.hoursAttended || 0}</td>
+                            <td className="p-1 text-center">
                               {day.screensharing ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
                                 <X className="h-3 w-3 text-red-400 mx-auto" />
                               )}
                             </td>
-                            <td className="p-2 text-center">
+                            <td className="p-1 text-center">
                               {day.submitted ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
                                 <X className="h-3 w-3 text-red-400 mx-auto" />
                               )}
                             </td>
-                            <td className="p-2 text-center">
+                            <td className="p-1 text-center">
                               {day.adminConfirmed ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (

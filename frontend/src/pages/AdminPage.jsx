@@ -183,52 +183,52 @@ export default function AdminProjectsPage() {
               </div>
               
               <div style={{flex: 1, overflow: 'auto'}}>
-                <table className="text-xs text-white" style={{borderCollapse: 'collapse', minWidth: '2500px'}}>
+                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%'}}>
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10" style={{minWidth: '120px', width: '120px'}}>Project</th>
-                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Client</th>
-                        <th className="text-left p-2" style={{minWidth: '140px', width: '140px'}}>Email</th>
-                        <th className="text-left p-2" style={{minWidth: '180px', width: '180px'}}>Description</th>
-                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>Status</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Type</th>
-                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>Priority</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Proj Type</th>
-                        <th className="text-left p-2" style={{minWidth: '120px', width: '120px'}}>Team</th>
-                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Lead</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>VA</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Freelancer</th>
-                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Update By</th>
-                        <th className="text-left p-2" style={{minWidth: '100px', width: '100px'}}>Coders Rec</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Leadership</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>Start</th>
-                        <th className="text-left p-2" style={{minWidth: '80px', width: '80px'}}>End</th>
-                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>Est.Hrs</th>
-                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>Hrs</th>
-                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>%</th>
-                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>GitHub</th>
-                        <th className="text-left p-2" style={{minWidth: '60px', width: '60px'}}>Loom</th>
-                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>WhatsApp</th>
-                        <th className="text-left p-2" style={{minWidth: '70px', width: '70px'}}>Created</th>
-                        <th className="text-left p-2 sticky right-0 bg-slate-800/80 z-10" style={{minWidth: '100px', width: '100px'}}>Actions</th>
+                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10" style={{width: '90px'}}>Project</th>
+                        <th className="text-left p-1" style={{width: '70px'}}>Client</th>
+                        <th className="text-left p-1" style={{width: '110px'}}>Email</th>
+                        <th className="text-left p-1" style={{width: '120px'}}>Desc</th>
+                        <th className="text-left p-1" style={{width: '55px'}}>Status</th>
+                        <th className="text-left p-1" style={{width: '55px'}}>Type</th>
+                        <th className="text-left p-1" style={{width: '50px'}}>Prior</th>
+                        <th className="text-left p-1" style={{width: '60px'}}>PType</th>
+                        <th className="text-left p-1" style={{width: '85px'}}>Team</th>
+                        <th className="text-left p-1" style={{width: '70px'}}>Lead</th>
+                        <th className="text-left p-1" style={{width: '55px'}}>VA</th>
+                        <th className="text-left p-1" style={{width: '70px'}}>Freelan</th>
+                        <th className="text-left p-1" style={{width: '70px'}}>Update</th>
+                        <th className="text-left p-1" style={{width: '70px'}}>Coders</th>
+                        <th className="text-left p-1" style={{width: '65px'}}>Leader</th>
+                        <th className="text-left p-1" style={{width: '65px'}}>Start</th>
+                        <th className="text-left p-1" style={{width: '65px'}}>End</th>
+                        <th className="text-left p-1" style={{width: '40px'}}>Est</th>
+                        <th className="text-left p-1" style={{width: '40px'}}>Hrs</th>
+                        <th className="text-left p-1" style={{width: '35px'}}>%</th>
+                        <th className="text-left p-1" style={{width: '45px'}}>Git</th>
+                        <th className="text-left p-1" style={{width: '45px'}}>Loom</th>
+                        <th className="text-left p-1" style={{width: '45px'}}>WA</th>
+                        <th className="text-left p-1" style={{width: '55px'}}>Date</th>
+                        <th className="text-left p-1 sticky right-0 bg-slate-800/80 z-10" style={{width: '80px'}}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredProjects.map((project) => (
                         <tr key={project._id} className="border-b border-white/5 hover:bg-white/5">
                           <td className="p-1 font-medium bg-slate-800/50 sticky left-0 z-10">
-                            <div className="truncate" style={{maxWidth: '90px'}} title={project.projectName}>
+                            <div className="truncate text-xs" title={project.projectName}>
                               {project.projectName || 'Untitled'}
                             </div>
                           </td>
-                          <td className="p-1"><div className="truncate" style={{maxWidth: '80px'}} title={project.clientName}>{project.clientName || '-'}</div></td>
+                          <td className="p-1"><div className="truncate text-xs" title={project.clientName}>{project.clientName || '-'}</div></td>
                           <td className="p-1">
-                            <div className="truncate" style={{maxWidth: '110px'}} title={project.clientEmail}>
+                            <div className="truncate text-xs" title={project.clientEmail}>
                               {project.clientEmail || '-'}
                             </div>
                           </td>
                           <td className="p-1">
-                            <div className="truncate" style={{maxWidth: '130px'}} title={project.description}>
+                            <div className="truncate text-xs" title={project.description}>
                               {project.description || '-'}
                             </div>
                           </td>
@@ -258,27 +258,27 @@ export default function AdminProjectsPage() {
                               {project.assignees?.length > 0 ? project.assignees.map(a => a.name || a.email).join(', ') : '-'}
                             </div>
                           </td>
-                          <td className="p-2">
-                            {project.leadAssignee?.name || project.leadAssignee?.email || '-'}
+                          <td className="p-1 text-xs">
+                            <div className="truncate">{project.leadAssignee?.name || project.leadAssignee?.email || '-'}</div>
                           </td>
-                          <td className="p-2">{project.vaIncharge || '-'}</td>
-                          <td className="p-2">{project.freelancer || '-'}</td>
-                          <td className="p-2">{project.updateIncharge || '-'}</td>
-                          <td className="p-2">
+                          <td className="p-1 text-xs"><div className="truncate">{project.vaIncharge || '-'}</div></td>
+                          <td className="p-1 text-xs"><div className="truncate">{project.freelancer || '-'}</div></td>
+                          <td className="p-1 text-xs"><div className="truncate">{project.updateIncharge || '-'}</div></td>
+                          <td className="p-1 text-xs">
                             <div className="max-w-[120px] truncate" title={project.codersRecommendation}>
                               {project.codersRecommendation || '-'}
                             </div>
                           </td>
-                          <td className="p-2">{project.leadership || '-'}</td>
-                          <td className="p-2">
-                            {project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
+                          <td className="p-1 text-xs"><div className="truncate">{project.leadership || '-'}</div></td>
+                          <td className="p-1 text-xs">
+                            {project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-2">
-                            {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
+                          <td className="p-1 text-xs">
+                            {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-2 text-center">{project.estimatedHoursRequired || 0}h</td>
-                          <td className="p-2 text-center">{project.estimatedHoursTaken || 0}h</td>
-                          <td className="p-2 text-center">
+                          <td className="p-1 text-xs text-center">{project.estimatedHoursRequired || 0}</td>
+                          <td className="p-1 text-xs text-center">{project.estimatedHoursTaken || 0}</td>
+                          <td className="p-1 text-center">
                             <span className={`px-2 py-0.5 rounded text-xs ${
                               project.completionPercentage >= 100 ? 'bg-emerald-500/20 text-emerald-400' :
                               project.completionPercentage >= 50 ? 'bg-blue-500/20 text-blue-400' :
@@ -287,34 +287,28 @@ export default function AdminProjectsPage() {
                               {project.completionPercentage || 0}%
                             </span>
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 text-xs text-center">
                             {project.githubLinks ? (
-                              <a href={project.githubLinks} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-                                View
-                              </a>
+                              <a href={project.githubLinks} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">•</a>
                             ) : '-'}
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 text-xs text-center">
                             {project.loomLink ? (
-                              <a href={project.loomLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-                                View
-                              </a>
+                              <a href={project.loomLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">•</a>
                             ) : '-'}
                           </td>
-                          <td className="p-2">
+                          <td className="p-1 text-xs text-center">
                             {project.whatsappGroupLink ? (
-                              <a href={project.whatsappGroupLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-                                View
-                              </a>
+                              <a href={project.whatsappGroupLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">•</a>
                             ) : '-'}
                           </td>
-                          <td className="p-2">
-                            {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
+                          <td className="p-1 text-xs">
+                            {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-2 sticky right-0 bg-slate-800/50 z-10">
-                            <div className="flex items-center gap-1">
+                          <td className="p-1 sticky right-0 bg-slate-800/50 z-10">
+                            <div className="flex items-center gap-0.5">
                               <button
-                                className="btn-ghost px-2 py-1 text-xs"
+                                className="btn-ghost px-1.5 py-0.5 text-xs"
                                 onClick={() => {
                                   setSelectedProject(project);
                                   setShowDetailsModal(true);
@@ -323,7 +317,7 @@ export default function AdminProjectsPage() {
                                 View
                               </button>
                               <button
-                                className="btn-ghost px-2 py-1 text-xs"
+                                className="btn-ghost px-1.5 py-0.5 text-xs"
                                 onClick={() => navigate(`/admin/project/${project._id}`)}
                               >
                                 Edit
