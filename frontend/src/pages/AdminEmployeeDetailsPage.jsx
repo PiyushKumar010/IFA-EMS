@@ -16,6 +16,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function AdminEmployeeDetailsPage() {
   const { id } = useParams();
@@ -67,7 +68,7 @@ export default function AdminEmployeeDetailsPage() {
     return (
       <PageBackground variant="violet">
         <div className="flex min-h-screen items-center justify-center text-white">
-          Loading...
+          <LoadingSpinner />
         </div>
       </PageBackground>
     );

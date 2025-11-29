@@ -20,6 +20,7 @@ import {
   Settings,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 const TAG_COLORS = [
   "#6366f1", "#8b5cf6", "#ec4899", "#ef4444", "#f97316",
@@ -624,7 +625,7 @@ function AdminDailyFormsPage() {
                                     </div>
 
                                     {loading ? (
-                                        <div className="py-4 text-center text-xs text-slate-400">Loading...</div>
+                                        <div className="py-4 text-center text-xs text-slate-400"><LoadingSpinner /></div>
                                     ) : dailyForms.length === 0 ? (
                                         <div className="py-4 text-center text-xs text-slate-400">
                                             No forms found

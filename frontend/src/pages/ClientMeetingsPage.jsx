@@ -8,6 +8,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function ClientMeetingsPage() {
   const navigate = useNavigate();
@@ -83,9 +84,9 @@ export default function ClientMeetingsPage() {
 
   if (loading) {
     return (
-      <PageBackground variant="cyan">
+      <PageBackground variant="violet">
         <div className="flex min-h-screen items-center justify-center text-white">
-          Loading...
+          <LoadingSpinner />
         </div>
       </PageBackground>
     );

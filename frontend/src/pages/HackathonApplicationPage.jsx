@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, User, Mail, Phone, FileText, Code, Users, Save } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function HackathonApplicationPage() {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ export default function HackathonApplicationPage() {
     return (
       <PageBackground variant="violet">
         <div className="flex min-h-screen items-center justify-center text-white">
-          Loading...
+          <LoadingSpinner />
         </div>
       </PageBackground>
     );

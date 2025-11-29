@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, MapPin, Briefcase, Calendar, Save, X } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function EmployeeProfileCompletionPage() {
   const navigate = useNavigate();
@@ -124,9 +125,9 @@ export default function EmployeeProfileCompletionPage() {
 
   if (loading) {
     return (
-      <PageBackground variant="emerald">
+      <PageBackground variant="violet">
         <div className="flex min-h-screen items-center justify-center text-white">
-          Loading...
+          <LoadingSpinner />
         </div>
       </PageBackground>
     );

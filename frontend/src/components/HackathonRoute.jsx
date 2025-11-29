@@ -23,7 +23,7 @@ export default function HackathonRoute({ children }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
         <div className="text-center">
-          <div className="mb-4 text-2xl font-bold">Loading...</div>
+          <div className="mb-4 text-2xl font-bold"><LoadingSpinner /></div>
         </div>
       </div>
     );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle, Clock, Save, Calendar, FolderOpen, LogIn, LogOut, Timer, Tag, History } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function EmployeeDailyFormPage() {
   const navigate = useNavigate();

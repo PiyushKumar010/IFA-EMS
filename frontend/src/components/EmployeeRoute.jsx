@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
+import LoadingSpinner from "./ui/LoadingSpinner";
 
 /**
  * EmployeeRoute - Requires employee role
@@ -33,7 +34,7 @@ export default function EmployeeRoute({ children }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white"><LoadingSpinner /></div>
       </div>
     );
   }
