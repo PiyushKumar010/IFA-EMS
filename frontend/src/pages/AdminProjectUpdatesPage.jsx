@@ -184,39 +184,42 @@ export default function AdminProjectUpdatesPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[32px] border border-white/10 bg-white/5">
-          <table className="w-full text-sm" style={{ minWidth: "1200px" }}>
-            <thead className="border-b border-white/20 bg-white/5">
+        <div 
+          className="overflow-x-auto overflow-y-auto rounded-[32px] border border-white/10 bg-white/5" 
+          style={{ maxHeight: "calc(100vh - 300px)", maxWidth: "calc(100vw - 350px)" }}
+        >
+          <table className="w-full text-sm" style={{ minWidth: "2000px" }}>
+            <thead className="border-b border-white/20 bg-slate-800 sticky top-0 z-20">
               <tr>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10 sticky left-0 bg-slate-800 z-10" style={{ minWidth: "150px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10 sticky left-0 bg-slate-800 z-30" style={{ width: "180px" }}>
                   Client Name
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "120px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "100px" }}>
                   Status
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "120px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "120px" }}>
                   VA Incharge
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "140px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "140px" }}>
                   Update Incharge
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "130px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "130px" }}>
                   Project Deadline
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "150px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "140px" }}>
                   Milestone Deadline
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "180px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "170px" }}>
                   Telegram Group Update
                 </th>
-                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "200px" }}>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ width: "200px" }}>
                   Milestone Details
                 </th>
                 {dateColumns.map((date) => (
                   <th
                     key={date}
                     className="p-3 text-left font-semibold text-slate-300 border-r border-white/10"
-                    style={{ minWidth: "200px" }}
+                    style={{ width: "250px" }}
                   >
                     {date}
                   </th>
