@@ -134,9 +134,9 @@ export default function AdminReportsPage() {
 
   return (
     <PageBackground variant="slate">
-      <div className="admin-viewport text-white">
-        {/* Header */}
-        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+      <div className="min-h-screen w-full overflow-hidden">
+        <div className="flex flex-col h-screen max-w-full">
+        <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/admin")}
@@ -170,11 +170,11 @@ export default function AdminReportsPage() {
           </div>
         </header>
 
-        <div className="admin-content-area" style={{padding: '1rem', height: 'calc(100vh - 80px)'}}>
-          <div style={{height: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+        <div className="flex-1 overflow-hidden p-4">
+          <div className="h-full flex flex-col gap-2 max-w-full">
             {/* Filters */}
             {showFilters && (
-              <div className="compact-card p-3">
+              <div className="compact-card p-3 flex-shrink-0">
                 <h2 className="mb-2 text-sm font-bold">Filters</h2>
                 <div className="grid grid-cols-3 gap-2">
                   {/* Employee Selection */}
@@ -239,10 +239,10 @@ export default function AdminReportsPage() {
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div style={{flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0}}>
-                <div className="compact-card" style={{padding: '0.75rem 1rem', marginBottom: '0.5rem'}}>
+              <div className="flex-1 flex flex-col overflow-hidden max-w-full">
+                <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold">
+                    <h2 className="text-sm font-bold text-white">
                       {selectedEmployee?.name} - {stats.completed}/{stats.total} ({stats.percentage}%)
                     </h2>
                     <div className="text-xs text-slate-400">
@@ -251,8 +251,8 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="table-scroll-container" style={{flex: 1, background: 'rgba(255,255,255,0.02)'}}>
-                  <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse', minWidth: '1500px'}}>
+                <div className="flex-1 overflow-auto border border-white/10 rounded-lg bg-slate-900/30" style={{maxWidth: '100%'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', tableLayout: 'fixed', width: 'max-content'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
@@ -353,6 +353,7 @@ export default function AdminReportsPage() {
               </div>
             ) : null}
           </div>
+        </div>
         </div>
       </div>
     </PageBackground>

@@ -131,8 +131,9 @@ export default function AdminProjectsPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="admin-viewport text-white">
-        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+      <div className="min-h-screen w-full overflow-hidden">
+        <div className="flex flex-col h-screen max-w-full">
+        <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/admin")}
@@ -173,17 +174,17 @@ export default function AdminProjectsPage() {
           </div>
         </header>
 
-        <div className="admin-content-area" style={{padding: '1rem', height: 'calc(100vh - 80px)'}}>
+        <div className="flex-1 overflow-hidden p-4">
           {filteredProjects.length > 0 ? (
-            <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-              <div className="compact-card" style={{padding: '0.75rem 1rem', marginBottom: '0.5rem'}}>
-                <h2 className="text-sm font-bold">
+            <div className="h-full flex flex-col max-w-full">
+              <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
+                <h2 className="text-sm font-bold text-white">
                   Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
                 </h2>
               </div>
               
-              <div className="table-scroll-container" style={{flex: 1, background: 'rgba(255,255,255,0.02)'}}>
-                <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse'}}>
+              <div className="flex-1 overflow-auto border border-white/10 rounded-lg bg-slate-900/30" style={{maxWidth: '100%'}}>
+                <table className="text-xs text-white" style={{borderCollapse: 'collapse', tableLayout: 'fixed', width: 'max-content'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10" style={{minWidth: '120px', width: '120px'}}>Project</th>
@@ -345,6 +346,7 @@ export default function AdminProjectsPage() {
               </p>
             </div>
           )}
+        </div>
         </div>
       </div>
 
