@@ -1,18 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
   FolderOpen,
   FileText,
-  MessageCircle,
   Calendar,
-  BarChart3,
   LogOut,
   Inbox,
-  Activity,
-  AlertCircle,
-  CheckCircle,
   Code,
+  MessageCircle,
+  Trophy,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
@@ -33,8 +31,6 @@ export default function AdminOverviewPage() {
         setStats(data.stats || {});
       }
     } catch (error) {
-      console.error("Error fetching stats:", error);
-      // Set default empty stats
       setStats({
         employees: { total: 0, approved: 0, pending: 0 },
         projects: { total: 0, active: 0, completed: 0 },
@@ -52,9 +48,7 @@ export default function AdminOverviewPage() {
         method: "POST",
         credentials: "include",
       });
-    } catch (e) {
-      /* ignore */
-    }
+    } catch (e) {}
     navigate("/");
   };
 
@@ -70,247 +64,191 @@ export default function AdminOverviewPage() {
     );
   }
 
-  const quickActions = [
+  // Only include options that exist in our project
+  const columns = [
     {
-      name: "Team Management",
-      description: "Manage employees and approvals",
-      icon: Users,
-      color: "bg-blue-500",
-      path: "/admin/employees",
-      count: stats?.employees?.total || 0,
-      badge: stats?.employees?.pending > 0 ? stats.employees.pending : null
+      label: "Employee Name",
+      key: "name",
+      width: "w-1/5",
     },
     {
-      name: "Projects",
-      description: "View and manage all projects",
-      icon: FolderOpen,
-      color: "bg-indigo-500",
-      path: "/admin/projects",
-      count: stats?.projects?.active || 0
+      label: "Role",
+      key: "role",
+      width: "w-1/6",
     },
     {
-      name: "Daily Forms",
-      description: "Monitor employee submissions",
-      icon: FileText,
-      color: "bg-emerald-500",
-      path: "/admin/daily-forms",
-      count: stats?.dailyForms?.todaySubmissions || 0
+      label: "Projects",
+      key: "projects",
+      width: "w-1/6",
     },
     {
-      name: "Messages",
-      description: "Communication hub",
-      icon: MessageCircle,
-      color: "bg-purple-500",
-      path: "/admin/messages",
-      count: 0
+      label: "Forms Today",
+      key: "formsToday",
+      width: "w-1/6",
     },
     {
-      name: "Meetings",
-      description: "Schedule and manage meetings",
-      icon: Calendar,
-      color: "bg-rose-500",
-      path: "/admin/meetings",
-      count: stats?.meetings?.thisWeek || 0
+      label: "Meetings",
+      key: "meetings",
+      width: "w-1/6",
     },
     {
-      name: "Analytics",
-      description: "Performance insights",
-      icon: BarChart3,
-      color: "bg-cyan-500",
-      path: "/admin/leaderboard",
-      count: 0
+      label: "Status",
+      key: "status",
+      width: "w-1/6",
+    },
+  ];
+
+  // Dummy data for table (replace with real API data if available)
+  const employees = [
+    {
+      id: 1,
+      name: "Alex Wong",
+      role: "Software Engineer",
+      projects: 3,
+      formsToday: 1,
+      meetings: 2,
+      status: "Active",
     },
     {
-      name: "Hackathon",
-      description: "Manage hackathon events",
-      icon: Code,
-      color: "bg-violet-500",
-      path: "/admin/hackathon",
-      count: 0
+      id: 2,
+      name: "Samantha Simmons",
+      role: "Software Engineer",
+      projects: 2,
+      formsToday: 1,
+      meetings: 1,
+      status: "Active",
     },
     {
-      name: "Reports",
-      description: "Task tracking reports",
-      icon: Activity,
-      color: "bg-orange-500",
-      path: "/admin/reports",
-      count: 0
+      id: 3,
+      name: "Brian Perez",
+      role: "Software Engineer",
+      projects: 1,
+      formsToday: 0,
+      meetings: 0,
+      status: "Inactive",
     },
-    {
-      name: "Pending Requests",
-      description: "Review employee approvals",
-      icon: Inbox,
-      color: "bg-amber-500",
-      path: "/admin/requests",
-      count: stats?.employees?.pending || 0,
-      badge: stats?.employees?.pending > 0 ? stats.employees.pending : null
-    }
   ];
 
   return (
     <PageBackground variant="violet">
       <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
-        {/* Header */}
-        <div className="mb-12 flex items-center justify-between">
+        {/* Top Bar */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold">Admin Overview</h1>
-            <p className="mt-2 text-slate-300">
-              Welcome back! Here's what's happening with your team.
-            </p>
+            <h1 className="text-3xl font-bold">Run Admin Overview</h1>
+            <p className="mt-1 text-slate-300 text-sm">Quick summary of employees, projects, forms, and meetings.</p>
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium transition hover:bg-white/20"
+            className="mt-4 md:mt-0 flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium transition hover:bg-white/20"
           >
             <LogOut className="h-4 w-4" />
             Sign Out
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20">
-                <Users className="h-6 w-6 text-blue-300" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats?.employees?.approved || 0}</div>
-                <div className="text-sm text-slate-300">Active Employees</div>
-                {stats?.employees?.pending > 0 && (
-                  <div className="mt-1 text-xs text-amber-300">
-                    {stats.employees.pending} pending approval
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Summary Cards */}
+        <div className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="rounded-xl bg-blue-500/20 p-4 flex flex-col items-center">
+            <Users className="h-6 w-6 text-blue-300 mb-2" />
+            <div className="text-2xl font-bold">{stats?.employees?.approved || 0}</div>
+            <div className="text-xs text-slate-200">Active Employees</div>
           </div>
-
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20">
-                <FolderOpen className="h-6 w-6 text-indigo-300" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats?.projects?.active || 0}</div>
-                <div className="text-sm text-slate-300">Active Projects</div>
-                <div className="mt-1 text-xs text-slate-400">
-                  {stats?.projects?.total || 0} total projects
-                </div>
-              </div>
-            </div>
+          <div className="rounded-xl bg-indigo-500/20 p-4 flex flex-col items-center">
+            <FolderOpen className="h-6 w-6 text-indigo-300 mb-2" />
+            <div className="text-2xl font-bold">{stats?.projects?.active || 0}</div>
+            <div className="text-xs text-slate-200">Active Projects</div>
           </div>
-
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500/20">
-                <FileText className="h-6 w-6 text-emerald-300" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats?.dailyForms?.todaySubmissions || 0}</div>
-                <div className="text-sm text-slate-300">Forms Today</div>
-                <div className="mt-1 text-xs text-slate-400">
-                  {stats?.dailyForms?.weeklySubmissions || 0} this week
-                </div>
-              </div>
-            </div>
+          <div className="rounded-xl bg-emerald-500/20 p-4 flex flex-col items-center">
+            <FileText className="h-6 w-6 text-emerald-300 mb-2" />
+            <div className="text-2xl font-bold">{stats?.dailyForms?.todaySubmissions || 0}</div>
+            <div className="text-xs text-slate-200">Forms Today</div>
           </div>
-
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-500/20">
-                <Calendar className="h-6 w-6 text-rose-300" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stats?.meetings?.thisWeek || 0}</div>
-                <div className="text-sm text-slate-300">Meetings This Week</div>
-                <div className="mt-1 text-xs text-slate-400">
-                  {stats?.meetings?.total || 0} total scheduled
-                </div>
-              </div>
-            </div>
+          <div className="rounded-xl bg-rose-500/20 p-4 flex flex-col items-center">
+            <Calendar className="h-6 w-6 text-rose-300 mb-2" />
+            <div className="text-2xl font-bold">{stats?.meetings?.thisWeek || 0}</div>
+            <div className="text-xs text-slate-200">Meetings This Week</div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-12">
-          <h2 className="mb-6 text-2xl font-bold">Quick Actions</h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {quickActions.map((action) => (
+        {/* Table Section */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-0 overflow-x-auto">
+          <div className="flex items-center justify-between px-6 pt-6 pb-2">
+            <div className="flex gap-4">
               <button
-                key={action.name}
-                onClick={() => navigate(action.path)}
-                className="glass-card group p-6 text-left transition-all hover:scale-105 hover:border-white/20"
+                onClick={() => navigate("/admin/employees")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.color}/20`}>
-                        <action.icon className={`h-5 w-5 ${action.color.replace('bg-', 'text-')}`} />
-                      </div>
-                      {action.badge && (
-                        <span className="rounded-full bg-amber-500 px-2 py-1 text-xs font-medium text-white">
-                          {action.badge}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-medium text-white">{action.name}</h3>
-                    <p className="mt-1 text-sm text-slate-300">{action.description}</p>
-                    {action.count !== undefined && action.count > 0 && (
-                      <div className="mt-2 text-xs text-slate-400">
-                        {action.count} items
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <Users className="h-4 w-4" /> Employees
               </button>
-            ))}
+              <button
+                onClick={() => navigate("/admin/projects")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <FolderOpen className="h-4 w-4" /> Projects
+              </button>
+              <button
+                onClick={() => navigate("/admin/daily-forms")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <FileText className="h-4 w-4" /> Daily Forms
+              </button>
+              <button
+                onClick={() => navigate("/admin/meetings")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <Calendar className="h-4 w-4" /> Meetings
+              </button>
+              <button
+                onClick={() => navigate("/admin/leaderboard")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <Trophy className="h-4 w-4" /> Leaderboard
+              </button>
+              <button
+                onClick={() => navigate("/admin/hackathon")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <Code className="h-4 w-4" /> Hackathon
+              </button>
+              <button
+                onClick={() => navigate("/admin/messages")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <MessageCircle className="h-4 w-4" /> Messages
+              </button>
+              <button
+                onClick={() => navigate("/admin/requests")}
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              >
+                <Inbox className="h-4 w-4" /> Requests
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* System Status */}
-        <div className="glass-card p-6">
-          <h2 className="mb-6 text-xl font-bold">System Status</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4">
-              <CheckCircle className="h-5 w-5 text-emerald-300" />
-              <div>
-                <div className="font-medium text-emerald-200">System Online</div>
-                <div className="text-sm text-emerald-300">All services operational</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-4">
-              <Activity className="h-5 w-5 text-blue-300" />
-              <div>
-                <div className="font-medium text-blue-200">Active Users</div>
-                <div className="text-sm text-blue-300">{stats?.employees?.approved || 0} employees online</div>
-              </div>
-            </div>
-            
-            <div className={`flex items-center gap-3 rounded-lg p-4 ${
-              stats?.employees?.pending > 0 
-                ? 'bg-amber-500/10 border border-amber-500/20' 
-                : 'bg-slate-500/10 border border-slate-500/20'
-            }`}>
-              {stats?.employees?.pending > 0 ? (
-                <>
-                  <AlertCircle className="h-5 w-5 text-amber-300" />
-                  <div>
-                    <div className="font-medium text-amber-200">Pending Actions</div>
-                    <div className="text-sm text-amber-300">{stats.employees.pending} approvals needed</div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-5 w-5 text-slate-300" />
-                  <div>
-                    <div className="font-medium text-slate-200">No Pending Actions</div>
-                    <div className="text-sm text-slate-300">All caught up!</div>
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left mt-2">
+              <thead>
+                <tr className="border-b border-white/10">
+                  {columns.map((col) => (
+                    <th key={col.key} className={`p-3 text-xs text-slate-300 font-semibold ${col.width}`}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((emp) => (
+                  <tr key={emp.id} className="border-b border-white/5 hover:bg-white/10">
+                    <td className="p-3 font-medium text-white">{emp.name}</td>
+                    <td className="p-3 text-slate-200">{emp.role}</td>
+                    <td className="p-3 text-slate-200">{emp.projects}</td>
+                    <td className="p-3 text-slate-200">{emp.formsToday}</td>
+                    <td className="p-3 text-slate-200">{emp.meetings}</td>
+                    <td className="p-3">
+                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${emp.status === "Active" ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-500/20 text-slate-300"}`}>{emp.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
