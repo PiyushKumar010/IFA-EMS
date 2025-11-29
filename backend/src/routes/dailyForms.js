@@ -1659,5 +1659,27 @@ router.put("/admin/default-template", authenticateToken, async (req, res) => {
   }
 });
 
+// Admin: Delete a daily form
+router.delete("/:formId", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { formId } = req.params;
+    const form = await DailyForm.findById(formId);
+
+    if (!form) {
+      return res.status(404).json({ error: "Daily form not found" });
+    }
+
+    await DailyForm.findByIdAndDelete(formId);
+    res.json({ success: true, message: "Daily form deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting daily form:", error);
+    res.status(500).json({ error: "Failed to delete daily form" });
+  }
+});
+
 export default router;
 

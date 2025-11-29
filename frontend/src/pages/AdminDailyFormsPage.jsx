@@ -75,6 +75,27 @@ function AdminDailyFormsPage() {
         }
     };
 
+    // Delete daily form handler
+    const handleDeleteForm = async (formId) => {
+        try {
+            const res = await fetch(`/api/daily-forms/${formId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.ok) {
+                setDailyForms(prev => prev.filter(f => f._id !== formId));
+                setSelectedForm(null);
+                alert('Daily form deleted successfully');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete form');
+            }
+        } catch (err) {
+            console.error('Delete form error:', err);
+            alert('Network error while deleting form');
+        }
+    };
+
     useEffect(() => {
         fetchEmployees();
          // fetchDefaultTemplate(); // Commented out to prevent fetching default template on mount
@@ -687,13 +708,26 @@ function QuickSendModal({ templates, employees, onClose, onSend }) {
                                             <h2 className="text-lg font-semibold">Daily Form Details</h2>
                                             <p className="text-slate-400">{formatDate(selectedForm.date)}</p>
                                         </div>
-                                        <button
-                                            onClick={() => handleAutoSelect(selectedForm._id)}
-                                            className="btn-primary flex items-center gap-2"
-                                        >
-                                            <Zap className="h-4 w-4" />
-                                            Auto-Select All
-                                        </button>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => handleAutoSelect(selectedForm._id)}
+                                                className="btn-primary flex items-center gap-2"
+                                            >
+                                                <Zap className="h-4 w-4" />
+                                                Auto-Select All
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm('Are you sure you want to delete this daily form? This action cannot be undone.')) {
+                                                        handleDeleteForm(selectedForm._id);
+                                                    }
+                                                }}
+                                                className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                Delete Form
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Time Tracking */}
