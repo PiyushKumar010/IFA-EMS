@@ -268,88 +268,62 @@ export default function AdminEmployeeDetailsPage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Projects Section */}
-          <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <FolderOpen className="h-5 w-5 text-indigo-300" />
-              <h2 className="text-xl font-semibold text-white">Projects</h2>
-              <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
-                {projects.length}
-              </span>
-            </div>
-            <div className="space-y-3">
-              {projects.length === 0 ? (
-                <p className="text-center text-slate-400">No projects assigned</p>
-              ) : (
-                projects.map((project) => (
-                  <div
-                    key={project._id}
-                    className="cursor-pointer rounded-lg border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10"
-                    onClick={() => navigate(`/admin/project/${project._id}`)}
-                  >
-                    <h3 className="font-semibold text-white">
-                      {project.projectName}
-                    </h3>
-                    <p className="text-sm text-slate-300">{project.clientName}</p>
-                    <div className="mt-2 flex items-center gap-4 text-xs text-slate-400">
-                      <span
-                        className={`rounded px-2 py-0.5 ${
-                          project.status === "Active"
-                            ? "bg-blue-500/20 text-blue-300"
-                            : project.status === "Completed"
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : "bg-slate-500/20 text-slate-300"
-                        }`}
+        {/* Projects & Daily Updates Table */}
+        <div className="mb-6 rounded-[32px] border border-white/10 bg-white/5 p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <FolderOpen className="h-5 w-5 text-indigo-300" />
+            <h2 className="text-xl font-semibold text-white">Projects & Daily Updates</h2>
+            <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
+              {progressReports.length} updates
+            </span>
+          </div>
+          
+          {progressReports.length === 0 ? (
+            <p className="text-center text-slate-400 py-8">No project updates yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/20">
+                    <th className="text-left p-3 font-semibold text-slate-300">Date</th>
+                    <th className="text-left p-3 font-semibold text-slate-300">Project Name</th>
+                    <th className="text-left p-3 font-semibold text-slate-300">Daily Project Update</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {progressReports
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map((report) => (
+                      <tr 
+                        key={report._id} 
+                        className="border-b border-white/10 hover:bg-white/5 transition-colors"
                       >
-                        {project.status || "New"}
-                      </span>
-                      {project.startDate && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(project.startDate).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+                        <td className="p-3 text-slate-300 whitespace-nowrap">
+                          {new Date(report.date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-white">
+                              {report.project?.projectName || "Unknown Project"}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {report.project?.clientName || ""}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-slate-300 max-w-md">
+                          <p className="line-clamp-2">{report.text}</p>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-
-          {/* Daily Updates Section */}
-          <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-indigo-300" />
-              <h2 className="text-xl font-semibold text-white">Daily Updates</h2>
-              <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
-                {progressReports.length}
-              </span>
-            </div>
-            <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
-              {progressReports.length === 0 ? (
-                <p className="text-center text-slate-400">No updates yet</p>
-              ) : (
-                progressReports.map((report) => (
-                  <div
-                    key={report._id}
-                    className="rounded-lg border border-white/10 bg-white/5 p-4"
-                  >
-                    <div className="mb-2 flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-white">
-                        {report.project?.projectName || "Unknown Project"}
-                      </h4>
-                      <span className="flex items-center gap-1 text-xs text-slate-400">
-                        <Clock className="h-3 w-3" />
-                        {new Date(report.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-300">{report.text}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Daily Forms Section */}
