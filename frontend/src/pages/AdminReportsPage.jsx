@@ -177,125 +177,103 @@ export default function AdminReportsPage() {
               <div className="compact-card p-3">
                 <h2 className="mb-2 text-sm font-bold">Filters</h2>
                 <div className="grid grid-cols-3 gap-2">
-              {/* Employee Selection */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Select Employee
-                </label>
-                <select
-                  value={selectedEmployee?._id || ""}
-                  onChange={(e) => {
-                    const emp = employees.find(emp => emp._id === e.target.value);
-                    setSelectedEmployee(emp || null);
-                  }}
-                  className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
-                >
-                  <option value="">Select an employee</option>
-                  {employees.map((employee) => (
-                    <option key={employee._id} value={employee._id}>
-                      {employee.name} ({employee.email})
-                    </option>
-                  ))}
-                </select>
+                  {/* Employee Selection */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Select Employee
+                    </label>
+                    <select
+                      value={selectedEmployee?._id || ""}
+                      onChange={(e) => {
+                        const emp = employees.find(emp => emp._id === e.target.value);
+                        setSelectedEmployee(emp || null);
+                      }}
+                      className="w-full rounded border border-white/10 bg-black/20 px-2 py-1 text-xs focus:border-emerald-400 focus:outline-none"
+                    >
+                      <option value="">Select an employee</option>
+                      {employees.map((employee) => (
+                        <option key={employee._id} value={employee._id}>
+                          {employee.name} ({employee.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date Range */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dateRange.startDate}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full rounded border border-white/10 bg-black/20 px-2 py-1 text-xs focus:border-emerald-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dateRange.endDate}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full rounded border border-white/10 bg-black/20 px-2 py-1 text-xs focus:border-emerald-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <button
+                    onClick={generateReport}
+                    disabled={loading || !selectedEmployee}
+                    className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Generating Report..." : "Generate Report"}
+                  </button>
+                </div>
               </div>
+            )}
 
-              {/* Date Range */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={dateRange.startDate}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
-                />
-              </div>
+            {/* Report Table */}
+            {reportData.length > 0 ? (
+              <div className="compact-card p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-bold">
+                    {selectedEmployee?.name} - {stats.completed}/{stats.total} ({stats.percentage}%)
+                  </h2>
+                  <div className="text-xs text-slate-400">
+                    {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={dateRange.endDate}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full rounded border border-white/10 bg-black/20 px-3 py-2 focus:border-emerald-400 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <button
-                onClick={generateReport}
-                disabled={loading || !selectedEmployee}
-                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Generating Report..." : "Generate Report"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Statistics */}
-        {reportData.length > 0 && (
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="glass-card p-6 text-center">
-              <div className="text-2xl font-bold text-emerald-400">{reportData.length}</div>
-              <div className="text-sm text-slate-300">Total Days</div>
-            </div>
-            <div className="glass-card p-6 text-center">
-              <div className="text-2xl font-bold text-blue-400">{stats.total}</div>
-              <div className="text-sm text-slate-300">Total Tasks</div>
-            </div>
-            <div className="glass-card p-6 text-center">
-              <div className="text-2xl font-bold text-green-400">{stats.completed}</div>
-              <div className="text-sm text-slate-300">Completed Tasks</div>
-            </div>
-            <div className="glass-card p-6 text-center">
-              <div className="text-2xl font-bold text-purple-400">{stats.percentage}%</div>
-              <div className="text-sm text-slate-300">Completion Rate</div>
-            </div>
-          </div>
-        )}
-
-        {/* Report Table */}
-        {reportData.length > 0 ? (
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">
-                Task Report - {selectedEmployee?.name}
-              </h2>
-              <div className="text-sm text-slate-300">
-                {new Date(dateRange.startDate).toLocaleDateString()} to {new Date(dateRange.endDate).toLocaleDateString()}
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left p-3 bg-slate-800/50 sticky left-0 z-10 min-w-[120px]">
-                      Date
-                    </th>
-                    {/* Get all unique tasks for column headers */}
-                    {(() => {
-                      const allTasks = new Set();
-                      reportData.forEach(day => {
-                        day.tasks.forEach(task => allTasks.add(task.taskText));
-                        day.customTasks.forEach(task => allTasks.add(task.taskText));
-                      });
-                      return Array.from(allTasks).map((taskText, idx) => (
-                        <th key={idx} className="text-left p-3 min-w-[180px] text-xs">
-                          {taskText}
+                <div className="overflow-x-auto max-h-[calc(100vh-200px)]">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
+                          Date
                         </th>
-                      ));
-                    })()}
-                    <th className="text-left p-3 min-w-[100px]">Hours</th>
-                    <th className="text-left p-3 min-w-[100px]">Screensharing</th>
-                    <th className="text-left p-3 min-w-[100px]">Submitted</th>
-                    <th className="text-left p-3 min-w-[120px]">Admin Confirmed</th>
-                  </tr>
+                        {/* Get all unique tasks for column headers */}
+                        {(() => {
+                          const allTasks = new Set();
+                          reportData.forEach(day => {
+                            day.tasks.forEach(task => allTasks.add(task.taskText));
+                            day.customTasks.forEach(task => allTasks.add(task.taskText));
+                          });
+                          return Array.from(allTasks).map((taskText, idx) => (
+                            <th key={idx} className="text-left p-2 min-w-[150px]">
+                              {taskText}
+                            </th>
+                          ));
+                        })()}
+                        <th className="text-left p-2 min-w-[60px]">Hrs</th>
+                        <th className="text-left p-2 min-w-[60px]">Screen</th>
+                        <th className="text-left p-2 min-w-[70px]">Submit</th>
+                        <th className="text-left p-2 min-w-[80px]">Confirm</th>
+                      </tr>
                 </thead>
                 <tbody>
                   {reportData.map((day, dayIdx) => {
@@ -306,74 +284,74 @@ export default function AdminReportsPage() {
                       d.customTasks.forEach(task => allTasks.add(task.taskText));
                     });
 
-                    return (
-                      <tr key={dayIdx} className="border-b border-white/5 hover:bg-white/5">
-                        <td className="p-3 font-medium bg-slate-800/30 sticky left-0 z-10">
-                          {new Date(day.date).toLocaleDateString()}
-                        </td>
-                        {Array.from(allTasks).map((taskText, taskIdx) => {
-                          const task = day.tasks.find(t => t.taskText === taskText) || 
-                                      day.customTasks.find(t => t.taskText === taskText);
-                          return (
-                            <td key={taskIdx} className="p-3 text-center">
-                              {task?.employeeChecked ? (
-                                <CheckCircle className="h-5 w-5 text-emerald-400 mx-auto" />
-                              ) : task ? (
-                                <X className="h-5 w-5 text-red-400 mx-auto" />
+                        return (
+                          <tr key={dayIdx} className="border-b border-white/5 hover:bg-white/5">
+                            <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10">
+                              {new Date(day.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
+                            </td>
+                            {Array.from(allTasks).map((taskText, taskIdx) => {
+                              const task = day.tasks.find(t => t.taskText === taskText) || 
+                                          day.customTasks.find(t => t.taskText === taskText);
+                              return (
+                                <td key={taskIdx} className="p-2 text-center">
+                                  {task?.employeeChecked ? (
+                                    <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
+                                  ) : task ? (
+                                    <X className="h-3 w-3 text-red-400 mx-auto" />
+                                  ) : (
+                                    <span className="text-slate-500">-</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td className="p-2 text-center">{day.hoursAttended || 0}</td>
+                            <td className="p-2 text-center">
+                              {day.screensharing ? (
+                                <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
-                                <span className="text-slate-500">-</span>
+                                <X className="h-3 w-3 text-red-400 mx-auto" />
                               )}
                             </td>
-                          );
-                        })}
-                        <td className="p-3 text-center">{day.hoursAttended || 0}h</td>
-                        <td className="p-3 text-center">
-                          {day.screensharing ? (
-                            <CheckCircle className="h-5 w-5 text-emerald-400 mx-auto" />
-                          ) : (
-                            <X className="h-5 w-5 text-red-400 mx-auto" />
-                          )}
-                        </td>
-                        <td className="p-3 text-center">
-                          {day.submitted ? (
-                            <CheckCircle className="h-5 w-5 text-emerald-400 mx-auto" />
-                          ) : (
-                            <X className="h-5 w-5 text-red-400 mx-auto" />
-                          )}
-                        </td>
-                        <td className="p-3 text-center">
-                          {day.adminConfirmed ? (
-                            <CheckCircle className="h-5 w-5 text-emerald-400 mx-auto" />
-                          ) : (
-                            <X className="h-5 w-5 text-slate-500 mx-auto" />
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                            <td className="p-2 text-center">
+                              {day.submitted ? (
+                                <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
+                              ) : (
+                                <X className="h-3 w-3 text-red-400 mx-auto" />
+                              )}
+                            </td>
+                            <td className="p-2 text-center">
+                              {day.adminConfirmed ? (
+                                <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
+                              ) : (
+                                <X className="h-3 w-3 text-slate-500 mx-auto" />
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : selectedEmployee && !loading ? (
+              <div className="compact-card p-6 text-center">
+                <FileText className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <h3 className="text-sm font-medium text-slate-300 mb-1">No Data Found</h3>
+                <p className="text-xs text-slate-400">
+                  No task data found for the selected employee and date range.
+                </p>
+              </div>
+            ) : !selectedEmployee ? (
+              <div className="compact-card p-6 text-center">
+                <Search className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <h3 className="text-sm font-medium text-slate-300 mb-1">Select Employee</h3>
+                <p className="text-xs text-slate-400">
+                  Choose an employee and date range to generate a task tracking report.
+                </p>
+              </div>
+            ) : null}
           </div>
-        ) : selectedEmployee && !loading ? (
-          <div className="glass-card p-12 text-center">
-            <FileText className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-slate-300 mb-2">No Data Found</h3>
-            <p className="text-slate-400">
-              No task data found for the selected employee and date range.
-            </p>
-          </div>
-        ) : !selectedEmployee ? (
-          <div className="glass-card p-12 text-center">
-            <Search className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-slate-300 mb-2">Select Employee</h3>
-            <p className="text-slate-400">
-              Choose an employee and date range to generate a task tracking report.
-            </p>
-          </div>
-        ) : null}
-      </div>
-      </div>
+        </div>
       </div>
     </PageBackground>
   );

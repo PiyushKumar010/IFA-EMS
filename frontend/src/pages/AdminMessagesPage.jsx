@@ -180,8 +180,8 @@ export default function AdminMessagesPage() {
         </div>
 
         <div className="admin-content-area">
-          <div className="horizontal-scroll-container">
-          <aside className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+          <div className="flex gap-4 h-full">
+          <aside className="w-80 flex-shrink-0 rounded-[28px] border border-white/10 bg-white/5 p-5 overflow-y-auto">
             <div className="flex items-center gap-3 text-sm uppercase tracking-[0.4em] text-slate-400">
               <Users className="h-4 w-4" />
               {activeTab === "employees" ? "Employees" : "Clients"}
@@ -243,7 +243,7 @@ export default function AdminMessagesPage() {
             </div>
           </aside>
 
-          <div className="space-y-8">
+          <div className="flex-1 space-y-4 overflow-y-auto">
             {activeTab === "employees" && (
               <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
                 <div className="flex items-center gap-3 text-sm uppercase tracking-[0.4em] text-slate-300">
@@ -286,7 +286,7 @@ export default function AdminMessagesPage() {
                   </span>
                 </div>
 
-                <div className="mt-6 flex max-h-[420px] flex-col gap-4 overflow-y-auto pr-2">
+                <div className="mt-6 flex max-h-[300px] flex-col gap-4 overflow-y-auto pr-2">
                   {chatMessages.length === 0 && (
                     <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center text-slate-300">
                       No messages yet.
