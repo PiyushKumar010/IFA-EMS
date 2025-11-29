@@ -3,10 +3,11 @@ import { TrendingUp, Search } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 export default function AdminProjectUpdatesPage() {
-  const [allUpdates, setAllUpdates] = useState([]);
-  const [filteredUpdates, setFilteredUpdates] = useState([]);
+  const [projectRows, setProjectRows] = useState([]);
+  const [filteredRows, setFilteredRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [dateColumns, setDateColumns] = useState([]);
 
   useEffect(() => {
     fetchAllUpdates();
@@ -14,19 +15,19 @@ export default function AdminProjectUpdatesPage() {
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredUpdates(allUpdates);
+      setFilteredRows(projectRows);
     } else {
       const term = searchTerm.toLowerCase();
-      const filtered = allUpdates.filter(
-        (update) =>
-          update.clientName?.toLowerCase().includes(term) ||
-          update.projectName?.toLowerCase().includes(term) ||
-          update.employeeName?.toLowerCase().includes(term) ||
-          update.updateText?.toLowerCase().includes(term)
+      const filtered = projectRows.filter(
+        (row) =>
+          row.clientName?.toLowerCase().includes(term) ||
+          row.projectName?.toLowerCase().includes(term) ||
+          row.vaIncharge?.toLowerCase().includes(term) ||
+          row.updateIncharge?.toLowerCase().includes(term)
       );
-      setFilteredUpdates(filtered);
+      setFilteredRows(filtered);
     }
-  }, [searchTerm, allUpdates]);
+  }, [searchTerm, projectRows]);
 
   const fetchAllUpdates = async () => {
     try {
@@ -38,39 +39,84 @@ export default function AdminProjectUpdatesPage() {
       const projects = projectsData.projects || [];
 
       // Fetch all progress reports for all projects
-      const updatesPromises = projects.map(async (project) => {
+      const projectDataPromises = projects.map(async (project) => {
         try {
           const progressRes = await fetch(`/api/progress/${project._id}`, {
             credentials: "include",
           });
           if (progressRes.ok) {
             const progressData = await progressRes.json();
-            return (progressData.progress || []).map((report) => ({
-              _id: report._id,
+            const reports = progressData.progress || [];
+            
+            return {
+              projectId: project._id,
               clientName: project.clientName,
               projectName: project.projectName,
               status: project.status,
-              employeeName: report.employee?.name || "Unknown",
-              employeeEmail: report.employee?.email || "",
-              updateText: report.text,
-              date: report.date,
               vaIncharge: project.vaIncharge || "-",
               updateIncharge: project.updateIncharge || "-",
+              projectDeadline: project.projectDeadline || "-",
+              milestoneDeadline: project.milestoneDeadline || "-",
+              telegramGroupUpdate: project.telegramGroupUpdate || "-",
               milestoneDetails: project.milestoneDetails || "-",
-            }));
+              reports: reports,
+            };
           }
-          return [];
+          return null;
         } catch (err) {
           console.error(`Error fetching progress for project ${project._id}:`, err);
-          return [];
+          return null;
         }
       });
 
-      const updatesArrays = await Promise.all(updatesPromises);
-      const allReports = updatesArrays.flat().sort((a, b) => new Date(b.date) - new Date(a.date));
+      const projectData = (await Promise.all(projectDataPromises)).filter(Boolean);
       
-      setAllUpdates(allReports);
-      setFilteredUpdates(allReports);
+      // Get all unique dates from all reports
+      const allDates = new Set();
+      projectData.forEach((proj) => {
+        proj.reports.forEach((report) => {
+          const dateKey = new Date(report.date).toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+          });
+          allDates.add(dateKey);
+        });
+      });
+      
+      // Sort dates
+      const sortedDates = Array.from(allDates).sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateB - dateA;
+      });
+      
+      setDateColumns(sortedDates);
+      
+      // Create rows with updates organized by date
+      const rows = projectData.map((proj) => {
+        const updatesByDate = {};
+        proj.reports.forEach((report) => {
+          const dateKey = new Date(report.date).toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+          });
+          if (!updatesByDate[dateKey]) {
+            updatesByDate[dateKey] = [];
+          }
+          updatesByDate[dateKey].push({
+            text: report.text,
+            employee: report.employee?.name || "Unknown",
+          });
+        });
+        
+        return {
+          ...proj,
+          updatesByDate,
+        };
+      });
+      
+      setProjectRows(rows);
+      setFilteredRows(rows);
     } catch (err) {
       console.error("Error fetching updates:", err);
     } finally {
@@ -107,7 +153,7 @@ export default function AdminProjectUpdatesPage() {
         <div>
           <h1 className="text-4xl font-bold">Project Daily Updates</h1>
           <p className="mt-2 text-slate-300">
-            Track all daily project updates from employees
+            Track all daily project updates organized by date
           </p>
         </div>
 
@@ -116,7 +162,7 @@ export default function AdminProjectUpdatesPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by client, project, or employee..."
+              placeholder="Search by client, project, or incharge..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field w-full pl-10"
@@ -124,75 +170,110 @@ export default function AdminProjectUpdatesPage() {
           </div>
           <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-2">
             <span className="text-sm text-slate-300">
-              Total Updates: <span className="font-bold text-white">{filteredUpdates.length}</span>
+              Total Projects: <span className="font-bold text-white">{filteredRows.length}</span>
             </span>
           </div>
         </div>
       </div>
 
-      {filteredUpdates.length === 0 ? (
+      {filteredRows.length === 0 ? (
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-12 text-center">
           <TrendingUp className="mx-auto h-12 w-12 text-slate-400" />
           <p className="mt-4 text-slate-400">
-            {searchTerm ? "No updates found matching your search" : "No project updates yet"}
+            {searchTerm ? "No projects found matching your search" : "No project updates yet"}
           </p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-[32px] border border-white/10 bg-white/5">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" style={{ minWidth: "1200px" }}>
             <thead className="border-b border-white/20 bg-white/5">
               <tr>
-                <th className="p-4 text-left font-semibold text-slate-300">Client Name</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Project Name</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Status</th>
-                <th className="p-4 text-left font-semibold text-slate-300">VA Incharge</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Update Incharge</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Employee</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Milestone Details</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Date</th>
-                <th className="p-4 text-left font-semibold text-slate-300">Daily Update</th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10 sticky left-0 bg-slate-800 z-10" style={{ minWidth: "150px" }}>
+                  Client Name
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "120px" }}>
+                  Status
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "120px" }}>
+                  VA Incharge
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "140px" }}>
+                  Update Incharge
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "130px" }}>
+                  Project Deadline
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "150px" }}>
+                  Milestone Deadline
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "180px" }}>
+                  Telegram Group Update
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-300 border-r border-white/10" style={{ minWidth: "200px" }}>
+                  Milestone Details
+                </th>
+                {dateColumns.map((date) => (
+                  <th
+                    key={date}
+                    className="p-3 text-left font-semibold text-slate-300 border-r border-white/10"
+                    style={{ minWidth: "200px" }}
+                  >
+                    {date}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {filteredUpdates.map((update, idx) => (
+              {filteredRows.map((row, idx) => (
                 <tr
-                  key={update._id}
+                  key={row.projectId}
                   className={`border-b border-white/10 hover:bg-white/5 transition-colors ${
                     idx % 2 === 0 ? "bg-white/[0.02]" : ""
                   }`}
                 >
-                  <td className="p-4">
-                    <span className="font-medium text-white">{update.clientName}</span>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-slate-300">{update.projectName}</span>
-                  </td>
-                  <td className="p-4">
-                    <span className={`rounded px-2 py-1 text-xs ${getStatusColor(update.status)}`}>
-                      {update.status || "New"}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-300">{update.vaIncharge}</td>
-                  <td className="p-4 text-slate-300">{update.updateIncharge}</td>
-                  <td className="p-4">
+                  <td className="p-3 border-r border-white/10 sticky left-0 bg-slate-800 z-10">
                     <div className="flex flex-col">
-                      <span className="text-white">{update.employeeName}</span>
-                      <span className="text-xs text-slate-400">{update.employeeEmail}</span>
+                      <span className="font-medium text-white">{row.clientName}</span>
+                      <span className="text-xs text-slate-400">{row.projectName}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-slate-300 max-w-xs">
-                    <div className="line-clamp-2">{update.milestoneDetails}</div>
+                  <td className="p-3 border-r border-white/10">
+                    <span className={`rounded px-2 py-1 text-xs ${getStatusColor(row.status)}`}>
+                      {row.status || "New"}
+                    </span>
                   </td>
-                  <td className="p-4 text-slate-300 whitespace-nowrap">
-                    {new Date(update.date).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                  <td className="p-3 text-slate-300 border-r border-white/10">{row.vaIncharge}</td>
+                  <td className="p-3 text-slate-300 border-r border-white/10">{row.updateIncharge}</td>
+                  <td className="p-3 text-slate-300 border-r border-white/10">
+                    {row.projectDeadline !== "-" 
+                      ? new Date(row.projectDeadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : "-"}
                   </td>
-                  <td className="p-4 text-slate-300 max-w-md">
-                    <div className="line-clamp-3">{update.updateText}</div>
+                  <td className="p-3 text-slate-300 border-r border-white/10">
+                    {row.milestoneDeadline !== "-"
+                      ? new Date(row.milestoneDeadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : "-"}
                   </td>
+                  <td className="p-3 text-slate-300 border-r border-white/10">{row.telegramGroupUpdate}</td>
+                  <td className="p-3 text-slate-300 border-r border-white/10">
+                    <div className="line-clamp-2">{row.milestoneDetails}</div>
+                  </td>
+                  {dateColumns.map((date) => (
+                    <td key={date} className="p-3 text-slate-300 border-r border-white/10 align-top">
+                      {row.updatesByDate[date] && row.updatesByDate[date].length > 0 ? (
+                        <div className="space-y-2">
+                          {row.updatesByDate[date].map((update, updateIdx) => (
+                            <div key={updateIdx} className="text-xs">
+                              <div className="font-semibold text-indigo-300 mb-1">{update.employee}:</div>
+                              <div className="text-slate-300">{update.text}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-500">-</span>
+                      )}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
