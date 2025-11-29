@@ -228,6 +228,40 @@
 
   .compact-section::-webkit-scrollbar-thumb:hover,
   .admin-content-area::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.7);
+    background: rgba(99, 102, 241, 0.8);
+  }
+
+  /* Table scroll container styling */
+  .table-scroll-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+  }
+
+  .table-scroll-container::-webkit-scrollbar {
+    height: 12px;
+    width: 12px;
+  }
+
+  .table-scroll-container::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 10px;
+    margin: 4px;
+  }
+
+  .table-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.6);
+    border-radius: 10px;
+    border: 2px solid rgba(30, 41, 59, 0.8);
+  }
+
+  .table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.9);
+  }
+
+  .table-scroll-container::-webkit-scrollbar-corner {
+    background: rgba(30, 41, 59, 0.8);
   }
 }

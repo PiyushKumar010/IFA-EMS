@@ -234,7 +234,7 @@ export default function AdminProjectsPage() {
                   </h2>
                 </div>
 
-                <div className="overflow-x-scroll overflow-y-auto max-h-[calc(100vh-200px)] border border-white/10 rounded-lg" style={{overscrollBehaviorX: 'contain'}}>
+                <div className="table-scroll-container">
                   <table className="text-xs" style={{minWidth: 'max-content', width: '100%'}}>
                     <thead>
                       <tr className="border-b border-white/10">
