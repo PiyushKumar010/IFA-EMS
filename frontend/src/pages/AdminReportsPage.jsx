@@ -134,9 +134,8 @@ export default function AdminReportsPage() {
 
   return (
     <PageBackground variant="slate">
-      <div className="min-h-screen w-full">
-        <div className="flex flex-col h-screen">
-        <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
+      <div className="admin-viewport text-white">
+        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/admin")}
@@ -170,11 +169,10 @@ export default function AdminReportsPage() {
           </div>
         </header>
 
-        <div className="flex-1 p-4" style={{overflow: 'hidden'}}>
-          <div className="h-full flex flex-col gap-2 max-w-full">
+        <div className="admin-content-area">
             {/* Filters */}
             {showFilters && (
-              <div className="compact-card p-3 flex-shrink-0">
+              <div className="compact-card p-3 mb-3">
                 <h2 className="mb-2 text-sm font-bold">Filters</h2>
                 <div className="grid grid-cols-3 gap-2">
                   {/* Employee Selection */}
@@ -239,8 +237,8 @@ export default function AdminReportsPage() {
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div className="flex-1 flex flex-col" style={{minHeight: 0}}>
-                <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
+              <div className="compact-card" style={{height: showFilters ? 'calc(100% - 180px)' : '100%', display: 'flex', flexDirection: 'column'}}>
+                <div style={{padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-white">
                       {selectedEmployee?.name} - {stats.completed}/{stats.total} ({stats.percentage}%)
@@ -251,7 +249,7 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto', overflowX: 'scroll', overflowY: 'scroll'}}>
+                <div style={{flex: 1, overflow: 'auto'}}>
                   <table className="text-xs text-white" style={{borderCollapse: 'collapse', minWidth: '1800px'}}>
                     <thead>
                       <tr className="border-b border-white/10">
@@ -352,8 +350,6 @@ export default function AdminReportsPage() {
                 </p>
               </div>
             ) : null}
-          </div>
-        </div>
         </div>
       </div>
     </PageBackground>
