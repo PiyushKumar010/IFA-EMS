@@ -224,18 +224,17 @@ export default function AdminProjectsPage() {
           </div>
         </header>
 
-        <div className="admin-content-area overflow-hidden">
-          <div className="h-full flex flex-col space-y-2">
-            {filteredProjects.length > 0 ? (
-              <div className="compact-card p-3 flex-1 flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                  <h2 className="text-sm font-bold">
-                    Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
-                  </h2>
-                </div>
-
-                <div className="table-scroll-container flex-1">
-                  <table className="text-xs" style={{minWidth: 'max-content', width: '100%'}}>
+        <div className="admin-content-area" style={{padding: '1rem', height: 'calc(100vh - 80px)'}}>
+          {filteredProjects.length > 0 ? (
+            <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+              <div className="compact-card" style={{padding: '0.75rem 1rem', marginBottom: '0.5rem'}}>
+                <h2 className="text-sm font-bold">
+                  Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
+                </h2>
+              </div>
+              
+              <div style={{flex: 1, overflow: 'auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.02)'}}>
+                <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[150px]">Project Name</th>
@@ -385,19 +384,18 @@ export default function AdminProjectsPage() {
                     </tbody>
                   </table>
                 </div>
-              </div>
-            ) : (
-              <div className="compact-card p-6 text-center">
-                <FolderOpen className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                <h3 className="text-sm font-medium text-slate-300 mb-1">
-                  {projects.length === 0 ? 'No Projects Yet' : 'No Matches'}
-                </h3>
-                <p className="text-xs text-slate-400">
-                  {projects.length === 0 ? 'Create your first project to get started.' : 'No projects match your filters.'}
-                </p>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="compact-card p-6 text-center">
+              <FolderOpen className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+              <h3 className="text-sm font-medium text-slate-300 mb-1">
+                {projects.length === 0 ? 'No Projects Yet' : 'No Matches'}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {projects.length === 0 ? 'Create your first project to get started.' : 'No projects match your filters.'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
