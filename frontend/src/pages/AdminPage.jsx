@@ -183,9 +183,9 @@ export default function AdminProjectsPage() {
               </div>
               
               <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%'}}>
-                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%'}}>
+                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1600px', border: '1px solid rgba(255,255,255,0.1)'}}>
                     <thead>
-                      <tr className="border-b border-white/10">
+                      <tr className="border-b border-white/20">
                         <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10" style={{width: '90px'}}>Project</th>
                         <th className="text-left p-1" style={{width: '70px'}}>Client</th>
                         <th className="text-left p-1" style={{width: '110px'}}>Email</th>
@@ -215,24 +215,24 @@ export default function AdminProjectsPage() {
                     </thead>
                     <tbody>
                       {filteredProjects.map((project) => (
-                        <tr key={project._id} className="border-b border-white/5 hover:bg-white/5">
-                          <td className="p-1 font-medium bg-slate-800/50 sticky left-0 z-10">
+                        <tr key={project._id} className="border-b border-white/10 hover:bg-white/5">
+                          <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <div className="truncate text-xs" title={project.projectName}>
                               {project.projectName || 'Untitled'}
                             </div>
                           </td>
-                          <td className="p-1"><div className="truncate text-xs" title={project.clientName}>{project.clientName || '-'}</div></td>
-                          <td className="p-1">
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}><div className="truncate text-xs" title={project.clientName}>{project.clientName || '-'}</div></td>
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <div className="truncate text-xs" title={project.clientEmail}>
                               {project.clientEmail || '-'}
                             </div>
                           </td>
-                          <td className="p-1">
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <div className="truncate text-xs" title={project.description}>
                               {project.description || '-'}
                             </div>
                           </td>
-                          <td className="p-1">
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <span className={`px-1 py-0.5 rounded text-xs ${
                               project.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' :
                               project.status === 'Active' ? 'bg-blue-500/20 text-blue-400' :
@@ -241,8 +241,8 @@ export default function AdminProjectsPage() {
                               {project.status || 'New'}
                             </span>
                           </td>
-                          <td className="p-1">{project.clientType || '-'}</td>
-                          <td className="p-1">
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>{project.clientType || '-'}</td>
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <span className={`px-1 py-0.5 rounded text-xs ${
                               project.priority === 'High' || project.priority === 'high' ? 'bg-red-500/20 text-red-400' :
                               project.priority === 'Medium' || project.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -252,33 +252,33 @@ export default function AdminProjectsPage() {
                               {project.priority || 'Normal'}
                             </span>
                           </td>
-                          <td className="p-1">{project.projectType || '-'}</td>
-                          <td className="p-1">
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>{project.projectType || '-'}</td>
+                          <td className="p-2" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <div className="max-w-[150px] truncate" title={project.assignees?.map(a => a.name || a.email).join(', ')}>
                               {project.assignees?.length > 0 ? project.assignees.map(a => a.name || a.email).join(', ') : '-'}
                             </div>
                           </td>
-                          <td className="p-1 text-xs">
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <div className="truncate">{project.leadAssignee?.name || project.leadAssignee?.email || '-'}</div>
                           </td>
-                          <td className="p-1 text-xs"><div className="truncate">{project.vaIncharge || '-'}</div></td>
-                          <td className="p-1 text-xs"><div className="truncate">{project.freelancer || '-'}</div></td>
-                          <td className="p-1 text-xs"><div className="truncate">{project.updateIncharge || '-'}</div></td>
-                          <td className="p-1 text-xs">
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}><div className="truncate">{project.vaIncharge || '-'}</div></td>
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}><div className="truncate">{project.freelancer || '-'}</div></td>
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}><div className="truncate">{project.updateIncharge || '-'}</div></td>
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <div className="max-w-[120px] truncate" title={project.codersRecommendation}>
                               {project.codersRecommendation || '-'}
                             </div>
                           </td>
-                          <td className="p-1 text-xs"><div className="truncate">{project.leadership || '-'}</div></td>
-                          <td className="p-1 text-xs">
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}><div className="truncate">{project.leadership || '-'}</div></td>
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             {project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-1 text-xs">
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-1 text-xs text-center">{project.estimatedHoursRequired || 0}</td>
-                          <td className="p-1 text-xs text-center">{project.estimatedHoursTaken || 0}</td>
-                          <td className="p-1 text-center">
+                          <td className="p-2 text-xs text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>{project.estimatedHoursRequired || 0}</td>
+                          <td className="p-2 text-xs text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>{project.estimatedHoursTaken || 0}</td>
+                          <td className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             <span className={`px-2 py-0.5 rounded text-xs ${
                               project.completionPercentage >= 100 ? 'bg-emerald-500/20 text-emerald-400' :
                               project.completionPercentage >= 50 ? 'bg-blue-500/20 text-blue-400' :
@@ -287,25 +287,25 @@ export default function AdminProjectsPage() {
                               {project.completionPercentage || 0}%
                             </span>
                           </td>
-                          <td className="p-1 text-xs text-center">
+                          <td className="p-2 text-xs text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             {project.githubLinks ? (
                               <a href={project.githubLinks} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">•</a>
                             ) : '-'}
                           </td>
-                          <td className="p-1 text-xs text-center">
+                          <td className="p-2 text-xs text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             {project.loomLink ? (
                               <a href={project.loomLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">•</a>
                             ) : '-'}
                           </td>
-                          <td className="p-1 text-xs text-center">
+                          <td className="p-2 text-xs text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             {project.whatsappGroupLink ? (
                               <a href={project.whatsappGroupLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">•</a>
                             ) : '-'}
                           </td>
-                          <td className="p-1 text-xs">
+                          <td className="p-2 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                             {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '-'}
                           </td>
-                          <td className="p-1 sticky right-0 bg-slate-800/50 z-10">
+                          <td className="p-2 sticky right-0 bg-slate-800/50 z-10">
                             <div className="flex items-center gap-0.5">
                               <button
                                 className="btn-ghost px-1.5 py-0.5 text-xs"

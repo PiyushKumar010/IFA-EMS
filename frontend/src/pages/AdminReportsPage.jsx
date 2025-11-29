@@ -250,9 +250,9 @@ export default function AdminReportsPage() {
                 </div>
 
                 <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%'}}>
-                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1200px'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1200px', border: '1px solid rgba(255,255,255,0.1)'}}>
                     <thead>
-                      <tr className="border-b border-white/10">
+                      <tr className="border-b border-white/20">
                         <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10" style={{width: '70px'}}>
                           Date
                         </th>
@@ -285,15 +285,15 @@ export default function AdminReportsPage() {
                     });
 
                         return (
-                          <tr key={dayIdx} className="border-b border-white/5 hover:bg-white/5">
-                            <td className="p-1 font-medium bg-slate-800/50 sticky left-0 z-10 text-xs">
+                          <tr key={dayIdx} className="border-b border-white/10 hover:bg-white/5">
+                            <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                               {new Date(day.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
                             </td>
                             {Array.from(allTasks).map((taskText, taskIdx) => {
                               const task = day.tasks.find(t => t.taskText === taskText) || 
                                           day.customTasks.find(t => t.taskText === taskText);
                               return (
-                                <td key={taskIdx} className="p-1 text-center">
+                                <td key={taskIdx} className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                                   {task?.employeeChecked ? (
                                     <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                                   ) : task ? (
@@ -304,22 +304,22 @@ export default function AdminReportsPage() {
                                 </td>
                               );
                             })}
-                            <td className="p-1 text-center text-xs">{day.hoursAttended || 0}</td>
-                            <td className="p-1 text-center">
+                            <td className="p-2 text-center text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>{day.hoursAttended || 0}</td>
+                            <td className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                               {day.screensharing ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
                                 <X className="h-3 w-3 text-red-400 mx-auto" />
                               )}
                             </td>
-                            <td className="p-1 text-center">
+                            <td className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
                               {day.submitted ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
                                 <X className="h-3 w-3 text-red-400 mx-auto" />
                               )}
                             </td>
-                            <td className="p-1 text-center">
+                            <td className="p-2 text-center">
                               {day.adminConfirmed ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
