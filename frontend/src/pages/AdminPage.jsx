@@ -233,8 +233,8 @@ export default function AdminProjectsPage() {
                 </h2>
               </div>
               
-              <div style={{flex: 1, overflow: 'auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.02)'}}>
-                <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse'}}>
+              <div className="table-scroll-container" style={{flex: 1, background: 'rgba(255,255,255,0.02)'}}>
+                <table className="text-xs" style={{width: '100%', borderCollapse: 'collapse', minWidth: '2000px'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[150px]">Project Name</th>
