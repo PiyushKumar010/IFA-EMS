@@ -233,11 +233,10 @@
 
   /* Table scroll container styling */
   .table-scroll-container {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 200px);
+    overflow: auto;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
+    position: relative;
   }
 
   .table-scroll-container::-webkit-scrollbar {

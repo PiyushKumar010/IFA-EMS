@@ -170,11 +170,11 @@ export default function AdminReportsPage() {
           </div>
         </header>
 
-        <div className="admin-content-area">
-          <div className="h-full overflow-y-auto space-y-2">
+        <div className="admin-content-area overflow-hidden">
+          <div className="h-full flex flex-col space-y-2">
             {/* Filters */}
             {showFilters && (
-              <div className="compact-card p-3">
+              <div className="compact-card p-3 flex-shrink-0">
                 <h2 className="mb-2 text-sm font-bold">Filters</h2>
                 <div className="grid grid-cols-3 gap-2">
                   {/* Employee Selection */}
@@ -239,8 +239,8 @@ export default function AdminReportsPage() {
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div className="compact-card p-3">
-                <div className="flex items-center justify-between mb-2">
+              <div className="compact-card p-3 flex-1 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between mb-2 flex-shrink-0">
                   <h2 className="text-sm font-bold">
                     {selectedEmployee?.name} - {stats.completed}/{stats.total} ({stats.percentage}%)
                   </h2>
@@ -249,7 +249,7 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="table-scroll-container">
+                <div className="table-scroll-container flex-1">
                   <table className="text-xs" style={{minWidth: 'max-content', width: '100%'}}>
                     <thead>
                       <tr className="border-b border-white/10">
