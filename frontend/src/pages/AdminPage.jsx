@@ -184,7 +184,7 @@ export default function AdminProjectsPage() {
                 </h2>
               </div>
               
-              <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%'}}>
+              <div style={{flex: 1, overflowX: 'scroll', overflowY: 'scroll', position: 'relative', maxWidth: '100%', paddingRight: '120px'}}>
                 <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '6200px', border: '1px solid rgba(255,255,255,0.1)'}}>
                     <thead>
                       <tr className="border-b border-white/20">

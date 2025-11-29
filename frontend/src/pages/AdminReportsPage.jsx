@@ -150,13 +150,6 @@ export default function AdminReportsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs"
-            >
-              <Filter className="h-3 w-3" />
-              Filters
-            </button>
             {reportData.length > 0 && (
               <button
                 onClick={exportToCSV}
@@ -170,11 +163,9 @@ export default function AdminReportsPage() {
         </header>
 
         <div className="admin-content-area" style={{position: 'relative'}}>
-            {/* Filters */}
-            {showFilters && (
-              <div className="compact-card p-3 mb-3" style={{flexShrink: 0}}>
-                <h2 className="mb-2 text-sm font-bold">Filters</h2>
-                <div className="grid grid-cols-3 gap-2">
+            {/* Filters - Always Visible */}
+            <div className="compact-card p-3 mb-3" style={{flexShrink: 0}}>
+              <div className="grid grid-cols-3 gap-2">
                   {/* Employee Selection */}
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">
@@ -232,12 +223,11 @@ export default function AdminReportsPage() {
                     {loading ? "Generating Report..." : "Generate Report"}
                   </button>
                 </div>
-              </div>
-            )}
+            </div>
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div className="compact-card" style={{height: showFilters ? 'calc(100% - 180px)' : '100%', display: 'flex', flexDirection: 'column', maxWidth: '100%'}}>
+              <div className="compact-card" style={{height: 'calc(100% - 180px)', display: 'flex', flexDirection: 'column', maxWidth: '100%'}}>
                 <div style={{padding: '0.75rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0}}>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-white">
