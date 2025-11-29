@@ -539,218 +539,212 @@ function AdminDailyFormsPage() {
 
     return (
         <PageBackground variant="violet">
-            <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
-                {/* Header */}
-                <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-6">
-                    <div>
+            <div className="admin-viewport text-white">
+                {/* Compact Header */}
+                <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+                    <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate("/admin")}
-                            className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+                            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
                         >
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Overview
+                            <ArrowLeft className="h-3 w-3" />
+                            Back
                         </button>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-4xl font-bold">Daily Forms Management</h1>
-                                <p className="mt-2 text-slate-300">
-                                    Manage employee daily update sheets with auto-selection and time tracking
-                                </p>
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={async () => {
-                                        await fetchAvailableTemplates();
-                                        setShowQuickSendModal(true);
-                                    }}
-                                    className="btn-primary flex items-center gap-2"
-                                >
-                                    <Zap className="h-4 w-4" />
-                                    Quick Send
-                                </button>
-                                <button
-                                    onClick={() => setShowCreateTemplateModal(true)}
-                                    className="btn-ghost flex items-center gap-2"
-                                >
-                                    <Settings className="h-4 w-4" />
-                                    Manage Templates
-                                </button>
-                            </div>
+                        <div>
+                            <h1 className="text-xl font-bold">Daily Forms</h1>
+                            <p className="text-xs text-slate-400">Manage employee daily updates</p>
                         </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={async () => {
+                                await fetchAvailableTemplates();
+                                setShowQuickSendModal(true);
+                            }}
+                            className="btn-primary flex items-center gap-1 px-3 py-1.5 text-xs"
+                        >
+                            <Zap className="h-3 w-3" />
+                            Quick Send
+                        </button>
+                        <button
+                            onClick={() => setShowCreateTemplateModal(true)}
+                            className="btn-ghost flex items-center gap-1 px-3 py-1.5 text-xs"
+                        >
+                            <Settings className="h-3 w-3" />
+                            Templates
+                        </button>
                     </div>
                 </header>
 
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-                    {/* Employee List */}
-                    <div className="lg:col-span-3">
-                        <div className="glass-card p-6">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-                                <User className="h-5 w-5" />
-                                Employees
-                            </h2>
-                            <div className="space-y-2">
-                                {employees.map((employee) => (
-                                    <button
-                                        key={employee._id}
-                                        onClick={() => handleEmployeeSelect(employee)}
-                                        className={`w-full rounded-lg border p-3 text-left transition-all ${
-                                            selectedEmployee?._id === employee._id
-                                                ? "border-indigo-500 bg-indigo-500/20"
-                                                : "border-white/10 bg-white/5 hover:bg-white/10"
-                                        }`}
-                                    >
-                                        <div className="font-medium">{employee.name || employee.email}</div>
-                                        <div className="text-sm text-slate-400">{employee.email}</div>
-                                    </button>
-                                ))}
+                {/* Horizontal Scroll Content */}
+                <div className="admin-content-area">
+                    <div className="horizontal-scroll-container">
+                        {/* Employee List */}
+                        <div className="compact-section w-64 flex-shrink-0">
+                            <div className="compact-card h-full flex flex-col">
+                                <h2 className="mb-2 flex items-center gap-1 text-sm font-semibold">
+                                    <User className="h-4 w-4" />
+                                    Employees
+                                </h2>
+                                <div className="space-y-1 overflow-y-auto flex-1">
+                                    {employees.map((employee) => (
+                                        <button
+                                            key={employee._id}
+                                            onClick={() => handleEmployeeSelect(employee)}
+                                            className={`w-full rounded-lg border p-2 text-left transition-all text-xs ${
+                                                selectedEmployee?._id === employee._id
+                                                    ? "border-indigo-500 bg-indigo-500/20"
+                                                    : "border-white/10 bg-white/5 hover:bg-white/10"
+                                            }`}
+                                        >
+                                            <div className="font-medium truncate">{employee.name || employee.email}</div>
+                                            <div className="text-xs text-slate-400 truncate">{employee.email}</div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Forms List */}
-                    <div className="lg:col-span-4">
-                        {selectedEmployee ? (
-                            <div className="glass-card p-6">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h2 className="flex items-center gap-2 text-lg font-semibold">
-                                        <FileText className="h-5 w-5" />
-                                        Daily Forms
-                                    </h2>
-                                    <button
-                                        onClick={() => showTemplateSelection(selectedEmployee._id)}
-                                        className="btn-primary flex items-center gap-2 px-3 py-1 text-sm"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Create Form
-                                    </button>
-                                </div>
-
-                                {loading ? (
-                                    <div className="py-8 text-center text-slate-400">Loading forms...</div>
-                                ) : dailyForms.length === 0 ? (
-                                    <div className="py-8 text-center text-slate-400">
-                                        No daily forms found for this employee.
+                        {/* Forms List */}
+                        <div className="compact-section w-80 flex-shrink-0">
+                            {selectedEmployee ? (
+                                <div className="compact-card h-full flex flex-col">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <h2 className="flex items-center gap-1 text-sm font-semibold">
+                                            <FileText className="h-4 w-4" />
+                                            Daily Forms
+                                        </h2>
+                                        <button
+                                            onClick={() => showTemplateSelection(selectedEmployee._id)}
+                                            className="btn-primary flex items-center gap-1 px-2 py-1 text-xs"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Create
+                                        </button>
                                     </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {dailyForms.map((form) => (
-                                            <button
-                                                key={form._id}
-                                                onClick={() => handleFormSelect(form)}
-                                                className={`w-full rounded-lg border p-3 text-left transition-all ${
-                                                    selectedForm?._id === form._id
-                                                        ? "border-emerald-500 bg-emerald-500/20"
-                                                        : "border-white/10 bg-white/5 hover:bg-white/10"
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="font-medium">{formatDate(form.date)}</div>
-                                                    <div className="flex items-center gap-2">
-                                                        {form.submitted && (
-                                                            <span className="text-xs text-emerald-400">Submitted</span>
-                                                        )}
-                                                        {form.adminConfirmed && (
-                                                            <Check className="h-4 w-4 text-emerald-400" />
-                                                        )}
+
+                                    {loading ? (
+                                        <div className="py-4 text-center text-xs text-slate-400">Loading...</div>
+                                    ) : dailyForms.length === 0 ? (
+                                        <div className="py-4 text-center text-xs text-slate-400">
+                                            No forms found
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1 overflow-y-auto flex-1">
+                                            {dailyForms.map((form) => (
+                                                <button
+                                                    key={form._id}
+                                                    onClick={() => handleFormSelect(form)}
+                                                    className={`w-full rounded-lg border p-2 text-left transition-all text-xs ${
+                                                        selectedForm?._id === form._id
+                                                            ? "border-emerald-500 bg-emerald-500/20"
+                                                            : "border-white/10 bg-white/5 hover:bg-white/10"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div className="font-medium">{formatDate(form.date)}</div>
+                                                        <div className="flex items-center gap-1">
+                                                            {form.submitted && (
+                                                                <span className="text-xs text-emerald-400">✓</span>
+                                                            )}
+                                                            {form.adminConfirmed && (
+                                                                <Check className="h-3 w-3 text-emerald-400" />
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="mt-1 text-sm text-slate-400">
-                                                    Entry: {formatTime(form.entryTime)} • Exit: {formatTime(form.exitTime)}
-                                                </div>
-                                                <div className="text-xs text-slate-500">
-                                                    Hours: {calculateWorkingHours(form.entryTime, form.exitTime)}
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="glass-card p-8 text-center">
-                                <User className="mx-auto h-12 w-12 text-slate-400" />
-                                <p className="mt-4 text-slate-400">Select an employee to view their daily forms</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Form Details */}
-                    <div className="lg:col-span-5">
-                        {selectedForm ? (
-                            <div className="space-y-6">
-                                {/* Form Header */}
-                                <div className="glass-card p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h2 className="text-lg font-semibold">Daily Form Details</h2>
-                                            <p className="text-slate-400">{formatDate(selectedForm.date)}</p>
+                                                    <div className="text-xs text-slate-400">
+                                                        {formatTime(form.entryTime)} - {formatTime(form.exitTime)}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {calculateWorkingHours(form.entryTime, form.exitTime)}
+                                                    </div>
+                                                </button>
+                                            ))}
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => handleAutoSelect(selectedForm._id)}
-                                                className="btn-primary flex items-center gap-2"
-                                            >
-                                                <Zap className="h-4 w-4" />
-                                                Auto-Select All
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    if (window.confirm('Are you sure you want to delete this daily form? This action cannot be undone.')) {
-                                                        handleDeleteForm(selectedForm._id);
-                                                    }
-                                                }}
-                                                className="btn-ghost text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                                Delete Form
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Time Tracking */}
-                                    <div className="mt-6 grid grid-cols-2 gap-4">
-                                        <div>
-                                            <div className="text-sm text-slate-400">Entry Time</div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-blue-400" />
-                                                <span>{formatTime(selectedForm.entryTime)}</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm text-slate-400">Exit Time</div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-rose-400" />
-                                                <span>{formatTime(selectedForm.exitTime)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4">
-                                        <div className="text-sm text-slate-400">Total Working Hours</div>
-                                        <div className="flex items-center gap-2">
-                                            <Timer className="h-4 w-4 text-emerald-400" />
-                                            <span className="font-medium">{calculateWorkingHours(selectedForm.entryTime, selectedForm.exitTime)}</span>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => setShowEditTimeModal(true)}
-                                        className="mt-4 btn-ghost flex items-center gap-2"
-                                    >
-                                        <Edit3 className="h-4 w-4" />
-                                        Edit Time
-                                    </button>
+                                    )}
                                 </div>
+                            ) : (
+                                <div className="compact-card h-full flex flex-col items-center justify-center text-center">
+                                    <User className="h-8 w-8 text-slate-400 mb-2" />
+                                    <p className="text-xs text-slate-400">Select employee</p>
+                                </div>
+                            )}
+                        </div>
 
-                                {/* Admin Editable Fields */}
-                                <div className="glass-card p-6">
-                                    <h3 className="text-lg font-semibold mb-4">Admin Edit Fields</h3>
-                                    
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {/* Hours Attended */}
-                                        <div>
-                                            <label className="block text-sm text-slate-400 mb-2">Hours Attended</label>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-blue-400" />
+                        {/* Form Details */}
+                        <div className="compact-section flex-1 min-w-[600px]">
+                            {selectedForm ? (
+                                <div className="compact-card h-full overflow-y-auto space-y-3">
+                                    {/* Form Header */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div>
+                                                <h2 className="text-sm font-semibold">Form Details</h2>
+                                                <p className="text-xs text-slate-400">{formatDate(selectedForm.date)}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => handleAutoSelect(selectedForm._id)}
+                                                    className="btn-primary flex items-center gap-1 px-2 py-1 text-xs"
+                                                >
+                                                    <Zap className="h-3 w-3" />
+                                                    Auto
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (window.confirm('Delete this form?')) {
+                                                            handleDeleteForm(selectedForm._id);
+                                                        }
+                                                    }}
+                                                    className="btn-ghost text-red-400 hover:text-red-300 flex items-center gap-1 px-2 py-1 text-xs"
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Time Tracking */}
+                                        <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+                                            <div className="bg-white/5 rounded p-1.5">
+                                                <div className="text-xs text-slate-400 mb-0.5">Entry</div>
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3 text-blue-400" />
+                                                    <span className="text-xs">{formatTime(selectedForm.entryTime)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white/5 rounded p-1.5">
+                                                <div className="text-xs text-slate-400 mb-0.5">Exit</div>
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3 text-rose-400" />
+                                                    <span className="text-xs">{formatTime(selectedForm.exitTime)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white/5 rounded p-1.5">
+                                                <div className="text-xs text-slate-400 mb-0.5">Total</div>
+                                                <div className="flex items-center gap-1">
+                                                    <Timer className="h-3 w-3 text-emerald-400" />
+                                                    <span className="text-xs font-medium">{calculateWorkingHours(selectedForm.entryTime, selectedForm.exitTime)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setShowEditTimeModal(true)}
+                                            className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs w-full"
+                                        >
+                                            <Edit3 className="h-3 w-3" />
+                                            Edit Time
+                                        </button>
+                                    </div>
+
+                                    {/* Admin Editable Fields */}
+                                    <div className="border-t border-white/10 pt-2">
+                                        <h3 className="text-xs font-semibold mb-2">Admin Fields</h3>
+                                        
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="block text-xs text-slate-400 mb-1">Hours Attended</label>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -758,92 +752,53 @@ function AdminDailyFormsPage() {
                                                     step="0.5"
                                                     value={selectedForm.hoursAttended || 0}
                                                     onChange={(e) => handleFormFieldUpdate('hoursAttended', parseFloat(e.target.value) || 0)}
-                                                    className="flex-1 rounded border border-white/10 bg-black/20 px-3 py-2 text-sm focus:border-emerald-400 focus:outline-none"
-                                                    placeholder="0"
+                                                    className="w-full rounded border border-white/10 bg-black/20 px-2 py-1 text-xs focus:border-emerald-400 focus:outline-none"
                                                 />
                                             </div>
-                                        </div>
-                                        
-                                        {/* Screensharing Status */}
-                                        <div>
-                                            <label className="block text-sm text-slate-400 mb-2">Screensharing Status</label>
-                                            <div 
-                                                className="flex items-center gap-2 cursor-pointer hover:bg-white/10 rounded p-2 transition-colors"
-                                                onClick={() => handleFormFieldUpdate('screensharing', !selectedForm.screensharing)}
-                                            >
-                                                {selectedForm.screensharing ? (
-                                                    <CheckSquare className="h-4 w-4 text-emerald-400" />
-                                                ) : (
-                                                    <Square className="h-4 w-4 text-slate-400" />
-                                                )}
-                                                <span className="text-sm">Screensharing Active</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Tasks */}
-                                <div className="glass-card p-6">
-                                    <h3 className="mb-4 text-lg font-semibold">Standard Tasks</h3>
-                                    <div className="space-y-2">
-                                        {selectedForm.tasks?.map((task, index) => (
-                                            <div key={task.taskId || index} className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
-                                                <div className="flex items-center gap-2">
-                                                    {task.employeeChecked ? (
-                                                        <CheckSquare className="h-4 w-4 text-blue-400" />
-                                                    ) : (
-                                                        <Square className="h-4 w-4 text-slate-400" />
-                                                    )}
-                                                    <span className="text-xs text-blue-300">Emp</span>
-                                                </div>
+                                            
+                                            <div>
+                                                <label className="block text-xs text-slate-400 mb-1">Screensharing</label>
                                                 <div 
-                                                    className="flex items-center gap-2 cursor-pointer hover:bg-white/10 rounded p-1 transition-colors"
-                                                    onClick={() => handleTaskToggle(index, 'adminChecked')}
+                                                    className="flex items-center gap-1 cursor-pointer hover:bg-white/10 rounded p-1 transition-colors"
+                                                    onClick={() => handleFormFieldUpdate('screensharing', !selectedForm.screensharing)}
                                                 >
-                                                    {task.adminChecked ? (
-                                                        <CheckSquare className="h-4 w-4 text-emerald-400" />
+                                                    {selectedForm.screensharing ? (
+                                                        <CheckSquare className="h-3 w-3 text-emerald-400" />
                                                     ) : (
-                                                        <Square className="h-4 w-4 text-slate-400" />
+                                                        <Square className="h-3 w-3 text-slate-400" />
                                                     )}
-                                                    <span className="text-xs text-emerald-300">Admin</span>
-                                                </div>
-                                                <div className="flex-1">
-                                                    <span className={task.isCompleted ? "text-emerald-300" : "text-slate-300"}>
-                                                        {task.taskText}
-                                                    </span>
+                                                    <span className="text-xs">Active</span>
                                                 </div>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Custom Tasks */}
-                                {selectedForm.customTasks && selectedForm.customTasks.length > 0 && (
-                                    <div className="glass-card p-6">
-                                        <h3 className="mb-4 text-lg font-semibold">Custom Tasks</h3>
-                                        <div className="space-y-2">
-                                            {selectedForm.customTasks.map((task, index) => (
-                                                <div key={index} className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
-                                                    <div className="flex items-center gap-2">
+                                    {/* Tasks */}
+                                    <div className="border-t border-white/10 pt-2">
+                                        <h3 className="mb-1.5 text-xs font-semibold">Standard Tasks</h3>
+                                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                                            {selectedForm.tasks?.map((task, index) => (
+                                                <div key={task.taskId || index} className="flex items-center gap-2 rounded-lg bg-white/5 p-1.5 text-xs">
+                                                    <div className="flex items-center gap-1">
                                                         {task.employeeChecked ? (
-                                                            <CheckSquare className="h-4 w-4 text-blue-400" />
+                                                            <CheckSquare className="h-3 w-3 text-blue-400" />
                                                         ) : (
-                                                            <Square className="h-4 w-4 text-slate-400" />
+                                                            <Square className="h-3 w-3 text-slate-400" />
                                                         )}
-                                                        <span className="text-xs text-blue-300">Emp</span>
+                                                        <span className="text-xs text-blue-300">E</span>
                                                     </div>
                                                     <div 
-                                                        className="flex items-center gap-2 cursor-pointer hover:bg-white/10 rounded p-1 transition-colors"
-                                                        onClick={() => handleCustomTaskToggle(index, 'adminChecked')}
+                                                        className="flex items-center gap-1 cursor-pointer hover:bg-white/10 rounded p-0.5 transition-colors"
+                                                        onClick={() => handleTaskToggle(index, 'adminChecked')}
                                                     >
                                                         {task.adminChecked ? (
-                                                            <CheckSquare className="h-4 w-4 text-emerald-400" />
+                                                            <CheckSquare className="h-3 w-3 text-emerald-400" />
                                                         ) : (
-                                                            <Square className="h-4 w-4 text-slate-400" />
+                                                            <Square className="h-3 w-3 text-slate-400" />
                                                         )}
-                                                        <span className="text-xs text-emerald-300">Admin</span>
+                                                        <span className="text-xs text-emerald-300">A</span>
                                                     </div>
-                                                    <div className="flex-1">
+                                                    <div className="flex-1 text-xs">
                                                         <span className={task.isCompleted ? "text-emerald-300" : "text-slate-300"}>
                                                             {task.taskText}
                                                         </span>
@@ -852,50 +807,82 @@ function AdminDailyFormsPage() {
                                             ))}
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Form Approval */}
-                                <div className="glass-card p-6">
-                                    <div className="mb-4">
-                                        <h3 className="text-lg font-semibold mb-4">Form Approval</h3>
+                                    {/* Custom Tasks */}
+                                    {selectedForm.customTasks && selectedForm.customTasks.length > 0 && (
+                                        <div className="border-t border-white/10 pt-2">
+                                            <h3 className="mb-1.5 text-xs font-semibold">Custom Tasks</h3>
+                                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                {selectedForm.customTasks.map((task, index) => (
+                                                    <div key={index} className="flex items-center gap-2 rounded-lg bg-white/5 p-1.5 text-xs">
+                                                        <div className="flex items-center gap-1">
+                                                            {task.employeeChecked ? (
+                                                                <CheckSquare className="h-3 w-3 text-blue-400" />
+                                                            ) : (
+                                                                <Square className="h-3 w-3 text-slate-400" />
+                                                            )}
+                                                            <span className="text-xs text-blue-300">E</span>
+                                                        </div>
+                                                        <div 
+                                                            className="flex items-center gap-1 cursor-pointer hover:bg-white/10 rounded p-0.5 transition-colors"
+                                                            onClick={() => handleCustomTaskToggle(index, 'adminChecked')}
+                                                        >
+                                                            {task.adminChecked ? (
+                                                                <CheckSquare className="h-3 w-3 text-emerald-400" />
+                                                            ) : (
+                                                                <Square className="h-3 w-3 text-slate-400" />
+                                                            )}
+                                                            <span className="text-xs text-emerald-300">A</span>
+                                                        </div>
+                                                        <div className="flex-1 text-xs">
+                                                            <span className={task.isCompleted ? "text-emerald-300" : "text-slate-300"}>
+                                                                {task.taskText}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Form Approval */}
+                                    <div className="border-t border-white/10 pt-2">
+                                        <h3 className="text-xs font-semibold mb-1.5">Form Approval</h3>
                                         
                                         {/* Approval Status */}
-                                        <div className={`mb-4 rounded-lg border p-4 ${
+                                        <div className={`mb-2 rounded-lg border p-2 text-xs ${
                                             selectedForm.adminConfirmed 
                                                 ? "border-emerald-500/50 bg-emerald-500/10" 
                                                 : "border-amber-500/50 bg-amber-500/10"
                                         }`}>
                                             <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2">
                                                     {selectedForm.adminConfirmed ? (
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500">
-                                                            <Check className="h-4 w-4 text-white" />
+                                                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
+                                                            <Check className="h-3 w-3 text-white" />
                                                         </div>
                                                     ) : (
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500">
-                                                            <Clock className="h-4 w-4 text-white" />
+                                                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500">
+                                                            <Clock className="h-3 w-3 text-white" />
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className={`font-medium ${
+                                                        <p className={`font-medium text-xs ${
                                                             selectedForm.adminConfirmed ? "text-emerald-200" : "text-amber-200"
                                                         }`}>
-                                                            {selectedForm.adminConfirmed ? "Approved" : "Pending Approval"}
+                                                            {selectedForm.adminConfirmed ? "Approved" : "Pending"}
                                                         </p>
                                                         {selectedForm.adminConfirmedAt && (
-                                                            <p className={`text-xs ${
-                                                                selectedForm.adminConfirmed ? "text-emerald-300" : "text-amber-300"
-                                                            }`}>
-                                                                {selectedForm.adminConfirmed ? "Approved" : "Updated"} on {new Date(selectedForm.adminConfirmedAt).toLocaleDateString()}
+                                                            <p className="text-xs text-slate-400">
+                                                                {new Date(selectedForm.adminConfirmedAt).toLocaleDateString()}
                                                             </p>
                                                         )}
                                                     </div>
                                                 </div>
                                                 
-                                                {/* Bonus Information */}
                                                 <div className="text-right">
-                                                    <p className="text-sm text-slate-300">Daily Bonus</p>
-                                                    <p className={`text-lg font-bold ${
+                                                    <p className="text-xs text-slate-300">Bonus</p>
+                                                    <p className={`text-sm font-bold ${
                                                         selectedForm.adminConfirmed ? "text-emerald-400" : "text-amber-400"
                                                     }`}>
                                                         ₹{selectedForm.dailyBonus || 0}
@@ -905,38 +892,38 @@ function AdminDailyFormsPage() {
                                         </div>
 
                                         {/* Action Buttons */}
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2 text-xs">
                                             {!selectedForm.adminConfirmed ? (
                                                 <button
                                                     onClick={() => handleApproveForm(selectedForm._id, true)}
-                                                    className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+                                                    className="btn-primary flex items-center gap-1 px-2 py-1 text-xs flex-1 bg-emerald-600 hover:bg-emerald-700"
                                                 >
-                                                    <Check className="h-4 w-4" />
-                                                    Approve & Release Bonus
+                                                    <Check className="h-3 w-3" />
+                                                    Approve
                                                 </button>
                                             ) : (
                                                 <button
                                                     onClick={() => handleApproveForm(selectedForm._id, false)}
-                                                    className="btn-ghost flex items-center gap-2 text-red-400 hover:text-red-300"
+                                                    className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs flex-1 text-red-400"
                                                 >
-                                                    <X className="h-4 w-4" />
-                                                    Revoke Approval
+                                                    <X className="h-3 w-3" />
+                                                    Revoke
                                                 </button>
                                             )}
                                             
-                                            <div className="text-sm text-slate-400">
-                                                Score: <span className="font-medium text-white">{selectedForm.score || 0}</span> points
+                                            <div className="text-xs text-slate-400">
+                                                Score: <span className="font-medium text-white">{selectedForm.score || 0}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="glass-card p-8 text-center">
-                                <Calendar className="mx-auto h-12 w-12 text-slate-400" />
-                                <p className="mt-4 text-slate-400">Select a daily form to view details</p>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="compact-card h-full flex flex-col items-center justify-center text-center">
+                                    <Calendar className="h-8 w-8 text-slate-400 mb-2" />
+                                    <p className="text-xs text-slate-400">Select a form</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

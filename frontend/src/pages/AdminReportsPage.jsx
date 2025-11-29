@@ -134,49 +134,49 @@ export default function AdminReportsPage() {
 
   return (
     <PageBackground variant="slate">
-      <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
+      <div className="admin-viewport text-white">
         {/* Header */}
-        <header className="mb-8 border-b border-white/10 pb-6">
-          <button
-            onClick={() => navigate("/admin")}
-            className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Admin Dashboard
-          </button>
-          <div className="flex items-center justify-between">
+        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back
+            </button>
             <div>
-              <h1 className="text-4xl font-bold">Task Tracking Reports</h1>
-              <p className="mt-2 text-slate-300">
-                Generate detailed task completion reports for employees
-              </p>
+              <h1 className="text-xl font-bold">Reports</h1>
+              <p className="text-xs text-slate-400">Task tracking reports</p>
             </div>
-            <div className="flex items-center gap-3">
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="btn-ghost flex items-center gap-1 px-2 py-1 text-xs"
+            >
+              <Filter className="h-3 w-3" />
+              Filters
+            </button>
+            {reportData.length > 0 && (
               <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="btn-ghost flex items-center gap-2"
+                onClick={exportToCSV}
+                className="btn-primary flex items-center gap-1 px-2 py-1 text-xs"
               >
-                <Filter className="h-4 w-4" />
-                Filters
+                <Download className="h-3 w-3" />
+                Export
               </button>
-              {reportData.length > 0 && (
-                <button
-                  onClick={exportToCSV}
-                  className="btn-primary flex items-center gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Export CSV
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </header>
 
-        {/* Filters */}
-        {showFilters && (
-          <div className="mb-8 glass-card p-6">
-            <h2 className="mb-4 text-xl font-bold">Report Filters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="admin-content-area">
+          <div className="h-full overflow-y-auto space-y-2">
+            {/* Filters */}
+            {showFilters && (
+              <div className="compact-card p-3">
+                <h2 className="mb-2 text-sm font-bold">Filters</h2>
+                <div className="grid grid-cols-3 gap-2">
               {/* Employee Selection */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -373,6 +373,8 @@ export default function AdminReportsPage() {
           </div>
         ) : null}
       </div>
+      </div>
+    </div>
     </PageBackground>
   );
 }

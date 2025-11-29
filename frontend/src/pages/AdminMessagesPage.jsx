@@ -137,19 +137,16 @@ export default function AdminMessagesPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="mx-auto min-h-screen w-full max-w-6xl px-6 pb-20 pt-10 text-white">
-        <header className="glass-panel rounded-[32px] px-7 py-8">
-          <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-            Communication hub
-          </p>
-          <h1 className="mt-2 text-4xl font-bold">Messaging Center</h1>
-          <p className="text-sm text-slate-300">
-            Broadcast announcements or chat 1-1 with employees and clients.
-          </p>
+      <div className="admin-viewport text-white">
+        <header className="admin-header-compact border-b border-white/10">
+          <div>
+            <h1 className="text-xl font-bold">Messages</h1>
+            <p className="text-xs text-slate-400">Chat with employees and clients</p>
+          </div>
         </header>
 
         {/* Tabs */}
-        <div className="mt-8 flex gap-2 border-b border-white/10">
+        <div className="flex gap-2 border-b border-white/10 px-4 pt-2">
           <button
             onClick={() => {
               setActiveTab("employees");
@@ -157,7 +154,7 @@ export default function AdminMessagesPage() {
               setSelectedClient(null);
               setChatMessages([]);
             }}
-            className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`px-3 py-1 text-xs font-semibold transition-colors ${
               activeTab === "employees"
                 ? "border-b-2 border-indigo-400 text-white"
                 : "text-slate-400 hover:text-white"
@@ -172,7 +169,7 @@ export default function AdminMessagesPage() {
               setSelectedClient(null);
               setChatMessages([]);
             }}
-            className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`px-3 py-1 text-xs font-semibold transition-colors ${
               activeTab === "clients"
                 ? "border-b-2 border-indigo-400 text-white"
                 : "text-slate-400 hover:text-white"
@@ -182,7 +179,8 @@ export default function AdminMessagesPage() {
           </button>
         </div>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[280px,1fr]">
+        <div className="admin-content-area">
+          <div className="horizontal-scroll-container">
           <aside className="rounded-[28px] border border-white/10 bg-white/5 p-5">
             <div className="flex items-center gap-3 text-sm uppercase tracking-[0.4em] text-slate-400">
               <Users className="h-4 w-4" />

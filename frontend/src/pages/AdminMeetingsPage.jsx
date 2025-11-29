@@ -275,84 +275,81 @@ export default function AdminMeetingsPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
-        <header className="mb-8 border-b border-white/10 pb-6">
-          <button
-            onClick={() => navigate("/admin")}
-            className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-                Meeting Management
-              </p>
-              <h1 className="mt-2 text-4xl font-bold">Meetings</h1>
-              <p className="mt-1 text-sm text-slate-300">
-                Create and manage meetings for employees and clients
-              </p>
-            </div>
+      <div className="admin-viewport text-white">
+        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+          <div className="flex items-center gap-4">
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary flex items-center gap-2"
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
             >
-              <Plus className="h-4 w-4" />
-              Create Meeting
+              <ArrowLeft className="h-3 w-3" />
+              Back
             </button>
+            <div>
+              <h1 className="text-xl font-bold">Meetings</h1>
+              <p className="text-xs text-slate-400">Create and manage meetings</p>
+            </div>
           </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary flex items-center gap-1 px-3 py-1.5 text-xs"
+          >
+            <Plus className="h-3 w-3" />
+            Create
+          </button>
         </header>
 
-        <div className="space-y-4">
-          {meetings.length === 0 ? (
-            <div className="rounded-[32px] border border-white/10 bg-white/5 p-12 text-center">
-              <Video className="mx-auto mb-4 h-12 w-12 text-slate-400" />
-              <p className="text-slate-300">No meetings created yet</p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="btn-primary mt-4"
-              >
-                Create Your First Meeting
-              </button>
-            </div>
-          ) : (
-            meetings.map((meeting) => (
-              <div
-                key={meeting._id}
-                className="rounded-[32px] border border-white/10 bg-white/5 p-6"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="mb-3 flex items-center gap-3">
-                      <span className="text-2xl">
-                        {getMeetingTypeIcon(meeting.meetingType)}
-                      </span>
-                      <h3 className="text-xl font-bold text-white">{meeting.subject}</h3>
-                      {getStatusBadge(
-                        meeting.status,
-                        meeting.scheduledDate,
-                        meeting.scheduledTime
-                      )}
-                    </div>
-                    {meeting.description && (
-                      <p className="mb-3 text-slate-300">{meeting.description}</p>
-                    )}
-                    <div className="mb-3 flex flex-wrap items-center gap-4 text-sm text-slate-300">
-                      <span className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(meeting.scheduledDate).toLocaleDateString()}
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        {meeting.scheduledTime} ({meeting.duration} min)
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        {meeting.meetingFor === "employees"
-                          ? "Employees"
-                          : meeting.meetingFor === "clients"
-                          ? "Clients"
+        <div className="admin-content-area">
+          <div className="h-full overflow-y-auto">
+            <div className="space-y-2">
+              {meetings.length === 0 ? (
+                <div className="compact-card p-8 text-center">
+                  <Video className="mx-auto mb-2 h-8 w-8 text-slate-400" />
+                  <p className="text-xs text-slate-400">No meetings yet</p>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="btn-primary mt-2 px-3 py-1 text-xs"
+                  >
+                    Create First Meeting
+                  </button>
+                </div>
+              ) : (
+                meetings.map((meeting) => (
+                  <div
+                    key={meeting._id}
+                    className="compact-card p-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="text-base">
+                            {getMeetingTypeIcon(meeting.meetingType)}
+                          </span>
+                          <h3 className="text-sm font-bold text-white truncate">{meeting.subject}</h3>
+                          {getStatusBadge(
+                            meeting.status,
+                            meeting.scheduledDate,
+                            meeting.scheduledTime
+                          )}
+                        </div>
+                        {meeting.description && (
+                          <p className="mb-2 text-xs text-slate-400 line-clamp-2">{meeting.description}</p>
+                        )}
+                        <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(meeting.scheduledDate).toLocaleDateString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {meeting.scheduledTime} ({meeting.duration}m)
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {meeting.meetingFor === "employees"
+                              ? "Employees"
+                              : meeting.meetingFor === "clients"
+                              ? "Clients"
                           : "Both"}
                       </span>
                     </div>

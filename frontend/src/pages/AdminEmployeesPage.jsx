@@ -73,98 +73,99 @@ export default function AdminEmployeesPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="mx-auto min-h-screen w-full max-w-6xl px-6 pb-20 pt-10 text-white">
-        <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+      <div className="admin-viewport text-white">
+        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/admin")}
-              className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Overview
+              <ArrowLeft className="h-3 w-3" />
+              Back
             </button>
-            <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-              Team management
-            </p>
-            <h1 className="mt-2 text-4xl font-bold">Approved Employees</h1>
-            <p className="text-sm text-slate-300">
-              View and manage your team members
-            </p>
+            <div>
+              <h1 className="text-xl font-bold">Employees</h1>
+              <p className="text-xs text-slate-400">View and manage your team</p>
+            </div>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search employees..."
-              className="input-field w-64 pl-10"
+              placeholder="Search..."
+              className="input-field w-48 pl-7 py-1 text-xs"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </header>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5">
-          <div className="divide-y divide-white/10">
-            {filteredEmployees.length === 0 ? (
-              <div className="p-10 text-center text-slate-300">
-                {employees.length === 0
-                  ? "No approved employees yet."
-                  : "No employees match your search."}
-              </div>
-            ) : (
-              filteredEmployees.map((employee) => (
-                <div
-                  key={employee._id}
-                  className="relative p-6 transition-colors hover:bg-white/5"
-                >
-                  <div
-                    className="flex items-center gap-4 cursor-pointer"
-                    onClick={() => navigate(`/admin/employee/${employee._id}`)}
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/20">
-                      <UserCircle2 className="h-6 w-6 text-indigo-300" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">
-                        {employee.name || "Unnamed Employee"}
-                      </h3>
-                      <p className="text-sm text-slate-300">{employee.email}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-3 py-1 text-xs text-emerald-300">
-                        Approved
-                      </span>
-                      <div className="menu-container relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowMenu(showMenu === employee._id ? null : employee._id);
-                          }}
-                          className="rounded-lg p-2 hover:bg-white/10 transition-colors"
-                        >
-                          <MoreVertical className="h-5 w-5 text-slate-400" />
-                        </button>
-                        {showMenu === employee._id && (
-                          <div className="absolute right-0 top-full mt-2 z-10 w-48 rounded-lg border border-white/10 bg-white/10 backdrop-blur-md shadow-lg">
+        <div className="admin-content-area">
+          <div className="h-full overflow-y-auto">
+            <div className="compact-card">
+              {filteredEmployees.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  {employees.length === 0
+                    ? "No approved employees yet."
+                    : "No employees match your search."}
+                </div>
+              ) : (
+                <div className="divide-y divide-white/10">
+                  {filteredEmployees.map((employee) => (
+                    <div
+                      key={employee._id}
+                      className="relative p-3 transition-colors hover:bg-white/5"
+                    >
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => navigate(`/admin/employee/${employee._id}`)}
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 flex-shrink-0">
+                          <UserCircle2 className="h-4 w-4 text-indigo-300" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white text-sm truncate">
+                            {employee.name || "Unnamed Employee"}
+                          </h3>
+                          <p className="text-xs text-slate-400 truncate">{employee.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
+                            Approved
+                          </span>
+                          <div className="menu-container relative">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setShowSuspendConfirm(employee._id);
-                                setShowMenu(null);
+                                setShowMenu(showMenu === employee._id ? null : employee._id);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-3 text-left text-sm text-red-300 hover:bg-red-500/20 transition-colors rounded-lg"
+                              className="rounded-lg p-1 hover:bg-white/10 transition-colors"
                             >
-                              <Ban className="h-4 w-4" />
-                              Suspend Access
+                              <MoreVertical className="h-4 w-4 text-slate-400" />
                             </button>
+                            {showMenu === employee._id && (
+                              <div className="absolute right-0 top-full mt-1 z-10 w-40 rounded-lg border border-white/10 bg-white/10 backdrop-blur-md shadow-lg">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowSuspendConfirm(employee._id);
+                                    setShowMenu(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-red-300 hover:bg-red-500/20 transition-colors rounded-lg"
+                                >
+                                  <Ban className="h-3 w-3" />
+                                  Suspend Access
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))
-            )}
+              )}
+            </div>
           </div>
         </div>
 
