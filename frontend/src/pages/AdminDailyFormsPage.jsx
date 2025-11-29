@@ -584,14 +584,16 @@ function QuickSendModal({ templates, employees, onClose, onSend }) {
                                 </p>
                             </div>
                             <div className="flex gap-3">
-                                {/* Removed the button to show default template modal */}
-                                {/* <button
-                                  onClick={() => setShowDefaultTemplateModal(true)}
-                                  className="btn-ghost flex items-center gap-2"
+                                <button
+                                    onClick={async () => {
+                                        await fetchAvailableTemplates();
+                                        setShowQuickSendModal(true);
+                                    }}
+                                    className="btn-primary flex items-center gap-2"
                                 >
-                                  <FileText className="h-4 w-4" />
-                                  Default Template
-                                </button> */}
+                                    <Zap className="h-4 w-4" />
+                                    Quick Send
+                                </button>
                                 <button
                                     onClick={() => setShowCreateTemplateModal(true)}
                                     className="btn-ghost flex items-center gap-2"

@@ -1659,6 +1659,96 @@ router.put("/admin/default-template", authenticateToken, async (req, res) => {
   }
 });
 
+// Admin: Quick send template to multiple employees
+router.post("/admin/quick-send", authenticateToken, async (req, res) => {
+  try {
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes("admin")) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { templateId, employeeIds } = req.body;
+
+    if (!templateId || !Array.isArray(employeeIds) || employeeIds.length === 0) {
+      return res.status(400).json({ error: "Template ID and employee IDs are required" });
+    }
+
+    // Get the template
+    const template = await DefaultFormTemplate.findById(templateId);
+    if (!template) {
+      return res.status(404).json({ error: "Template not found" });
+    }
+
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const createdForms = [];
+    const errors = [];
+
+    // Create a form for each selected employee
+    for (const employeeId of employeeIds) {
+      try {
+        // Check if form already exists for today
+        const existingForm = await DailyForm.findOne({
+          employee: employeeId,
+          date: { $gte: startOfDay }
+        });
+
+        if (existingForm) {
+          errors.push({ employeeId, error: "Form already exists for today" });
+          continue;
+        }
+
+        // Map template tasks to form tasks
+        const formTasks = template.tasks.map(task => ({
+          taskId: task.taskId,
+          taskText: task.taskText,
+          employeeChecked: false,
+          adminChecked: false,
+          isCompleted: false
+        }));
+
+        const formCustomTasks = template.customTasks.map(task => ({
+          taskText: task.taskText,
+          employeeChecked: false,
+          adminChecked: false,
+          isCompleted: false
+        }));
+
+        // Create new form
+        const newForm = new DailyForm({
+          employee: employeeId,
+          date: startOfDay,
+          tasks: formTasks,
+          customTasks: formCustomTasks,
+          hoursAttended: 0,
+          screensharing: false,
+          submitted: false,
+          lastEditedBy: req.user.userId,
+          lastEditedAt: new Date()
+        });
+
+        await newForm.save();
+        createdForms.push(newForm);
+      } catch (error) {
+        console.error(`Error creating form for employee ${employeeId}:`, error);
+        errors.push({ employeeId, error: error.message });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Created ${createdForms.length} forms successfully`,
+      created: createdForms.length,
+      failed: errors.length,
+      errors: errors
+    });
+  } catch (error) {
+    console.error("Quick send error:", error);
+    res.status(500).json({ error: "Failed to send template" });
+  }
+});
+
 // Admin: Delete a daily form
 router.delete("/:formId", authenticateToken, async (req, res) => {
   try {
