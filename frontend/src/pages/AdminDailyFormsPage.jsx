@@ -456,42 +456,48 @@ function QuickSendModal({ templates, employees, onClose, onSend }) {
 
     const handleCreateForm = async (employeeId, formData, templateId = null) => {
         try {
-            setError("");
-            const requestData = {
-                employeeId,
-                templateId,
-                ...formData
-            };
-            
-            console.log("Creating form with data:", requestData);
-            
-            const res = await fetch("/api/daily-forms/admin/create-for-employee", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify(requestData)
-            });
+          setError("");
+          let requestData = {
+            employeeId,
+            templateId,
+            ...formData
+          };
 
-            const responseData = await res.json();
-            
-            if (res.ok) {
-                setShowCreateForm(false);
-                setShowTemplateSelectionModal(false);
-                if (selectedEmployee) {
-                    fetchEmployeeForms(selectedEmployee._id);
-                }
-                alert("Daily form created for employee!");
-            } else {
-                console.error("Server error:", responseData);
-                setError(responseData.error || "Failed to create form");
-                alert(responseData.error || "Failed to create form");
+          // If a template is selected, include its tasks and customTasks in the request
+          if (templateId && selectedTemplate) {
+            requestData.tasks = selectedTemplate.tasks || [];
+            requestData.customTasks = selectedTemplate.customTasks || [];
+          }
+
+          console.log("Creating form with data:", requestData);
+
+          const res = await fetch("/api/daily-forms/admin/create-for-employee", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(requestData)
+          });
+
+          const responseData = await res.json();
+
+          if (res.ok) {
+            setShowCreateForm(false);
+            setShowTemplateSelectionModal(false);
+            if (selectedEmployee) {
+              fetchEmployeeForms(selectedEmployee._id);
             }
+            alert("Daily form created for employee!");
+          } else {
+            console.error("Server error:", responseData);
+            setError(responseData.error || "Failed to create form");
+            alert(responseData.error || "Failed to create form");
+          }
         } catch (error) {
-            console.error("Create form error:", error);
-            setError("Network error occurred");
-            alert("Network error occurred");
+          console.error("Create form error:", error);
+          setError("Network error occurred");
+          alert("Network error occurred");
         }
-    };
+      };
 
     const formatTime = (dateString) => {
         if (!dateString) return "Not set";
