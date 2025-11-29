@@ -56,6 +56,25 @@ function AdminDailyFormsPage() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
+    // Delete template handler
+    const handleDeleteTemplate = async (templateId) => {
+        try {
+            const res = await fetch(`/api/default-form-templates/${templateId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.ok) {
+                setAvailableTemplates(prev => prev.filter(t => t._id !== templateId));
+                alert('Template deleted successfully');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete template');
+            }
+        } catch (err) {
+            alert('Network error while deleting template');
+        }
+    };
+
     useEffect(() => {
         fetchEmployees();
          // fetchDefaultTemplate(); // Commented out to prevent fetching default template on mount
@@ -1503,8 +1522,6 @@ const CreateTemplateModal = ({ template, onClose, onSubmit, onChange }) => {
       const task = {
         taskId: `task-${Date.now()}`,
         taskText: newTask.trim(),
-        category: "General", // Add default category
-        frequency: "daily", // Add default frequency
         isCompleted: false,
         employeeChecked: false,
         adminChecked: false
