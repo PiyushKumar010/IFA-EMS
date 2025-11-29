@@ -9,12 +9,14 @@ import {
   Code,
   MessageCircle,
   Trophy,
+  TrendingUp,
 } from "lucide-react";
 import PageBackground from "../components/ui/PageBackground";
 
 const NAV_ITEMS = [
   { key: "employees", label: "Employees", icon: Users, path: "/admin/employees" },
   { key: "projects", label: "Projects", icon: FolderOpen, path: "/admin/projects" },
+  { key: "projectupdates", label: "Project Updates", icon: TrendingUp, path: "/admin/project-updates" },
   { key: "dailyforms", label: "Daily Forms", icon: FileText, path: "/admin/daily-forms" },
   { key: "meetings", label: "Meetings", icon: Calendar, path: "/admin/meetings" },
   { key: "leaderboard", label: "Leaderboard", icon: Trophy, path: "/admin/leaderboard" },

@@ -6,6 +6,7 @@ import AdminProjectsPage from "./pages/AdminPage";
 import AdminLayout from "./pages/AdminLayout";
 import AdminOverviewPage from "./pages/AdminOverviewPage";
 import AdminProjectEdit from './pages/AdminProjectEdit';
+import AdminProjectUpdatesPage from './pages/AdminProjectUpdatesPage';
 import EmployeePage from "./pages/EmployeePage";
 import EmployeeProject from "./pages/EmployeeProject";
 import EmployeeDailyFormPage from "./pages/EmployeeDailyFormPage";
@@ -59,6 +60,16 @@ export default function App() {
             <AdminRoute>
               <AdminLayout>
                 <AdminProjectsPage />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/project-updates"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminProjectUpdatesPage />
               </AdminLayout>
             </AdminRoute>
           }

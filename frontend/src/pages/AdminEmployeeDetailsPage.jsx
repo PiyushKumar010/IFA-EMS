@@ -162,7 +162,7 @@ export default function AdminEmployeeDetailsPage() {
                       } else if (isAssignee) {
                         role = "Team Member";
                       } else {
-                        role = "Contributor";
+                        role = "Team Member";
                       }
                       
                       return (
