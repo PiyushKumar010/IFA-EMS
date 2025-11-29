@@ -251,8 +251,8 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto'}}>
-                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: 'max-content'}}>
+                <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto', overflowX: 'scroll', overflowY: 'scroll'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', minWidth: '1800px'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
