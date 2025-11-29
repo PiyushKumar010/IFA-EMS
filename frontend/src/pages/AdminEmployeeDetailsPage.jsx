@@ -23,12 +23,6 @@ export default function AdminEmployeeDetailsPage() {
   const [employee, setEmployee] = useState(null);
   const [projects, setProjects] = useState([]);
   const [progressReports, setProgressReports] = useState([]);
-  const [dailyForms, setDailyForms] = useState([]);
-  const [selectedForm, setSelectedForm] = useState(null);
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [showCustomFormModal, setShowCustomFormModal] = useState(false);
-  const [newCustomTask, setNewCustomTask] = useState("");
-  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,126 +56,10 @@ export default function AdminEmployeeDetailsPage() {
         const progressData = await progressRes.json();
         setProgressReports(progressData.progress || []);
       }
-
-      // Fetch daily forms
-      const formsRes = await fetch(`/api/daily-forms/employee/${id}`, {
-        credentials: "include",
-      });
-      if (formsRes.ok) {
-        const formsData = await formsRes.json();
-        setDailyForms(formsData.forms || []);
-      }
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleTaskChange = (taskIndex, checked) => {
-    setSelectedForm((prev) => {
-      const updated = { ...prev };
-      updated.tasks[taskIndex].adminChecked = checked;
-      updated.tasks[taskIndex].isCompleted =
-        updated.tasks[taskIndex].employeeChecked && checked;
-      return updated;
-    });
-  };
-
-  const handleCustomTaskChange = (taskIndex, checked) => {
-    setSelectedForm((prev) => {
-      const updated = { ...prev };
-      updated.customTasks[taskIndex].adminChecked = checked;
-      updated.customTasks[taskIndex].isCompleted =
-        updated.customTasks[taskIndex].employeeChecked && checked;
-      return updated;
-    });
-  };
-
-  const handleSaveForm = async () => {
-    if (!selectedForm) return;
-
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/daily-forms/${selectedForm._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          tasks: selectedForm.tasks,
-          customTasks: selectedForm.customTasks,
-          hoursAttended: selectedForm.hoursAttended,
-          screensharing: selectedForm.screensharing,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedForm(data.form);
-        await fetchData();
-        alert("Form updated successfully! Score and bonus have been recalculated.");
-      } else {
-        alert("Failed to update form");
-      }
-    } catch (err) {
-      console.error("Error saving form:", err);
-      alert("Failed to save form");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleViewForm = async (formId) => {
-    try {
-      const res = await fetch(`/api/daily-forms/${formId}`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedForm(data.form);
-        setShowFormModal(true);
-      }
-    } catch (err) {
-      console.error("Error fetching form:", err);
-    }
-  };
-
-  const handleCreateCustomForm = async () => {
-    if (!newCustomTask.trim()) {
-      alert("Please enter a task");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/daily-forms/custom/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          customTasks: [
-            {
-              taskText: newCustomTask,
-              employeeChecked: false,
-              adminChecked: false,
-            },
-          ],
-        }),
-      });
-
-      if (res.ok) {
-        setNewCustomTask("");
-        setShowCustomFormModal(false);
-        await fetchData();
-        alert("Custom task added successfully!");
-      } else {
-        alert("Failed to create custom task");
-      }
-    } catch (err) {
-      console.error("Error creating custom form:", err);
-      alert("Failed to create custom task");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -205,26 +83,7 @@ export default function AdminEmployeeDetailsPage() {
     );
   }
 
-  // Group tasks by category
-  const getTasksByCategory = (tasks) => {
-    const grouped = {};
-    tasks.forEach((task) => {
-      const category = task.category || "Other";
-      if (!grouped[category]) {
-        grouped[category] = [];
-      }
-      grouped[category].push(task);
-    });
-    return grouped;
-  };
 
-  const isFormConfirmed = (form) => {
-    if (!form) return false;
-    if (form.adminConfirmed === true) return true;
-    if (form.adminConfirmed === false) return false;
-    // For historical data created before confirmation workflow
-    return Boolean(form.score || form.dailyBonus || form.scoreCalculatedAt);
-  };
 
   return (
     <PageBackground variant="violet">
@@ -250,13 +109,6 @@ export default function AdminEmployeeDetailsPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button
-                className="btn-primary flex items-center gap-2"
-                onClick={() => setShowCustomFormModal(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Add Custom Task
-              </button>
               <button
                 className="btn-primary flex items-center gap-2"
                 onClick={() => navigate("/admin/messages")}
@@ -287,150 +139,98 @@ export default function AdminEmployeeDetailsPage() {
                   <tr className="border-b border-white/20">
                     <th className="text-left p-3 font-semibold text-slate-300">Date</th>
                     <th className="text-left p-3 font-semibold text-slate-300">Project Name</th>
+                    <th className="text-left p-3 font-semibold text-slate-300">Client Name</th>
+                    <th className="text-left p-3 font-semibold text-slate-300">Role</th>
+                    <th className="text-left p-3 font-semibold text-slate-300">Status</th>
+                    <th className="text-left p-3 font-semibold text-slate-300">Priority</th>
                     <th className="text-left p-3 font-semibold text-slate-300">Daily Project Update</th>
                   </tr>
                 </thead>
                 <tbody>
                   {progressReports
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map((report) => (
-                      <tr 
-                        key={report._id} 
-                        className="border-b border-white/10 hover:bg-white/5 transition-colors"
-                      >
-                        <td className="p-3 text-slate-300 whitespace-nowrap">
-                          {new Date(report.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex flex-col">
+                    .map((report) => {
+                      const project = report.project;
+                      const isAssignee = project?.assignees?.some(a => a._id === id || a === id);
+                      const isLeadAssignee = project?.leadAssignee?._id === id || project?.leadAssignee === id;
+                      
+                      let role = "";
+                      if (isLeadAssignee && isAssignee) {
+                        role = "Lead & Team Member";
+                      } else if (isLeadAssignee) {
+                        role = "Lead Assignee";
+                      } else if (isAssignee) {
+                        role = "Team Member";
+                      } else {
+                        role = "Contributor";
+                      }
+                      
+                      return (
+                        <tr 
+                          key={report._id} 
+                          className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                        >
+                          <td className="p-3 text-slate-300 whitespace-nowrap">
+                            {new Date(report.date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </td>
+                          <td className="p-3">
                             <span className="font-semibold text-white">
-                              {report.project?.projectName || "Unknown Project"}
+                              {project?.projectName || "Unknown Project"}
                             </span>
-                            <span className="text-xs text-slate-400">
-                              {report.project?.clientName || ""}
+                          </td>
+                          <td className="p-3 text-slate-300">
+                            {project?.clientName || "-"}
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              isLeadAssignee 
+                                ? "bg-purple-500/20 text-purple-300" 
+                                : "bg-blue-500/20 text-blue-300"
+                            }`}>
+                              {role}
                             </span>
-                          </div>
-                        </td>
-                        <td className="p-3 text-slate-300 max-w-md">
-                          <p className="line-clamp-2">{report.text}</p>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              project?.status === "Active"
+                                ? "bg-blue-500/20 text-blue-300"
+                                : project?.status === "Completed"
+                                ? "bg-emerald-500/20 text-emerald-300"
+                                : "bg-slate-500/20 text-slate-300"
+                            }`}>
+                              {project?.status || "New"}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              project?.priority === "High" || project?.priority === "high"
+                                ? "bg-red-500/20 text-red-300"
+                                : project?.priority === "Medium" || project?.priority === "medium"
+                                ? "bg-yellow-500/20 text-yellow-300"
+                                : "bg-green-500/20 text-green-300"
+                            }`}>
+                              {project?.priority || "Normal"}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-300 max-w-md">
+                            <p className="line-clamp-2">{report.text}</p>
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
-
-        {/* Daily Forms Section */}
-        <div className="mt-6 rounded-[32px] border border-white/10 bg-white/5 p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-indigo-300" />
-              <h2 className="text-xl font-semibold text-white">Daily Forms</h2>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
-                {dailyForms.length}
-              </span>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {dailyForms.length === 0 ? (
-              <p className="text-center text-slate-400">No forms submitted yet</p>
-            ) : (
-              dailyForms.map((form) => {
-                const completedTasks =
-                  (form.tasks || []).filter((t) => t.isCompleted).length +
-                  (form.customTasks || []).filter((t) => t.isCompleted).length;
-                const totalTasks =
-                  (form.tasks?.length || 0) + (form.customTasks?.length || 0);
-                const confirmed = isFormConfirmed(form);
-                return (
-                  <div
-                    key={form._id}
-                    className="cursor-pointer rounded-lg border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10"
-                    onClick={() => handleViewForm(form._id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-slate-400" />
-                          <span className="font-semibold text-white">
-                            {new Date(form.date).toLocaleDateString("en-US", {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </span>
-                          {confirmed ? (
-                            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
-                              Confirmed
-                            </span>
-                          ) : form.submitted ? (
-                            <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-200">
-                              Pending admin review
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-slate-500/20 px-2 py-0.5 text-xs text-slate-200">
-                              Draft
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-2 flex items-center gap-4 text-sm text-slate-300">
-                          <span>
-                            {completedTasks} / {totalTasks} tasks completed
-                          </span>
-                          <span>•</span>
-                          <span>{form.hoursAttended} hours</span>
-                          {form.screensharing && (
-                            <>
-                              <span>•</span>
-                              <span className="text-emerald-300">Screensharing</span>
-                            </>
-                          )}
-                          {(confirmed || form.score || form.dailyBonus) && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-1 text-emerald-300">
-                                <TrendingUp className="h-3 w-3" />
-                                Score: {form.score || 0}
-                              </span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1 font-semibold text-emerald-300">
-                                <span>₹</span>
-                                {form.dailyBonus || 0}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {(confirmed || form.score || form.dailyBonus) && (
-                          <div className="text-right">
-                            <div className="flex items-center gap-1 text-xs text-emerald-300">
-                              <span>₹</span>
-                              <span className="font-semibold">{form.dailyBonus || 0}</span>
-                            </div>
-                            <div className="text-xs text-slate-400">Score: {form.score || 0}</div>
-                          </div>
-                        )}
-                        <Edit className="h-5 w-5 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Form Edit Modal */}
-        {showFormModal && selectedForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8 backdrop-blur-md">
+      </div>
+    </PageBackground>
+  );
+}
             <div className="glass-panel relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[32px] px-8 py-8">
               <button
                 onClick={() => {
