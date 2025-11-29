@@ -350,52 +350,54 @@ export default function AdminMeetingsPage() {
                               ? "Employees"
                               : meeting.meetingFor === "clients"
                               ? "Clients"
-                          : "Both"}
-                      </span>
-                    </div>
-                    <div className="mb-3">
-                      <a
-                        href={meeting.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Join Meeting
-                      </a>
-                    </div>
-                    {(meeting.invitedEmployees?.length > 0 ||
-                      meeting.invitedClients?.length > 0) && (
-                      <div className="text-xs text-slate-400">
-                        {meeting.invitedEmployees?.length > 0 && (
-                          <span>
-                            {meeting.invitedEmployees.length} employee
-                            {meeting.invitedEmployees.length > 1 ? "s" : ""}
+                              : "Both"}
                           </span>
-                        )}
-                        {meeting.invitedEmployees?.length > 0 &&
-                          meeting.invitedClients?.length > 0 && <span> • </span>}
-                        {meeting.invitedClients?.length > 0 && (
-                          <span>
-                            {meeting.invitedClients.length} client
-                            {meeting.invitedClients.length > 1 ? "s" : ""}
-                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <a
+                            href={meeting.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200 text-xs"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Join Meeting
+                          </a>
+                        </div>
+                        {(meeting.invitedEmployees?.length > 0 ||
+                          meeting.invitedClients?.length > 0) && (
+                          <div className="text-xs text-slate-400">
+                            {meeting.invitedEmployees?.length > 0 && (
+                              <span>
+                                {meeting.invitedEmployees.length} employee
+                                {meeting.invitedEmployees.length > 1 ? "s" : ""}
+                              </span>
+                            )}
+                            {meeting.invitedEmployees?.length > 0 &&
+                              meeting.invitedClients?.length > 0 && <span> • </span>}
+                            {meeting.invitedClients?.length > 0 && (
+                              <span>
+                                {meeting.invitedClients.length} client
+                                {meeting.invitedClients.length > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleDelete(meeting._id)}
+                          className="rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-red-300 hover:bg-red-500/20"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDelete(meeting._id)}
-                      className="rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-red-300 hover:bg-red-500/20"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Create Meeting Modal */}

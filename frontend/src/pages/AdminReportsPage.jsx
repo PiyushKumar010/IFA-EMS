@@ -374,7 +374,7 @@ export default function AdminReportsPage() {
         ) : null}
       </div>
       </div>
-    </div>
+      </div>
     </PageBackground>
   );
 }
