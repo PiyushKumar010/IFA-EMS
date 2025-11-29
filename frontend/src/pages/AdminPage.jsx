@@ -239,11 +239,28 @@ export default function AdminProjectsPage() {
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[150px]">Project Name</th>
-                        <th className="text-left p-2 min-w-[150px]">Client</th>
+                        <th className="text-left p-2 min-w-[120px]">Client Name</th>
+                        <th className="text-left p-2 min-w-[150px]">Client Email</th>
                         <th className="text-left p-2 min-w-[200px]">Description</th>
-                        <th className="text-left p-2 min-w-[100px]">Status</th>
-                        <th className="text-left p-2 min-w-[100px]">Team Size</th>
-                        <th className="text-left p-2 min-w-[120px]">Hours Logged</th>
+                        <th className="text-left p-2 min-w-[80px]">Status</th>
+                        <th className="text-left p-2 min-w-[100px]">Client Type</th>
+                        <th className="text-left p-2 min-w-[80px]">Priority</th>
+                        <th className="text-left p-2 min-w-[100px]">Project Type</th>
+                        <th className="text-left p-2 min-w-[150px]">Team Members</th>
+                        <th className="text-left p-2 min-w-[120px]">Lead Assignee</th>
+                        <th className="text-left p-2 min-w-[100px]">VA Incharge</th>
+                        <th className="text-left p-2 min-w-[100px]">Freelancer</th>
+                        <th className="text-left p-2 min-w-[120px]">Update Incharge</th>
+                        <th className="text-left p-2 min-w-[120px]">Coders Rec.</th>
+                        <th className="text-left p-2 min-w-[100px]">Leadership</th>
+                        <th className="text-left p-2 min-w-[100px]">Start Date</th>
+                        <th className="text-left p-2 min-w-[100px]">End Date</th>
+                        <th className="text-left p-2 min-w-[100px]">Est. Hours</th>
+                        <th className="text-left p-2 min-w-[100px]">Hours Taken</th>
+                        <th className="text-left p-2 min-w-[80px]">Progress</th>
+                        <th className="text-left p-2 min-w-[100px]">GitHub</th>
+                        <th className="text-left p-2 min-w-[100px]">Loom</th>
+                        <th className="text-left p-2 min-w-[100px]">WhatsApp</th>
                         <th className="text-left p-2 min-w-[100px]">Created</th>
                         <th className="text-left p-2 min-w-[120px] sticky right-0 bg-slate-800/80 z-10">Actions</th>
                       </tr>
@@ -255,6 +272,11 @@ export default function AdminProjectsPage() {
                             {project.projectName || 'Untitled'}
                           </td>
                           <td className="p-2">{project.clientName || '-'}</td>
+                          <td className="p-2">
+                            <div className="max-w-[150px] truncate" title={project.clientEmail}>
+                              {project.clientEmail || '-'}
+                            </div>
+                          </td>
                           <td className="p-2">
                             <div className="max-w-[200px] truncate" title={project.description}>
                               {project.description || '-'}
@@ -269,8 +291,73 @@ export default function AdminProjectsPage() {
                               {project.status || 'New'}
                             </span>
                           </td>
-                          <td className="p-2 text-center">{project.assignees?.length || 0}</td>
-                          <td className="p-2 text-center">{project.totalHoursLogged || 0}h</td>
+                          <td className="p-2">{project.clientType || '-'}</td>
+                          <td className="p-2">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              project.priority === 'High' || project.priority === 'high' ? 'bg-red-500/20 text-red-400' :
+                              project.priority === 'Medium' || project.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                              project.priority === 'Low' || project.priority === 'low' ? 'bg-green-500/20 text-green-400' :
+                              'bg-slate-500/20 text-slate-400'
+                            }`}>
+                              {project.priority || 'Normal'}
+                            </span>
+                          </td>
+                          <td className="p-2">{project.projectType || '-'}</td>
+                          <td className="p-2">
+                            <div className="max-w-[150px] truncate" title={project.assignees?.map(a => a.name || a.email).join(', ')}>
+                              {project.assignees?.length > 0 ? project.assignees.map(a => a.name || a.email).join(', ') : '-'}
+                            </div>
+                          </td>
+                          <td className="p-2">
+                            {project.leadAssignee?.name || project.leadAssignee?.email || '-'}
+                          </td>
+                          <td className="p-2">{project.vaIncharge || '-'}</td>
+                          <td className="p-2">{project.freelancer || '-'}</td>
+                          <td className="p-2">{project.updateIncharge || '-'}</td>
+                          <td className="p-2">
+                            <div className="max-w-[120px] truncate" title={project.codersRecommendation}>
+                              {project.codersRecommendation || '-'}
+                            </div>
+                          </td>
+                          <td className="p-2">{project.leadership || '-'}</td>
+                          <td className="p-2">
+                            {project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
+                          </td>
+                          <td className="p-2">
+                            {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
+                          </td>
+                          <td className="p-2 text-center">{project.estimatedHoursRequired || 0}h</td>
+                          <td className="p-2 text-center">{project.estimatedHoursTaken || 0}h</td>
+                          <td className="p-2 text-center">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              project.completionPercentage >= 100 ? 'bg-emerald-500/20 text-emerald-400' :
+                              project.completionPercentage >= 50 ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {project.completionPercentage || 0}%
+                            </span>
+                          </td>
+                          <td className="p-2">
+                            {project.githubLinks ? (
+                              <a href={project.githubLinks} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                                View
+                              </a>
+                            ) : '-'}
+                          </td>
+                          <td className="p-2">
+                            {project.loomLink ? (
+                              <a href={project.loomLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                                View
+                              </a>
+                            ) : '-'}
+                          </td>
+                          <td className="p-2">
+                            {project.whatsappGroupLink ? (
+                              <a href={project.whatsappGroupLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                                View
+                              </a>
+                            ) : '-'}
+                          </td>
                           <td className="p-2">
                             {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
                           </td>
