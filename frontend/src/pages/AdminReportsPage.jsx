@@ -134,7 +134,8 @@ export default function AdminReportsPage() {
 
   return (
     <PageBackground variant="slate">
-      <div className="w-screen h-screen overflow-hidden flex flex-col">
+      <div className="min-h-screen w-full">
+        <div className="flex flex-col h-screen">
         <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
           <div className="flex items-center gap-4">
             <button
@@ -145,7 +146,7 @@ export default function AdminReportsPage() {
               Back
             </button>
             <div>
-              <h1 className="text-xl font-bold">Reports</h1>
+              <h1 className="text-xl font-bold text-white">Reports</h1>
               <p className="text-xs text-slate-400">Task tracking reports</p>
             </div>
           </div>
@@ -169,7 +170,7 @@ export default function AdminReportsPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4" style={{width: '100vw', boxSizing: 'border-box'}}>
+        <div className="flex-1 p-4" style={{overflow: 'hidden'}}>
           <div className="h-full flex flex-col gap-2 max-w-full">
             {/* Filters */}
             {showFilters && (
@@ -238,7 +239,7 @@ export default function AdminReportsPage() {
 
             {/* Report Table */}
             {reportData.length > 0 ? (
-              <div className="flex-1 flex flex-col" style={{width: '100%', maxWidth: '100%', overflow: 'hidden'}}>
+              <div className="flex-1 flex flex-col" style={{minHeight: 0}}>
                 <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-white">
@@ -250,8 +251,8 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto', width: '100%', maxWidth: '100%'}}>
-                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: 'max-content'}}>
+                <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto'}}>
+                  <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: 'max-content'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[100px]">
@@ -335,7 +336,7 @@ export default function AdminReportsPage() {
                 </div>
               </div>
             ) : selectedEmployee && !loading ? (
-              <div className="compact-card p-6 text-center" style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
+              <div className="compact-card p-6 text-center flex-1 flex items-center justify-center flex-col">
                 <FileText className="h-8 w-8 text-slate-400 mx-auto mb-2" />
                 <h3 className="text-sm font-medium text-slate-300 mb-1">No Data Found</h3>
                 <p className="text-xs text-slate-400">
@@ -352,6 +353,7 @@ export default function AdminReportsPage() {
               </div>
             ) : null}
           </div>
+        </div>
         </div>
       </div>
     </PageBackground>

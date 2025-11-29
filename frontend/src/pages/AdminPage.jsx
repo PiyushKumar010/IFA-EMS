@@ -131,7 +131,8 @@ export default function AdminProjectsPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="w-screen h-screen overflow-hidden flex flex-col">
+      <div className="min-h-screen w-full">
+        <div className="flex flex-col h-screen">
         <header className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-4 py-2 bg-slate-900/50">
           <div className="flex items-center gap-4">
             <button
@@ -173,17 +174,18 @@ export default function AdminProjectsPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4" style={{width: '100vw', boxSizing: 'border-box'}}>
+        <div className="flex-1 p-4" style={{overflow: 'hidden'}}>
+          <div className="h-full flex flex-col">
           {filteredProjects.length > 0 ? (
-            <div className="h-full flex flex-col" style={{width: '100%', maxWidth: '100%'}}>
+            <div className="flex-1 flex flex-col" style={{minHeight: 0}}>
               <div className="compact-card flex-shrink-0 mb-2" style={{padding: '0.75rem 1rem'}}>
                 <h2 className="text-sm font-bold text-white">
                   Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
                 </h2>
               </div>
               
-              <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto', width: '100%', maxWidth: '100%'}}>
-                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: 'max-content'}}>
+              <div className="flex-1 border border-white/10 rounded-lg bg-slate-900/30" style={{overflow: 'auto'}}>
+                <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: 'max-content'}}>
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10" style={{minWidth: '120px', width: '120px'}}>Project</th>
@@ -347,6 +349,8 @@ export default function AdminProjectsPage() {
               </p>
             </div>
           )}
+          </div>
+        </div>
         </div>
       </div>
 
