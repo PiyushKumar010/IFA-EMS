@@ -131,24 +131,22 @@ export default function AdminProjectsPage() {
 
   return (
     <PageBackground variant="violet">
-      <div className="mx-auto min-h-screen w-full max-w-7xl px-6 pb-20 pt-10 text-white">
-        {/* Top Navigation */}
-        <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+      <div className="admin-viewport text-white">
+        <header className="admin-header-compact flex items-center justify-between border-b border-white/10">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/admin")}
-              className="mb-4 flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Overview
+              <ArrowLeft className="h-3 w-3" />
+              Back
             </button>
-            <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-              Project Management
-            </p>
-            <h1 className="mt-2 text-4xl font-bold">Projects</h1>
-            <p className="text-sm text-slate-300">Manage and track all your projects</p>
+            <div>
+              <h1 className="text-xl font-bold">Projects</h1>
+              <p className="text-xs text-slate-400">Manage and track all your projects</p>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -226,172 +224,92 @@ export default function AdminProjectsPage() {
           </div>
         </header>
 
-        {/* Stats Grid */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, idx) => (
-            <div
-              key={idx}
-              className="glass-card p-6 transition-shadow hover:border-white/20"
-            >
-              <div className="mb-4">
-                <span className="text-sm font-medium text-slate-300">{stat.label}</span>
-              </div>
-              <div className="text-3xl font-bold text-white">{stat.value}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Projects Section */}
-        <div className="rounded-[32px] border border-white/10 bg-white/5">
-          <div className="border-b border-white/10 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.6em] text-slate-300">
-                  Project portfolio
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">Active Projects</h2>
-                <p className="mt-1 text-sm text-slate-300">Manage and track your ongoing work</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1">
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${
-                      filterStatus === "all"
-                        ? "rounded bg-indigo-500/20 text-white"
-                        : "text-slate-300 hover:text-white"
-                    }`}
-                    onClick={() => setFilterStatus("all")}
-                  >
-                    All
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${
-                      filterStatus === "pending"
-                        ? "rounded bg-indigo-500/20 text-white"
-                        : "text-slate-300 hover:text-white"
-                    }`}
-                    onClick={() => setFilterStatus("pending")}
-                  >
-                    Pending
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${
-                      filterStatus === "active"
-                        ? "rounded bg-indigo-500/20 text-white"
-                        : "text-slate-300 hover:text-white"
-                    }`}
-                    onClick={() => setFilterStatus("active")}
-                  >
-                    Active
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${
-                      filterStatus === "completed"
-                        ? "rounded bg-indigo-500/20 text-white"
-                        : "text-slate-300 hover:text-white"
-                    }`}
-                    onClick={() => setFilterStatus("completed")}
-                  >
-                    Completed
-                  </button>
+        <div className="admin-content-area">
+          <div className="h-full overflow-y-auto space-y-2">
+            {filteredProjects.length > 0 ? (
+              <div className="compact-card p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-bold">
+                    Projects ({filteredProjects.length}) - {stats[2].value} Completed, {stats[3].value} Active
+                  </h2>
                 </div>
-                <button
-                  className="btn-primary flex items-center gap-2 px-4 py-2 text-sm"
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  + New Project
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* Project List */}
-          <div className="divide-y divide-white/10">
-            {filteredProjects.length === 0 && (
-              <div className="p-10 text-center text-slate-300">
-                {projects.length === 0
-                  ? "No projects yet. Create your first project to get started."
-                  : "No projects match your filters."}
+                <div className="overflow-x-scroll overflow-y-auto max-h-[calc(100vh-200px)] border border-white/10 rounded-lg" style={{overscrollBehaviorX: 'contain'}}>
+                  <table className="text-xs" style={{minWidth: 'max-content', width: '100%'}}>
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left p-2 bg-slate-800/80 sticky left-0 z-10 min-w-[150px]">Project Name</th>
+                        <th className="text-left p-2 min-w-[150px]">Client</th>
+                        <th className="text-left p-2 min-w-[200px]">Description</th>
+                        <th className="text-left p-2 min-w-[100px]">Status</th>
+                        <th className="text-left p-2 min-w-[100px]">Team Size</th>
+                        <th className="text-left p-2 min-w-[120px]">Hours Logged</th>
+                        <th className="text-left p-2 min-w-[100px]">Created</th>
+                        <th className="text-left p-2 min-w-[120px] sticky right-0 bg-slate-800/80 z-10">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProjects.map((project) => (
+                        <tr key={project._id} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10">
+                            {project.projectName || 'Untitled'}
+                          </td>
+                          <td className="p-2">{project.clientName || '-'}</td>
+                          <td className="p-2">
+                            <div className="max-w-[200px] truncate" title={project.description}>
+                              {project.description || '-'}
+                            </div>
+                          </td>
+                          <td className="p-2">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              project.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                              project.status === 'Active' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {project.status || 'New'}
+                            </span>
+                          </td>
+                          <td className="p-2 text-center">{project.assignees?.length || 0}</td>
+                          <td className="p-2 text-center">{project.totalHoursLogged || 0}h</td>
+                          <td className="p-2">
+                            {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }) : '-'}
+                          </td>
+                          <td className="p-2 sticky right-0 bg-slate-800/50 z-10">
+                            <div className="flex items-center gap-1">
+                              <button
+                                className="btn-ghost px-2 py-1 text-xs"
+                                onClick={() => {
+                                  setSelectedProject(project);
+                                  setShowDetailsModal(true);
+                                }}
+                              >
+                                View
+                              </button>
+                              <button
+                                className="btn-ghost px-2 py-1 text-xs"
+                                onClick={() => navigate(`/admin/project/${project._id}`)}
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="compact-card p-6 text-center">
+                <FolderOpen className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <h3 className="text-sm font-medium text-slate-300 mb-1">
+                  {projects.length === 0 ? 'No Projects Yet' : 'No Matches'}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {projects.length === 0 ? 'Create your first project to get started.' : 'No projects match your filters.'}
+                </p>
               </div>
             )}
-            {filteredProjects.map((project) => (
-              <div
-                key={project._id}
-                className="p-6 transition-colors hover:bg-white/5"
-              >
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20">
-                      <FolderOpen className="h-6 w-6 text-indigo-300" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">{project.projectName}</h3>
-                      <p className="text-sm text-slate-300">{project.clientName}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="btn-ghost rounded-lg px-3 py-1 text-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProject(project);
-                        setShowDetailsModal(true);
-                      }}
-                    >
-                      View Details
-                    </button>
-                    <button
-                      className="rounded-lg p-2 hover:bg-white/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/admin/project/${project._id}`);
-                      }}
-                    >
-                      <MoreVertical className="h-5 w-5 text-slate-400" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-4">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        project.status === "Active"
-                          ? "bg-blue-400"
-                          : project.status === "Completed"
-                            ? "bg-emerald-400"
-                            : "bg-slate-400"
-                      }`}
-                    ></span>
-                    <span className="text-sm text-slate-300">{project.status}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-400" />
-                    <span className="text-sm text-slate-300">
-                      {project.assignees?.length || 0} members
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-slate-400" />
-                    <span className="text-sm text-slate-300">
-                      {project.startDate
-                        ? new Date(project.startDate).toLocaleDateString()
-                        : "No date"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-slate-400" />
-                    <span className="text-sm text-slate-300">
-                      {project.estimatedHoursTaken || 0}h logged
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-sm text-slate-300">
-                  {project.description || "No description"}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
