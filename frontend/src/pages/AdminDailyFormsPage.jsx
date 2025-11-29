@@ -1425,32 +1425,44 @@ const TemplateSelectionModal = ({ employee, templates, onClose, onSubmit, onCrea
             {templates.map((template) => (
               <div
                 key={template._id}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                className={`p-4 border rounded-lg cursor-pointer transition-colors flex items-center justify-between ${
                   selectedTemplate?._id === template._id
                     ? 'border-emerald-500 bg-emerald-500/20'
                     : 'border-white/10 bg-white/5 hover:bg-white/10'
                 }`}
                 onClick={() => setSelectedTemplate(template)}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">{template.name}</h4>
-                    <p className="text-sm text-slate-400">{template.description}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
-                        {template.roleType}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium truncate">{template.name}</h4>
+                  <p className="text-sm text-slate-400 truncate">{template.description}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
+                      {template.roleType}
+                    </span>
+                    {template.isDefault && (
+                      <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">
+                        Default
                       </span>
-                      {template.isDefault && (
-                        <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">
-                          Default
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-slate-400 mt-1">
                     {template.tasks?.length || 0} tasks, {template.customTasks?.length || 0} custom
                   </div>
                 </div>
+                {/* Delete button only for admin-created (not default) templates */}
+                {!template.isDefault && (
+                  <button
+                    className="ml-4 text-red-400 hover:text-red-300 px-2 py-1 rounded transition-colors"
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (window.confirm('Are you sure you want to delete this template?')) {
+                        handleDeleteTemplate(template._id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
