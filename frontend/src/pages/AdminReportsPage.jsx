@@ -253,7 +253,7 @@ export default function AdminReportsPage() {
                   <table className="text-xs text-white" style={{borderCollapse: 'collapse', width: '100%', minWidth: '1200px', border: '1px solid rgba(255,255,255,0.1)'}}>
                     <thead>
                       <tr className="border-b border-white/20">
-                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10" style={{width: '70px'}}>
+                        <th className="text-left p-1 bg-slate-800/80 sticky left-0 z-10 border-r border-white/10" style={{width: '70px'}}>
                           Date
                         </th>
                         {/* Get all unique tasks for column headers */}
@@ -264,14 +264,14 @@ export default function AdminReportsPage() {
                             day.customTasks.forEach(task => allTasks.add(task.taskText));
                           });
                           return Array.from(allTasks).map((taskText, idx) => (
-                            <th key={idx} className="text-left p-1" style={{width: '110px'}}>
+                            <th key={idx} className="text-left p-1 border-r border-white/10" style={{width: '110px'}}>
                               <div className="truncate" title={taskText}>{taskText}</div>
                             </th>
                           ));
                         })()}
-                        <th className="text-left p-1" style={{width: '40px'}}>Hrs</th>
-                        <th className="text-left p-1" style={{width: '50px'}}>Screen</th>
-                        <th className="text-left p-1" style={{width: '55px'}}>Submit</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '40px'}}>Hrs</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '50px'}}>Screen</th>
+                        <th className="text-left p-1 border-r border-white/10" style={{width: '55px'}}>Submit</th>
                         <th className="text-left p-1" style={{width: '60px'}}>Confirm</th>
                       </tr>
                 </thead>
@@ -286,14 +286,14 @@ export default function AdminReportsPage() {
 
                         return (
                           <tr key={dayIdx} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10 text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
+                            <td className="p-2 font-medium bg-slate-800/50 sticky left-0 z-10 text-xs border-r border-white/10">
                               {new Date(day.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
                             </td>
                             {Array.from(allTasks).map((taskText, taskIdx) => {
                               const task = day.tasks.find(t => t.taskText === taskText) || 
                                           day.customTasks.find(t => t.taskText === taskText);
                               return (
-                                <td key={taskIdx} className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
+                                <td key={taskIdx} className="p-2 text-center border-r border-white/10">
                                   {task?.employeeChecked ? (
                                     <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                                   ) : task ? (
@@ -304,15 +304,15 @@ export default function AdminReportsPage() {
                                 </td>
                               );
                             })}
-                            <td className="p-2 text-center text-xs" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>{day.hoursAttended || 0}</td>
-                            <td className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
+                            <td className="p-2 text-center text-xs border-r border-white/10">{day.hoursAttended || 0}</td>
+                            <td className="p-2 text-center border-r border-white/10">
                               {day.screensharing ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
                                 <X className="h-3 w-3 text-red-400 mx-auto" />
                               )}
                             </td>
-                            <td className="p-2 text-center" style={{borderRight: '1px solid rgba(255,255,255,0.1)'}}>
+                            <td className="p-2 text-center border-r border-white/10">
                               {day.submitted ? (
                                 <CheckCircle className="h-3 w-3 text-emerald-400 mx-auto" />
                               ) : (
