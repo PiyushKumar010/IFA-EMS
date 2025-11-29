@@ -26,6 +26,69 @@ const TAG_COLORS = [
   "#eab308", "#22c55e", "#10b981", "#06b6d4", "#3b82f6"
 ];
 
+// Quick Send Modal Component
+function QuickSendModal({ templates, employees, onClose, onSend }) {
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+
+  const toggleEmployee = (id) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(id) ? prev.filter((eid) => eid !== id) : [...prev, id]
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
+      <div className="glass-panel w-full max-w-2xl rounded-[32px] px-8 py-8 max-h-[90vh] overflow-y-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Quick Send Template</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm text-slate-300 mb-2">Select Template</label>
+          <select
+            className="input-field w-full"
+            value={selectedTemplate}
+            onChange={(e) => setSelectedTemplate(e.target.value)}
+          >
+            <option value="" disabled>Select a template...</option>
+            {templates.map((tpl) => (
+              <option key={tpl._id} value={tpl._id}>{tpl.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm text-slate-300 mb-2">Select Employees</label>
+          <div className="max-h-48 overflow-y-auto border rounded bg-white/5 p-2">
+            {employees.map((emp) => (
+              <label key={emp._id} className="flex items-center gap-2 py-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedEmployees.includes(emp._id)}
+                  onChange={() => toggleEmployee(emp._id)}
+                />
+                <span>{emp.name || emp.email}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onClose} className="btn-ghost flex-1">Cancel</button>
+          <button
+            className="btn-primary flex-1"
+            disabled={!selectedTemplate || selectedEmployees.length === 0}
+            onClick={() => onSend(selectedTemplate, selectedEmployees)}
+          >
+            Send Template
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminDailyFormsPage() {
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -240,95 +303,6 @@ function AdminDailyFormsPage() {
             console.error("Time update error:", error);
         }
     };
-// Quick Send Modal
-function QuickSendModal({ templates, employees, onClose, onSend }) {
-  const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [selectedEmployees, setSelectedEmployees] = useState([]);
-
-  const toggleEmployee = (id) => {
-    setSelectedEmployees((prev) =>
-      prev.includes(id) ? prev.filter((eid) => eid !== id) : [...prev, id]
-    );
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
-      <div className="glass-panel w-full max-w-2xl rounded-[32px] px-8 py-8 max-h-[90vh] overflow-y-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Quick Send Template</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm text-slate-300 mb-2">Select Template</label>
-          <select
-            className="input-field w-full"
-            value={selectedTemplate}
-            onChange={(e) => setSelectedTemplate(e.target.value)}
-          >
-            <option value="" disabled>Select a template...</option>
-            {templates.map((tpl) => (
-              <option key={tpl._id} value={tpl._id}>{tpl.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm text-slate-300 mb-2">Select Employees</label>
-          <div className="max-h-48 overflow-y-auto border rounded bg-white/5 p-2">
-            {employees.map((emp) => (
-              <label key={emp._id} className="flex items-center gap-2 py-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedEmployees.includes(emp._id)}
-                  onChange={() => toggleEmployee(emp._id)}
-                />
-                <span>{emp.name || emp.email}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="btn-ghost flex-1">Cancel</button>
-          <button
-            className="btn-primary flex-1"
-            disabled={!selectedTemplate || selectedEmployees.length === 0}
-            onClick={() => onSend(selectedTemplate, selectedEmployees)}
-          >
-            Send Template
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-        {showQuickSendModal && (
-          <QuickSendModal
-            templates={availableTemplates}
-            employees={employees}
-            onClose={() => setShowQuickSendModal(false)}
-            onSend={async (templateId, employeeIds) => {
-              // Call backend to send template to selected employees
-              try {
-                const res = await fetch("/api/daily-forms/admin/quick-send", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  credentials: "include",
-                  body: JSON.stringify({ templateId, employeeIds })
-                });
-                if (res.ok) {
-                  alert("Template sent to selected employees!");
-                  setShowQuickSendModal(false);
-                } else {
-                  const err = await res.json();
-                  alert(err.error || "Failed to send template");
-                }
-              } catch (e) {
-                alert("Network error");
-              }
-            }}
-          />
-        )}
 
     const handleDeleteTag = async (formId, tagId) => {
         if (!confirm("Are you sure you want to delete this tag?")) return;
@@ -967,6 +941,35 @@ function QuickSendModal({ templates, employees, onClose, onSend }) {
                 </div>
 
                 {/* Modals */}
+                {showQuickSendModal && (
+                    <QuickSendModal
+                        templates={availableTemplates}
+                        employees={employees}
+                        onClose={() => setShowQuickSendModal(false)}
+                        onSend={async (templateId, employeeIds) => {
+                            try {
+                                const res = await fetch("/api/daily-forms/admin/quick-send", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    credentials: "include",
+                                    body: JSON.stringify({ templateId, employeeIds })
+                                });
+                                if (res.ok) {
+                                    const result = await res.json();
+                                    alert(`Template sent successfully! Created ${result.created} forms.`);
+                                    setShowQuickSendModal(false);
+                                } else {
+                                    const err = await res.json();
+                                    alert(err.error || "Failed to send template");
+                                }
+                            } catch (e) {
+                                console.error("Quick send error:", e);
+                                alert("Network error");
+                            }
+                        }}
+                    />
+                )}
+
                 {showCreateForm && (
                     <CreateFormModal
                       employee={selectedEmployee}
