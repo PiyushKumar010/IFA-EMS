@@ -340,6 +340,7 @@ export default function AdminMessagesPage() {
           </div>
         </div>
       </div>
+      </div>
     </PageBackground>
   );
 }
